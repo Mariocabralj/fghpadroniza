@@ -13,7 +13,6 @@ import { toast } from "sonner";
 
 const docTypes = [
   "POP/PRS",
-  "Protocolo Clínico",
   "Manual",
   "Plano",
   "Política Interna",
@@ -60,8 +59,16 @@ export default function NewDocument() {
   if (!user) return <Navigate to="/" />;
 
   const handleStart = () => {
+    if (!title.trim()) {
+      toast.error("Preencha o título do documento");
+      return;
+    }
     if (!docType) {
       toast.error("Selecione o tipo de documento");
+      return;
+    }
+    if (!sector.trim()) {
+      toast.error("Preencha o setor responsável");
       return;
     }
 
