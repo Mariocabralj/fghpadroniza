@@ -21,6 +21,10 @@ const docTypes = [
   "Fluxograma",
   "Carta de Anuência",
   "Ata de Reunião",
+  "Panfleto",
+  "Portaria",
+  "Ementa de Treinamento",
+  "Papel Timbrado",
   "Norma Zero",
 ];
 
