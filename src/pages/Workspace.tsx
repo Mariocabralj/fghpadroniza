@@ -1,152 +1,171 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Download, Send, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType } from "docx";
 import { saveAs } from "file-saver";
 
 const today = new Date().toLocaleDateString("pt-BR");
-const nextYear = new Date(Date.now() + 365 * 86400000).toLocaleDateString("pt-BR");
-
-const defaultOriginal = `Higienização das Mãos
-
-A higienização das mãos é fundamental para prevenir infecções hospitalares. Deve ser realizada por todos os profissionais de saúde antes e após contato com pacientes.
-
-Materiais: sabonete líquido, papel toalha, álcool gel 70%.
-
-Passos:
-1. Abrir a torneira e molhar as mãos
-2. Aplicar sabonete líquido suficiente
-3. Ensaboar as palmas das mãos friccionando-as
-4. Esfregar o dorso das mãos
-5. Entrelaçar os dedos e friccionar
-6. Esfregar o polegar com movimento circular
-7. Friccionar as pontas dos dedos nas palmas
-8. Enxaguar as mãos retirando todo o sabonete
-9. Secar com papel toalha descartável
-10. Fechar a torneira com papel toalha`;
-
-const generateStandardized = (title: string, sector: string, docType: string) => {
-  const code = `POP-${sector?.substring(0, 3).toUpperCase() || "GER"}-001`;
-  return `PROCEDIMENTO OPERACIONAL PADRÃO - POP
-
-${title || "HIGIENIZAÇÃO DAS MÃOS"}
-
-Código: ${code}
-Versão: 01
-Data de Emissão: ${today}
-Próxima Revisão: ${nextYear}
-Setor: ${sector || "Enfermagem"}
-
-1. OBJETIVO / FINALIDADE
-Padronizar a técnica de higienização das mãos visando a prevenção e controle de infecções relacionadas à assistência à saúde (IRAS), garantindo a segurança do paciente e do profissional.
-
-2. ÂMBITO DE APLICAÇÃO
-Este procedimento aplica-se a todos os profissionais de saúde, visitantes e acompanhantes nas dependências da Fundação Gestão Hospitalar Martiniano Fernandes.
-
-3. RESPONSABILIDADES
-- Elaboração: Analista de Processos
-- Execução: Todos os profissionais de saúde
-- Supervisão: Coordenação de Enfermagem e CCIH
-- Aprovação: Gerência de Qualidade
-
-4. MATERIAIS NECESSÁRIOS
-- Sabonete líquido neutro ou antisséptico
-- Papel toalha descartável
-- Álcool gel 70%
-- Lixeira com pedal
-
-5. PROCEDIMENTO
-5.1 Abrir a torneira e molhar as mãos, evitando encostar na pia
-5.2 Aplicar na palma da mão quantidade suficiente de sabonete líquido
-5.3 Ensaboar as palmas das mãos, friccionando-as entre si
-5.4 Esfregar a palma da mão direita contra o dorso da mão esquerda e vice-versa
-5.5 Entrelaçar os dedos e friccionar os espaços interdigitais
-5.6 Esfregar o dorso dos dedos com movimentos de vai e vem
-5.7 Esfregar o polegar com auxílio da palma da mão contralateral, com movimento circular
-5.8 Friccionar as polpas digitais e unhas nas palmas das mãos
-5.9 Esfregar os punhos com movimentos circulares
-5.10 Enxaguar as mãos, retirando os resíduos de sabonete
-5.11 Secar as mãos com papel toalha descartável
-5.12 Fechar a torneira utilizando o papel toalha
-
-6. REFERÊNCIAS NORMATIVAS
-- ANVISA - Segurança do Paciente: Higienização das Mãos (2009)
-- OMS - Diretrizes sobre Higienização das Mãos em Serviços de Saúde (2005)
-- NR-32 - Segurança e Saúde no Trabalho em Serviços de Saúde
-
-7. REGISTRO DE ALTERAÇÕES
-| Versão | Data       | Alteração           | Responsável    |
-|--------|------------|---------------------|----------------|
-| 01     | ${today} | Emissão inicial     | Mario Cabral   |
-
-8. APROVAÇÃO
-Elaborado por: Mario Cabral - Analista de Processos
-Revisado por: _________________________
-Aprovado por: _________________________`;
-};
 
 interface CheckItem {
   label: string;
   ok: boolean;
 }
 
-const getChecklist = (): CheckItem[] => [
-  { label: "Código de identificação", ok: true },
-  { label: "Objetivo definido", ok: true },
-  { label: "Âmbito de aplicação", ok: true },
-  { label: "Responsabilidades", ok: true },
-  { label: "Procedimento detalhado", ok: true },
-  { label: "Referências normativas", ok: true },
-  { label: "Formatação FGH", ok: true },
-  { label: "Aprovação", ok: false },
-];
+function analyzeChecklist(text: string): CheckItem[] {
+  const lower = text.toLowerCase();
+  return [
+    { label: "Código de identificação", ok: /código:/i.test(text) },
+    { label: "Objetivo definido", ok: /objetivo/i.test(text) },
+    { label: "Abrangência definida", ok: /abrang|âmbito/i.test(text) },
+    { label: "Responsabilidades", ok: /responsabilidade|competência|elaboração/i.test(text) },
+    { label: "Procedimento detalhado", ok: /procedimento|disposiç|atividade|etapa/i.test(text) },
+    { label: "Referências normativas", ok: /referência|bibliograf/i.test(text) },
+    { label: "Histórico de revisões", ok: /histórico|alteraç|revisões/i.test(text) },
+    { label: "Aprovação", ok: /aprovad|aprovação.*:.*\S/i.test(text) && !/a definir|a preencher|___/i.test(text.match(/aprovação[:\s]*(.*)/i)?.[1] || "") },
+  ];
+}
 
 export default function Workspace() {
   const { user } = useAuth();
   const location = useLocation();
   const state = location.state as any;
-  const title = state?.title || "POP Higienização das Mãos";
-  const sector = state?.sector || "Enfermagem";
-  const docType = state?.docType || "POP Padrão";
+  const title = state?.title || "Documento Padronizado";
+  const sector = state?.sector || "";
+  const docType = state?.docType || "POP/PRS";
 
-  const [original, setOriginal] = useState(state?.pastedText || state?.ideaText || defaultOriginal);
-  const [standardized, setStandardized] = useState(generateStandardized(title, sector, docType));
-  const checklist = getChecklist();
+  const [original, setOriginal] = useState(
+    state?.pastedText || state?.ideaText || state?.fileName || ""
+  );
+  const [standardized, setStandardized] = useState(state?.standardizedText || "");
+
+  const checklist = useMemo(() => analyzeChecklist(standardized), [standardized]);
   const completionPct = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
 
   if (!user) return <Navigate to="/" />;
 
   const exportDocx = async () => {
-    const lines = standardized.split("\n").filter(Boolean);
-    const children = lines.map((line) => {
-      if (line.match(/^\d+\.\s[A-ZÁÉÍÓÚÂÊÔÃÕÇ \/]+$/)) {
-        return new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: line, bold: true })] });
+    const lines = standardized.split("\n");
+    const children: Paragraph[] = [];
+
+    for (const line of lines) {
+      if (!line.trim()) {
+        children.push(new Paragraph({ children: [] }));
+        continue;
       }
-      if (line.startsWith("PROCEDIMENTO OPERACIONAL")) {
-        return new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, children: [new TextRun({ text: line, bold: true })] });
+
+      // Section headers (numbered, all caps)
+      if (line.match(/^\d+\.?\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ\/ ]{4,}$/)) {
+        children.push(new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 300, after: 120 },
+          children: [new TextRun({ text: line, bold: true, font: "Arial", size: 24 })],
+        }));
+        continue;
       }
-      if (line.startsWith("5.") || line.startsWith("- ")) {
-        return new Paragraph({ indent: { left: 360 }, children: [new TextRun(line)] });
+
+      // Chapter headers (CAPÍTULO)
+      if (line.match(/^CAPÍTULO/i)) {
+        children.push(new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 300, after: 120 },
+          children: [new TextRun({ text: line, bold: true, font: "Arial", size: 24 })],
+        }));
+        continue;
       }
-      return new Paragraph({ children: [new TextRun(line)] });
-    });
+
+      // Main title
+      if (line.match(/^(PROCEDIMENTO OPERACIONAL|PROTOCOLO CL[ÍI]NICO|MANUAL|PLANO|POL[ÍI]TICA|REGIMENTO|FLUXOGRAMA|CARTA|ATA DE)/i)) {
+        children.push(new Paragraph({
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 200, after: 200 },
+          children: [new TextRun({ text: line, bold: true, font: "Arial", size: 28 })],
+        }));
+        continue;
+      }
+
+      // Sub-items (5.1, 6.2, etc)
+      if (line.match(/^\d+\.\d+/)) {
+        children.push(new Paragraph({
+          indent: { left: 360 },
+          spacing: { before: 60, after: 60 },
+          children: [new TextRun({ text: line, font: "Arial", size: 22 })],
+        }));
+        continue;
+      }
+
+      // Bullet items
+      if (line.match(/^[\-•●]\s/)) {
+        children.push(new Paragraph({
+          indent: { left: 540 },
+          spacing: { before: 40, after: 40 },
+          children: [new TextRun({ text: line, font: "Arial", size: 22 })],
+        }));
+        continue;
+      }
+
+      // Metadata lines (Código, Emissão, etc)
+      if (line.match(/^(Código|Emissão|Versão|Título|Elaboração|Aprovação|Revisão|Setor):/)) {
+        children.push(new Paragraph({
+          spacing: { before: 40, after: 40 },
+          children: [
+            new TextRun({ text: line.split(":")[0] + ": ", bold: true, font: "Arial", size: 22 }),
+            new TextRun({ text: line.split(":").slice(1).join(":").trim(), font: "Arial", size: 22 }),
+          ],
+        }));
+        continue;
+      }
+
+      // Regular paragraph
+      children.push(new Paragraph({
+        spacing: { before: 40, after: 40 },
+        children: [new TextRun({ text: line, font: "Arial", size: 22 })],
+      }));
+    }
+
+    // Add footer
+    children.push(new Paragraph({ children: [] }));
+    children.push(new Paragraph({
+      spacing: { before: 400 },
+      children: [
+        new TextRun({ text: `Atualizado por: ${user.name}`, font: "Arial", size: 18 }),
+        new TextRun({ text: `  |  Validado por: A definir  |  Aprovado por: A definir`, font: "Arial", size: 18 }),
+      ],
+    }));
+    children.push(new Paragraph({
+      children: [new TextRun({ text: `Data: ${today}`, font: "Arial", size: 18 })],
+    }));
 
     const doc = new Document({
-      sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, children }],
+      styles: {
+        default: {
+          document: { run: { font: "Arial", size: 22 } },
+        },
+      },
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 11906, height: 16838 }, // A4
+            margin: { top: 1440, right: 1134, bottom: 1440, left: 1418 },
+          },
+        },
+        children,
+      }],
     });
+
     const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${title.replace(/\s+/g, "_")}.docx`);
+    saveAs(blob, `${title.replace(/\s+/g, "_")}_FGH.docx`);
   };
 
   const sendToQuality = () => {
-    const code = `POP-${sector?.substring(0, 3).toUpperCase() || "GER"}-001`;
+    const code = standardized.match(/Código:\s*(.+)/)?.[1]?.trim() || `DOC-${sector?.substring(0, 3).toUpperCase() || "GER"}-001`;
     const subject = encodeURIComponent(`Documento para Revisão - ${title}`);
     const body = encodeURIComponent(
-      `Prezado(a) Setor de Qualidade,\n\nSegue para revisão o documento:\n\nTítulo: ${title}\nTipo: ${docType}\nCódigo: ${code}\nVersão: 01\nElaborado por: ${user.name} - ${user.role}\nData: ${today}\n\nO documento foi padronizado através do sistema FGH Padroniza e está pronto para análise final.\n\nAtenciosamente,\n${user.name}\n${user.role}`
+      `Prezado(a) Setor de Qualidade,\n\nSegue para revisão o documento:\n\nTítulo: ${title}\nTipo: ${docType}\nCódigo: ${code}\nVersão: 001\nElaborado por: ${user.name} - ${user.role}\nData: ${today}\n\nO documento foi padronizado através do sistema FGH Padroniza e está pronto para análise final.\n\nAtenciosamente,\n${user.name}\n${user.role}`
     );
     window.open(`mailto:hps.qualidade@hps.fghsaude.org.br?subject=${subject}&body=${body}`);
   };
@@ -185,7 +204,7 @@ export default function Workspace() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   <div>
                     <h2 className="font-semibold text-foreground text-sm">Documento Padronizado FGH</h2>
-                    <p className="text-xs text-muted-foreground">Formatado conforme Norma Zero</p>
+                    <p className="text-xs text-muted-foreground">Gerado por IA conforme Norma Zero</p>
                   </div>
                 </div>
                 <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-success/10 text-success">Pronto</span>
