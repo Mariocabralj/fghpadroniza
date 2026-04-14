@@ -89,7 +89,7 @@ function createHeaderTable(title: string): Table {
 
   const cellProps = (w: number) => ({
     borders,
-    width: { size: w, type: WidthType.DXA as const },
+    width: { size: w, type: WidthType.DXA },
     margins: { top: 20, bottom: 20, left: 60, right: 60 },
   });
 
@@ -166,7 +166,7 @@ function createFooterTable(): Table {
   const colW = Math.floor(CONTENT_WIDTH / 3);
   const cellProps = (w: number) => ({
     borders,
-    width: { size: w, type: WidthType.DXA as const },
+    width: { size: w, type: WidthType.DXA },
     margins: { top: 20, bottom: 20, left: 60, right: 60 },
   });
   const tinyRun = (text: string) =>
