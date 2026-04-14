@@ -9,8 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, ClipboardPaste, Lightbulb, Info, Sparkles } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
-const docTypes = ["POP Padrão", "Instrução de Trabalho", "Protocolo", "Fluxograma", "Formulário", "Checklist"];
+const docTypes = [
+  "POP/PRS",
+  "Protocolo Clínico",
+  "Manual",
+  "Plano",
+  "Política Interna",
+  "Regimento Interno",
+  "Fluxograma",
+  "Carta de Anuência",
+  "Ata de Reunião",
+  "Norma Zero",
+];
 
 const textSuggestions = [
   "Objetivo: Para que serve o documento",
@@ -39,12 +51,36 @@ export default function NewDocument() {
   const [pastedText, setPastedText] = useState("");
   const [ideaText, setIdeaText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("upload");
 
   if (!user) return <Navigate to="/" />;
 
   const handleStart = () => {
+    if (!docType) {
+      toast.error("Selecione o tipo de documento");
+      return;
+    }
+
+    const hasContent =
+      (activeTab === "upload" && file) ||
+      (activeTab === "paste" && pastedText.trim()) ||
+      (activeTab === "idea" && ideaText.trim());
+
+    if (!hasContent) {
+      toast.error("Forneça o conteúdo do documento");
+      return;
+    }
+
     navigate("/analise", {
-      state: { title, docType, sector, pastedText, ideaText, fileName: file?.name },
+      state: {
+        title,
+        docType,
+        sector,
+        pastedText: activeTab === "paste" ? pastedText : undefined,
+        ideaText: activeTab === "idea" ? ideaText : undefined,
+        file: activeTab === "upload" ? file : undefined,
+        fileName: file?.name,
+      },
     });
   };
 
@@ -53,10 +89,12 @@ export default function NewDocument() {
       <div className="p-6 max-w-4xl mx-auto space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Novo Documento</h1>
-          <p className="text-muted-foreground text-sm">Escolha como deseja enviar seu conteúdo</p>
+          <p className="text-muted-foreground text-sm">
+            Escolha como deseja enviar seu conteúdo — a IA vai padronizá-lo conforme a Norma Zero FGH
+          </p>
         </div>
 
-        <Tabs defaultValue="upload" className="space-y-6">
+        <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="upload" className="gap-2"><Upload className="w-4 h-4" />Upload</TabsTrigger>
             <TabsTrigger value="paste" className="gap-2"><ClipboardPaste className="w-4 h-4" />Colar Texto</TabsTrigger>
@@ -156,7 +194,7 @@ export default function NewDocument() {
             </div>
           </div>
           <Button onClick={handleStart} className="w-full gradient-primary text-primary-foreground font-semibold gap-2 h-12">
-            <Sparkles className="w-5 h-5" /> Iniciar Padronização
+            <Sparkles className="w-5 h-5" /> Iniciar Padronização com IA
           </Button>
         </div>
       </div>
