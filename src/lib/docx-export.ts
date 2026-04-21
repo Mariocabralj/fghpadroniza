@@ -263,6 +263,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
   const children: (Paragraph | Table)[] = [];
   const upperTitle = title.trim().toUpperCase();
   let i = 0;
+  let firstSectionSeen = false;
 
   while (i < lines.length) {
     const line = lines[i];
@@ -284,6 +285,26 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
     if (trimmed && trimmed.toUpperCase() === upperTitle) {
       i++;
       continue;
+    }
+
+    // Before the first numbered section (e.g. "1. APRESENTAÇÃO"),
+    // skip any standalone heading-like lines that the AI may have emitted
+    // as a body title (all caps without numbering, or starting with #).
+    if (!firstSectionSeen && trimmed) {
+      const isNumberedSection = /^\d+\.?\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ\/ ]{3,}/.test(line);
+      const isSummary = ["SUMÁRIO", "ÍNDICE"].includes(trimmed.toUpperCase());
+      if (isNumberedSection || isSummary) {
+        firstSectionSeen = true;
+      } else {
+        const looksLikeTitle =
+          /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\/\-\s]{4,}$/.test(trimmed) ||
+          /^#{1,3}\s/.test(line) ||
+          trimmed.toUpperCase().includes(upperTitle);
+        if (looksLikeTitle) {
+          i++;
+          continue;
+        }
+      }
     }
 
     // Empty lines
