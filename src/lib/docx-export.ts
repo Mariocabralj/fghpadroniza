@@ -1,15 +1,15 @@
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
   Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
-  PageBreak, LevelFormat, Footer, Header, PageNumber,
-  ImageRun, VerticalAlign, SectionType,
+  LevelFormat, Footer, Header, PageNumber,
+  ImageRun,
 } from "docx";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
 // Margins: 2.5cm top/bottom, 3cm left/right (1cm = 567 DXA)
-const MARGIN_TOP = 1418;
-const MARGIN_BOTTOM = 1418;
+const MARGIN_TOP = 2268;       // extra room for header (image + metadata table)
+const MARGIN_BOTTOM = 2400;    // larger footer area
 const MARGIN_LEFT = 1701;
 const MARGIN_RIGHT = 1701;
 const PAGE_WIDTH = 11906;
@@ -44,6 +44,7 @@ function buildTableFromRows(rows: string[][]): Table {
   const colWidth = Math.floor(CONTENT_WIDTH / numCols);
 
   return new Table({
+    alignment: AlignmentType.CENTER,
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
     columnWidths: Array(numCols).fill(colWidth),
     rows: rows.map((row, rowIdx) =>
@@ -82,22 +83,24 @@ async function loadHeaderImage(): Promise<Buffer | null> {
 }
 
 function createHeaderTable(title: string): Table {
-  const col1 = 4030;
-  const col2 = 4016;
-  const col3 = 1730;
-  const totalWidth = col1 + col2 + col3;
+  // Distribute header table across the full content width (no indent)
+  const col1 = Math.floor(CONTENT_WIDTH * 0.44);
+  const col2 = Math.floor(CONTENT_WIDTH * 0.36);
+  const col3 = CONTENT_WIDTH - col1 - col2;
 
   const cellProps = (w: number) => ({
     borders,
     width: { size: w, type: WidthType.DXA },
-    margins: { top: 20, bottom: 20, left: 60, right: 60 },
+    margins: { top: 40, bottom: 40, left: 80, right: 80 },
   });
 
   const smallRun = (text: string, bold = false) =>
     new TextRun({ text, font: "Arial", size: 20, bold });
 
   return new Table({
-    width: { size: totalWidth, type: WidthType.DXA },
+    alignment: AlignmentType.CENTER,
+    width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    indent: { size: 0, type: WidthType.DXA },
     columnWidths: [col1, col2, col3],
     rows: [
       // Row 1: Código | Emissão | Versão
@@ -123,7 +126,7 @@ function createHeaderTable(title: string): Table {
           }),
         ],
       }),
-      // Row 2: Título (merged visually across 3 cols)
+      // Row 2: Título (merged across 3 cols)
       new TableRow({
         children: [
           new TableCell({
@@ -167,42 +170,45 @@ function createFooterTable(): Table {
   const cellProps = (w: number) => ({
     borders,
     width: { size: w, type: WidthType.DXA },
-    margins: { top: 20, bottom: 20, left: 60, right: 60 },
+    margins: { top: 100, bottom: 100, left: 120, right: 120 },
   });
-  const tinyRun = (text: string) =>
-    new TextRun({ text, font: "Arial", size: 16 });
+  // Arial 11pt = size 22 (half-points)
+  const footerRun = (text: string, bold = false) =>
+    new TextRun({ text, font: "Arial", size: 22, bold });
 
   return new Table({
+    alignment: AlignmentType.CENTER,
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    indent: { size: 0, type: WidthType.DXA },
     columnWidths: [colW, colW, colW],
     rows: [
       new TableRow({
         children: [
           new TableCell({
             ...cellProps(colW),
-            children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [
-              tinyRun("Atualizado por: [A PREENCHER]"),
+            children: [new Paragraph({ spacing: { after: 0, line: 280 }, children: [
+              footerRun("Atualizado por: ", true), footerRun("[A PREENCHER]"),
             ] })],
           }),
           new TableCell({
             ...cellProps(colW),
-            children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [
-              tinyRun("Validado por: [A PREENCHER]"),
+            children: [new Paragraph({ spacing: { after: 0, line: 280 }, children: [
+              footerRun("Validado por: ", true), footerRun("[A PREENCHER]"),
             ] })],
           }),
           new TableCell({
             ...cellProps(colW),
-            children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [
-              tinyRun("Aprovado por: [A PREENCHER]"),
+            children: [new Paragraph({ spacing: { after: 0, line: 280 }, children: [
+              footerRun("Aprovado por: ", true), footerRun("[A PREENCHER]"),
             ] })],
           }),
         ],
       }),
       new TableRow({
         children: [
-          new TableCell({ ...cellProps(colW), children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [tinyRun("Data: XX/XX/XXXX")] })] }),
-          new TableCell({ ...cellProps(colW), children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [tinyRun("Data: XX/XX/XXXX")] })] }),
-          new TableCell({ ...cellProps(colW), children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [tinyRun("Data: XX/XX/XXXX")] })] }),
+          new TableCell({ ...cellProps(colW), children: [new Paragraph({ spacing: { after: 0, line: 280 }, children: [footerRun("Data: ", true), footerRun("XX/XX/XXXX")] })] }),
+          new TableCell({ ...cellProps(colW), children: [new Paragraph({ spacing: { after: 0, line: 280 }, children: [footerRun("Data: ", true), footerRun("XX/XX/XXXX")] })] }),
+          new TableCell({ ...cellProps(colW), children: [new Paragraph({ spacing: { after: 0, line: 280 }, children: [footerRun("Data: ", true), footerRun("XX/XX/XXXX")] })] }),
         ],
       }),
     ],
@@ -215,17 +221,21 @@ function createHeader(title: string, headerImage: Buffer | null): Header {
   if (headerImage) {
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
+      indent: { left: 0, right: 0 },
+      spacing: { before: 0, after: 120 },
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 580, height: 59 },
+        transformation: { width: 520, height: 70 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header-logo" },
       })],
     }));
   }
 
   children.push(createHeaderTable(title));
+
+  // Small spacer paragraph after the header table
+  children.push(new Paragraph({ spacing: { before: 0, after: 0 }, children: [] }));
 
   return new Header({ children });
 }
@@ -236,31 +246,47 @@ function createFooter(): Footer {
       createFooterTable(),
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 60 },
+        spacing: { before: 160, after: 0 },
         children: [
-          new TextRun({ text: "Página ", font: "Arial", size: 16 }),
-          new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 16 }),
+          new TextRun({ text: "Página ", font: "Arial", size: 22 }),
+          new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 22 }),
+          new TextRun({ text: " de ", font: "Arial", size: 22 }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Arial", size: 22 }),
         ],
       }),
     ],
   });
 }
 
-function parseContentLines(lines: string[]): (Paragraph | Table)[] {
+function parseContentLines(lines: string[], title: string): (Paragraph | Table)[] {
   const children: (Paragraph | Table)[] = [];
+  const upperTitle = title.trim().toUpperCase();
   let i = 0;
 
   while (i < lines.length) {
     const line = lines[i];
+    const trimmed = line.trim();
 
     // Skip metadata lines (now in header)
-    if (line.match(/^(Codificação|Código|Emissão|Versão|Título|Elaboração|Aprovação|Revisão|Setor):/i)) {
+    if (trimmed.match(/^(Codificação|Código|Emissão|Versão|Título|Elaboração|Aprovação|Revisão|Setor):/i)) {
+      i++;
+      continue;
+    }
+
+    // Skip page break markers (no cover anymore — render as a single flow)
+    if (trimmed === "---QUEBRA_DE_PAGINA---") {
+      i++;
+      continue;
+    }
+
+    // Skip duplicated title lines from the body (title now lives only in header)
+    if (trimmed && trimmed.toUpperCase() === upperTitle) {
       i++;
       continue;
     }
 
     // Empty lines
-    if (!line.trim()) {
+    if (!trimmed) {
       children.push(new Paragraph({ spacing: { before: 60, after: 60 }, children: [] }));
       i++;
       continue;
@@ -291,12 +317,12 @@ function parseContentLines(lines: string[]): (Paragraph | Table)[] {
     }
 
     // SUMÁRIO heading
-    if (line.trim().toUpperCase() === "SUMÁRIO" || line.trim().toUpperCase() === "ÍNDICE") {
+    if (trimmed.toUpperCase() === "SUMÁRIO" || trimmed.toUpperCase() === "ÍNDICE") {
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { before: 300, after: 200 },
-        children: [new TextRun({ text: line.trim().toUpperCase(), bold: true, font: "Arial", size: 28 })],
+        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Arial", size: 28 })],
       }));
       i++;
       continue;
@@ -364,16 +390,6 @@ export async function exportDocx(title: string, standardizedText: string): Promi
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
-  // Split by page break markers
-  const pages: string[][] = [[]];
-  for (const line of allLines) {
-    if (line.trim() === "---QUEBRA_DE_PAGINA---") {
-      pages.push([]);
-    } else {
-      pages[pages.length - 1].push(line);
-    }
-  }
-
   const headerImage = await loadHeaderImage();
   const header = createHeader(title, headerImage);
   const footer = createFooter();
@@ -381,8 +397,9 @@ export async function exportDocx(title: string, standardizedText: string): Promi
   const pageProps = {
     page: {
       size: { width: PAGE_WIDTH, height: PAGE_HEIGHT },
-      margin: { top: 2268, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT }, // Extra top margin for header
+      margin: { top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT },
     },
+    titlePage: false, // ensure header/footer are identical on the first page
   };
 
   const numbering = {
@@ -398,105 +415,15 @@ export async function exportDocx(title: string, standardizedText: string): Promi
     }],
   };
 
-  // SECTION 1: Cover page - vertically centered title
-  const coverSection = {
-    properties: {
-      ...pageProps,
-      verticalAlign: VerticalAlign.CENTER,
-    },
-    headers: { default: header },
-    footers: { default: footer },
-    children: [
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 200 },
-        children: [new TextRun({
-          text: "DOCUMENTO OFICIAL",
-          bold: true,
-          font: "Arial",
-          size: 20,
-          color: "00377B",
-        })],
-      }),
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 200, after: 0 },
-        children: [new TextRun({
-          text: "Versão vigente para uso institucional",
-          font: "Arial",
-          size: 18,
-          italics: true,
-          color: "666666",
-        })],
-      }),
-      new Paragraph({ spacing: { before: 600 }, children: [] }),
-      new Paragraph({
-        heading: HeadingLevel.HEADING_1,
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 400, after: 400 },
-        children: [new TextRun({
-          text: title.toUpperCase(),
-          bold: true,
-          font: "Arial",
-          size: 28,
-        })],
-      }),
-    ],
-  };
+  // No cover. Document starts directly on "1. APRESENTAÇÃO".
+  const bodyChildren = parseContentLines(allLines, title);
 
-  // SECTION 2+: Content pages
-  const contentSections: any[] = [];
-
-  // If pages were split by page break markers, process each
-  // Skip first page content if it's just the title (already on cover)
-  let startPage = 0;
-  if (pages.length > 1) {
-    // First page content was the cover, skip metadata lines
-    const firstPageClean = pages[0].filter(l => 
-      !l.match(/^(Codificação|Código|Emissão|Versão|Título|Elaboração|Aprovação|Revisão|Setor):/i) &&
-      l.trim() !== title.toUpperCase() &&
-      l.trim().length > 0
-    );
-    if (firstPageClean.length === 0) {
-      startPage = 1; // Skip empty cover page content
-    }
-  }
-
-  for (let pageIdx = startPage; pageIdx < pages.length; pageIdx++) {
-    const pageLines = pages[pageIdx];
-    // Filter out cover title duplicates
-    const filteredLines = pageLines.filter(l => {
-      const trimmed = l.trim();
-      if (pageIdx === 0 && trimmed === title.toUpperCase()) return false;
-      return true;
-    });
-
-    const children = parseContentLines(filteredLines);
-    if (children.length === 0) continue;
-
-    contentSections.push({
-      properties: {
-        ...pageProps,
-        ...(pageIdx === startPage ? { type: SectionType.NEXT_PAGE } : {}),
-      },
-      headers: { default: header },
-      footers: { default: footer },
-      children,
-    });
-  }
-
-  // If no content sections, add a minimal one
-  if (contentSections.length === 0) {
-    const children = parseContentLines(allLines);
-    contentSections.push({
-      properties: pageProps,
-      headers: { default: header },
-      footers: { default: footer },
-      children: children.length > 0 ? children : [
-        new Paragraph({ children: [new TextRun({ text: standardizedText, font: "Arial", size: 22 })] }),
-      ],
-    });
-  }
+  const sectionChildren = bodyChildren.length > 0 ? bodyChildren : [
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      children: [new TextRun({ text: standardizedText, font: "Arial", size: 22 })],
+    }),
+  ];
 
   const doc = new Document({
     styles: {
@@ -517,7 +444,12 @@ export async function exportDocx(title: string, standardizedText: string): Promi
       ],
     },
     numbering,
-    sections: [coverSection, ...contentSections],
+    sections: [{
+      properties: pageProps,
+      headers: { default: header },
+      footers: { default: footer },
+      children: sectionChildren,
+    }],
   });
 
   return Packer.toBlob(doc);
