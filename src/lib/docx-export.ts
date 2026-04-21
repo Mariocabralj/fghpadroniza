@@ -72,12 +72,12 @@ function buildTableFromRows(rows: string[][]): Table {
   });
 }
 
-async function loadHeaderImage(): Promise<Buffer | null> {
+async function loadHeaderImage(): Promise<Uint8Array | null> {
   try {
-    const response = await fetch("/templates/header_logo.png");
+    const response = await fetch(headerLogoUrl);
     if (!response.ok) return null;
     const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    return new Uint8Array(arrayBuffer);
   } catch {
     return null;
   }
