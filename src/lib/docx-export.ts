@@ -4,6 +4,7 @@ import {
   LevelFormat, Footer, Header, PageNumber,
   ImageRun,
 } from "docx";
+import headerLogoUrl from "@/assets/header_logo.png";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -71,12 +72,12 @@ function buildTableFromRows(rows: string[][]): Table {
   });
 }
 
-async function loadHeaderImage(): Promise<Buffer | null> {
+async function loadHeaderImage(): Promise<Uint8Array | null> {
   try {
-    const response = await fetch("/templates/header_logo.png");
+    const response = await fetch(headerLogoUrl);
     if (!response.ok) return null;
     const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    return new Uint8Array(arrayBuffer);
   } catch {
     return null;
   }
@@ -215,7 +216,7 @@ function createFooterTable(): Table {
   });
 }
 
-function createHeader(title: string, headerImage: Buffer | null): Header {
+function createHeader(title: string, headerImage: Uint8Array | null): Header {
   const children: (Paragraph | Table)[] = [];
 
   if (headerImage) {
@@ -226,7 +227,7 @@ function createHeader(title: string, headerImage: Buffer | null): Header {
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 520, height: 70 },
+        transformation: { width: 150, height: 19 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header-logo" },
       })],
     }));
@@ -262,6 +263,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
   const children: (Paragraph | Table)[] = [];
   const upperTitle = title.trim().toUpperCase();
   let i = 0;
+  let firstSectionSeen = false;
 
   while (i < lines.length) {
     const line = lines[i];
@@ -283,6 +285,26 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
     if (trimmed && trimmed.toUpperCase() === upperTitle) {
       i++;
       continue;
+    }
+
+    // Before the first numbered section (e.g. "1. APRESENTAÇÃO"),
+    // skip any standalone heading-like lines that the AI may have emitted
+    // as a body title (all caps without numbering, or starting with #).
+    if (!firstSectionSeen && trimmed) {
+      const isNumberedSection = /^\d+\.?\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ\/ ]{3,}/.test(line);
+      const isSummary = ["SUMÁRIO", "ÍNDICE"].includes(trimmed.toUpperCase());
+      if (isNumberedSection || isSummary) {
+        firstSectionSeen = true;
+      } else {
+        const looksLikeTitle =
+          /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\/\-\s]{4,}$/.test(trimmed) ||
+          /^#{1,3}\s/.test(line) ||
+          trimmed.toUpperCase().includes(upperTitle);
+        if (looksLikeTitle) {
+          i++;
+          continue;
+        }
+      }
     }
 
     // Empty lines
