@@ -216,7 +216,7 @@ function createFooterTable(): Table {
   });
 }
 
-function createHeader(title: string, headerImage: Buffer | null): Header {
+function createHeader(title: string, headerImage: Uint8Array | null): Header {
   const children: (Paragraph | Table)[] = [];
 
   if (headerImage) {
@@ -227,7 +227,7 @@ function createHeader(title: string, headerImage: Buffer | null): Header {
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 520, height: 70 },
+        transformation: { width: 150, height: 19 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header-logo" },
       })],
     }));
