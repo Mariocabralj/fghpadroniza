@@ -4,6 +4,7 @@ import {
   LevelFormat, Footer, Header, PageNumber,
   ImageRun,
 } from "docx";
+import headerLogoUrl from "@/assets/header_logo.png";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
