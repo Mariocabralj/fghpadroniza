@@ -6,186 +6,217 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// =============================================================================
+// NÍVEL ESPECÍFICO — Estrutura exata extraída dos modelos da Biblioteca FGH
+// (public/templates/MODELO_*.docx). Cada bloco reflete o layout oficial do
+// arquivo correspondente. A IA deve seguir rigorosamente essas seções.
+// =============================================================================
 const TEMPLATE_SECTIONS: Record<string, string> = {
-  "POP/PRS": `SUMÁRIO (com hiperlinks)
+  "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+SUMÁRIO (com hiperlinks)
+1. APRESENTAÇÃO — introdução sobre o tema
+2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
+3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+4. COMPETÊNCIAS — atuações de cada profissional envolvido
+5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+6. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 6.1, 6.2, 6.1.1...
+7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais (ANVISA, OMS, MS, ONA, etc.)
+10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+
+  "Protocolo Clínico": `Estrutura oficial (MODELO_PROTOCOLO_CLINICO.docx) — 12 seções numeradas:
+SUMÁRIO (com hiperlinks)
+1. APRESENTAÇÃO — introdução sobre o tema clínico
+2. OBJETIVOS — finalidade do protocolo
+3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+4. CRITÉRIOS DE INCLUSÃO/EXCLUSÃO — pacientes/condições em que se aplica ou não
+5. COMPETÊNCIAS — atuações de cada profissional
+6. FLUXOGRAMAS — descrição textual do fluxo clínico
+7. DISPOSIÇÕES GERAIS — conduta clínica detalhada com subitens 7.1, 7.2...
+8. RESULTADOS ESPERADOS — indicadores com metas definidas (um indicador por resultado)
+9. INFORMAÇÕES ADICIONAIS
+10. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+11. REFERÊNCIA BIBLIOGRÁFICA
+12. ANEXOS`,
+
+  "Manual": `Estrutura oficial (MODELO_MANUAL.docx) — 7 seções numeradas:
+1. OBJETIVOS — finalidade do manual
+2. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+3. SIGLÁRIO — alinhamento de linguagem, definição de termos e abreviações
+4. COMPETÊNCIA — papel e responsabilidades dos envolvidos
+5. DISPOSIÇÕES GERAIS — itens detalhados do manual em questão (com subitens)
+6. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+7. REFERÊNCIA BIBLIOGRÁFICA`,
+
+  "Plano": `Estrutura oficial (MODELO_PLANO.docx) — 7 seções numeradas:
+SUMÁRIO (com hiperlinks)
+1. OBJETIVO — critérios e diretrizes do plano
+2. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+3. RESPONSABILIDADES — listar por papel/cargo
+4. PROCEDIMENTOS/ATIVIDADES — detalhados com subitens 4.1, 4.2, 4.1.1...
+   (incluir Material Necessário e Definições quando aplicável dentro deste bloco)
+5. GESTÃO DE RISCOS — riscos identificados e medidas de mitigação
+6. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+7. REFERÊNCIA BIBLIOGRÁFICA`,
+
+  "Política Interna": `Estrutura oficial (MODELO_POLITICA_INTERNA.docx) — 7 seções numeradas:
+1. APRESENTAÇÃO — conceito e introdução do assunto da política
+2. OBJETIVO — finalidade da política
+3. SIGLÁRIO — alinhamento de linguagem, termos e abreviações
+4. DISPOSIÇÕES GERAIS — detalhamento do processo
+5. INFORMAÇÕES ADICIONAIS — informações complementares
+6. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+7. REFERÊNCIAS`,
+
+  "Regimento Interno": `Estrutura oficial (MODELO_REGIMENTO_INTERNO.docx) — Capítulos romanos:
+ÍNDICE
+CAPÍTULO I - DA NATUREZA E COMPETÊNCIAS — finalidade, definições e termos técnicos
+CAPÍTULO II - DA COMPOSIÇÃO — membros da comissão e hierarquização
+CAPÍTULO III - DAS ATRIBUIÇÕES — competência, papéis e responsabilidades de cada membro
+CAPÍTULO IV - DO FUNCIONAMENTO — regras e políticas de funcionamento da comissão
+CAPÍTULO V - ACOMPANHAMENTO DE RESULTADO — resultados/entregas periódicas, indicadores
+CAPÍTULO VI - ANEXOS — documentos anexos (ato constitutivo, cronograma anual, atas...)
+CAPÍTULO VII - REFERÊNCIAS — legislações aplicáveis à comissão
+HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)`,
+
+  "Fluxograma": `Estrutura oficial (MODELO_FLUXOGRAMA.docx) — fluxo descrito textualmente:
 1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. COMPETÊNCIA
+2. OBJETIVO — finalidade do fluxo
+3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+4. COMPETÊNCIA — responsáveis pelo processo
 5. SIGLÁRIO
-6. FLUXOGRAMA (se aplicável)
-7. DISPOSIÇÕES GERAIS (etapas detalhadas com subitens numerados)
-8. INFORMAÇÕES ADICIONAIS
-9. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-10. REFERÊNCIAS BIBLIOGRÁFICAS
-11. ANEXOS`,
-
-  "Protocolo Clínico": `SUMÁRIO (com hiperlinks)
-1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. CRITÉRIOS DE INCLUSÃO/EXCLUSÃO
-5. COMPETÊNCIA
-6. SIGLÁRIO
-7. FLUXOGRAMA
-8. DISPOSIÇÕES GERAIS (conduta clínica detalhada)
-9. RESULTADOS ESPERADOS (indicadores com metas)
-10. INFORMAÇÕES ADICIONAIS
-11. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-12. REFERÊNCIAS BIBLIOGRÁFICAS
-13. ANEXOS`,
-
-  "Manual": `SUMÁRIO (com hiperlinks)
-1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. SIGLÁRIO
-5. COMPETÊNCIA
-6. DISPOSIÇÕES GERAIS (itens detalhados do manual)
-7. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-8. REFERÊNCIAS BIBLIOGRÁFICAS`,
-
-  "Plano": `SUMÁRIO (com hiperlinks)
-1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. MATERIAL NECESSÁRIO
-5. RESPONSABILIDADES
-6. DEFINIÇÕES
-7. PROCEDIMENTOS/ATIVIDADES (detalhados com subitens)
-8. GESTÃO DE RISCOS
-9. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-10. REFERÊNCIAS BIBLIOGRÁFICAS`,
-
-  "Política Interna": `SUMÁRIO (com hiperlinks)
-1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. SIGLÁRIO
-5. DISPOSIÇÕES GERAIS (detalhamento da política)
-6. INFORMAÇÕES ADICIONAIS
-7. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-8. REFERÊNCIAS BIBLIOGRÁFICAS`,
-
-  "Regimento Interno": `ÍNDICE
-CAPÍTULO I - DA NATUREZA E COMPETÊNCIAS
-CAPÍTULO II - DA COMPOSIÇÃO
-CAPÍTULO III - DAS ATRIBUIÇÕES
-CAPÍTULO IV - DO FUNCIONAMENTO
-CAPÍTULO V - ACOMPANHAMENTO DE RESULTADO
-CAPÍTULO VI - ANEXOS
-CAPÍTULO VII - REFERÊNCIAS
-ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)`,
-
-  "Fluxograma": `SUMÁRIO (com hiperlinks)
-1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. COMPETÊNCIA
-5. SIGLÁRIO
-6. FLUXOGRAMA (descrição textual detalhada de cada etapa, com pontos de decisão SIM/NÃO e responsáveis)
+6. FLUXOGRAMA — descrição textual passo a passo, com pontos de decisão SIM/NÃO,
+   responsável de cada etapa e conexões entre as etapas
 7. DISPOSIÇÕES GERAIS
-8. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
+8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
 9. REFERÊNCIAS BIBLIOGRÁFICAS`,
 
-  "Carta de Anuência": `SUMÁRIO (com hiperlinks)
-1. OBJETIVO
-2. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-3. SIGLÁRIO
-4. COMPETÊNCIA
-5. DISPOSIÇÕES GERAIS (texto da carta com campos para preenchimento)
-6. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-7. REFERÊNCIAS BIBLIOGRÁFICAS`,
+  "Carta de Anuência": `Estrutura oficial (MODELO_CARTA_ANUENCIA.docx):
+1. OBJETIVOS — finalidade da carta de anuência (citando Resolução 466/2012 ou 510/2016)
+2. ABRANGÊNCIA — pesquisadores externos/internos, alunos, profissionais
+3. SIGLÁRIO — FGH, CEP e outras siglas pertinentes
+4. COMPETÊNCIA — Diretor e Coordenador do setor
+5. DISPOSIÇÕES GERAIS — corpo da carta com TÍTULO "CARTA DE ANUÊNCIA DO RESPONSÁVEL PELO SETOR"
+   contendo campos para preenchimento entre colchetes [nome do setor], [título do projeto],
+   [pesquisador responsável], [equipe], [objetivo], [Resolução 466/12 ou 510/16],
+   declaração de sigilo e cláusula de retirada
+6. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+7. REFERÊNCIA BIBLIOGRÁFICA`,
 
-  "Ata de Reunião": `ATA DE REUNIÃO
-Principal Pauta
-Setor/Comissão, Data, Hora
-PAUTA (itens numerados)
-PENDÊNCIAS DA REUNIÃO ANTERIOR (tabela: DESCRIÇÃO | RESPONSÁVEL | PRAZO | STATUS)
-ASSUNTOS ABORDADOS (itens numerados)
-DELIBERAÇÕES (tabela: DESCRIÇÃO | RESPONSÁVEL | PRAZO | STATUS)
+  "Ata de Reunião": `Estrutura oficial (MODELO_ATA_REUNIAO):
+ATA DE REUNIÃO
+Principal Pauta: [...]
+Setor/Comissão: [...]   Data: [...]   Hora: [...]
+PAUTA — itens numerados
+PENDÊNCIAS DA REUNIÃO ANTERIOR — tabela: DESCRIÇÃO | RESPONSÁVEL | PRAZO | STATUS
+ASSUNTOS ABORDADOS — itens numerados
+DELIBERAÇÕES — tabela: DESCRIÇÃO | RESPONSÁVEL | PRAZO | STATUS
 JUSTIFICATIVA DE FALTAS
-PARTICIPANTES (tabela: Nome | Instituição/Matrícula | Setor/Cargo | Assinatura)
-ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)`,
+PARTICIPANTES — tabela: NOME | INSTITUIÇÃO/MATRÍCULA | SETOR/CARGO | ASSINATURA
+HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)`,
 
-  "Panfleto": `Formato visual e informativo:
-- Título chamativo
-- Informações resumidas em tópicos
-- Linguagem acessível ao público
-- Dados de contato e identificação FGH`,
+  "Panfleto": `Estrutura oficial (MODELO_PANFLETO.docx) — folder institucional:
+TÍTULO DO FOLDER (chamativo)
+Subsessões (3 a 6 blocos), cada uma contendo:
+- Título da subsessão
+- 3 a 5 bullets curtos com orientações práticas e linguagem acessível ao público
+Informações Institucionais — identificação FGH/HPS, contato
+Observação: panfleto NÃO leva tabela de Histórico de Revisões.`,
 
-  "Portaria": `SUMÁRIO (com hiperlinks)
-1. APRESENTAÇÃO
-2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
-4. COMPETÊNCIA
-5. DELIBERAÇÕES (artigos numerados)
-6. DISPOSIÇÕES FINAIS
-7. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
-8. REFERÊNCIAS BIBLIOGRÁFICAS`,
+  "Portaria": `Estrutura oficial (MODELO_PORTARIA.docx) — minimalista:
+1. DELIBERAÇÕES — artigos numerados (Art. 1º, Art. 2º...) com a determinação institucional
+2. PARTICIPANTES — listar membros executores (nome, cargo, setor)
+HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)`,
 
-  "Ementa de Treinamento": `DADOS DO TREINAMENTO:
+  "Ementa de Treinamento": `Estrutura oficial (MODELO_EMENTA):
+DADOS DO TREINAMENTO:
 - Tema, Instrutor, Carga Horária, Data
 - Público-alvo
-- Objetivo
-- Metodologia
-- Conteúdo Programático
-- Avaliação
+- Descrição do Treinamento
+- Objetivos Principais
+- Conteúdo Programático (em tópicos)
+- Metodologia de Ensino
+- Metodologia de Avaliação
+- Resultados Esperados
+- Setor Responsável
 - Certificação`,
 
-  "Papel Timbrado": `Modelo de papel timbrado institucional FGH com:
-- Cabeçalho com identificação da unidade
-- Área para conteúdo
-- Rodapé institucional`,
+  "Papel Timbrado": `Estrutura oficial (MODELO_PAPEL_TIMBRADO.docx) — corpo livre institucional.
+Use o título descrito pelo usuário como cabeçalho do conteúdo (ex.: "ATA DE OITIVA – APURAÇÃO INTERNA")
+e organize o corpo com seções numeradas curtas conforme o tema (Identificação, Descrição do Fato,
+Relato, Considerações Finais, Assinaturas). Inclua local, data e linhas de assinatura ao final.
+Observação: papel timbrado NÃO leva tabela de Histórico de Revisões.`,
 
-  "Norma Zero": `SUMÁRIO (com hiperlinks)
+  "Norma Zero": `Estrutura oficial (MODELO_NORMA_ZERO.docx) — 8 seções numeradas:
+SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO
 2. OBJETIVO
-3. ABRANGÊNCIA (Fixo: "Todas as áreas assistenciais e administrativas das unidades FGH")
+3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
 4. COMPETÊNCIA
 5. SIGLÁRIO
 6. DISPOSIÇÕES GERAIS E INFORMAÇÕES ADICIONAIS
-7. ALTERAÇÕES DE VERSÕES (tabela: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO)
+7. ALTERAÇÕES DE VERSÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
 8. REFERÊNCIAS BIBLIOGRÁFICAS`,
 };
 
-const SYSTEM_PROMPT = `Você é um Especialista em Processos Hospitalares da Fundação Gestão Hospitalar Martiniano Fernandes (FGH). Sua função é transformar rascunhos, textos brutos ou descrições de ideias em documentos padronizados conforme a NORM.QUAL-001 (Norma Zero FGH).
+// =============================================================================
+// NÍVEL GLOBAL — System Prompt da Norma Zero (NORM.QUAL-001)
+// Aplica-se a TODOS os documentos, independentemente do tipo selecionado.
+// =============================================================================
+const SYSTEM_PROMPT = `Você é um Especialista em Processos Hospitalares da Fundação Gestão Hospitalar Martiniano Fernandes (FGH). Sua função é transformar rascunhos, textos brutos ou descrições de ideias em documentos padronizados conforme uma HIERARQUIA DE DOIS NÍVEIS:
 
-REGRAS OBRIGATÓRIAS DE ESTRUTURA:
-1. CAPA: Sempre inicie com o título do documento em CAIXA ALTA, centralizado.
-2. Logo abaixo da capa inclua os metadados:
-   Codificação: [A PREENCHER PELA QUALIDADE]
-   Emissão: [data de hoje]
-   Versão: 01
-   Título: [título do documento em CAIXA ALTA]
-   Elaboração: Mario Cabral
-   Aprovação: [A PREENCHER]
-   Revisão: [data + 2 anos]
-3. Após os metadados, insira o SUMÁRIO com todos os títulos das seções numeradas.
-4. Depois do sumário, siga a estrutura do modelo selecionado.
+═══════════════════════════════════════════════════════════════════════
+NÍVEL 1 — GLOBAL (NORM.QUAL-001 / Norma Zero FGH)
+Aplica-se a TODO documento gerado, independentemente do tipo.
+═══════════════════════════════════════════════════════════════════════
+1. SEM CAPA. O conteúdo do corpo do documento começa diretamente na primeira seção numerada (ex.: "1. APRESENTAÇÃO" ou "CAPÍTULO I - ..."). NÃO inclua título do documento no corpo — o título já consta no cabeçalho gerado pelo sistema.
+2. NÃO repita os metadados (Codificação, Emissão, Versão, Título, Elaboração, Aprovação, Revisão) no corpo — esses dados são renderizados automaticamente no Header pelo motor de exportação.
+3. Linguagem técnica hospitalar, formal, objetiva e justificada.
+4. ABRANGÊNCIA, sempre que existir, deve ser EXATAMENTE: "Todas as áreas assistenciais e administrativas das unidades FGH".
+5. SEMPRE inclua REFERÊNCIAS BIBLIOGRÁFICAS reais (ANVISA, OMS, MS, ONA, CFM, COFEN, RDC, Resoluções, Portarias do MS, etc.) — nunca invente fontes.
+6. Seja DETALHISTA nos procedimentos/disposições — descreva passo a passo com subitens hierárquicos (6.1, 6.2, 6.1.1...).
 
-REGRAS OBRIGATÓRIAS DE CONTEÚDO:
-1. SEMPRE gere o documento COMPLETO, preenchendo TODOS os tópicos da estrutura.
-2. Use linguagem técnica hospitalar, formal, objetiva e JUSTIFICADA.
-3. Se o conteúdo do usuário não cobrir todos os tópicos, CRIE conteúdo adequado com base no contexto e boas práticas hospitalares.
-4. O item ABRANGÊNCIA deve ser SEMPRE: "Todas as áreas assistenciais e administrativas das unidades FGH".
-5. SEMPRE inclua o item ALTERAÇÕES DE VERSÕES como tabela com colunas: VERSÃO | DATA | CONTROLE DE ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO
-   - Primeira linha: 01 | [Data Atual] | Emissão Inicial | Mario Cabral | [A PREENCHER]
-6. SEMPRE inclua REFERÊNCIAS BIBLIOGRÁFICAS reais (ANVISA, OMS, MS, ONA, CFM, COFEN, etc.).
-7. Seja DETALHISTA nos procedimentos/disposições gerais - descreva passo a passo com subitens.
-8. Quando o tipo for Protocolo Clínico, inclua critérios de inclusão/exclusão, fluxograma e resultados esperados.
-9. Quando o tipo for POP/PRS, inclua fluxograma se aplicável e informações adicionais.
+REGRA TABELA — HISTÓRICO DE REVISÕES (OBRIGATÓRIA em quase todos os tipos):
+Use SEMPRE este formato exato, com 5 colunas:
+| HISTÓRICO DE REVISÕES |
+| VERSÃO | DATA DA REVISÃO | CONTROLE DAS ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO |
+| 01 | [Data Atual] | Emissão Inicial | Mario Cabral | [A PREENCHER] |
 
-REGRAS OBRIGATÓRIAS DE FORMATAÇÃO (para interpretação do frontend):
-1. Títulos de seção devem ser NUMERADOS e em CAIXA ALTA (ex: "1. APRESENTAÇÃO", "2. OBJETIVO").
-2. NÃO use marcações Markdown (**, ##, etc.). Use texto puro.
-3. Use bullets com "•" para listas.
-4. Subitens com numeração decimal (6.1, 6.2, 6.1.1, etc.).
-5. Tabelas em formato de texto com "|" como separador de colunas.
-6. Separe a CAPA e o SUMÁRIO do corpo com uma linha "---QUEBRA_DE_PAGINA---".
+Exceções (NÃO incluir tabela de Histórico de Revisões):
+- Panfleto
+- Papel Timbrado
 
-REGRA PARA UPLOAD/CORREÇÃO:
-Ao receber um rascunho para padronização, identifique os tópicos correspondentes e transponha-os para o modelo da Norma Zero. Se faltar algum tópico obrigatório (Siglário, Histórico de Revisões, etc.), gere o campo com o marcador "[A PREENCHER PELA UNIDADE]". A codificação deve ser sempre "[A PREENCHER PELA QUALIDADE]".`;
+═══════════════════════════════════════════════════════════════════════
+NÍVEL 2 — ESPECÍFICO (Biblioteca de Modelos)
+Cada tipo de documento tem uma estrutura própria, extraída do arquivo
+oficial da biblioteca FGH. Siga RIGOROSAMENTE a estrutura informada
+no prompt do usuário (campo "ESTRUTURA OBRIGATÓRIA").
+═══════════════════════════════════════════════════════════════════════
+- Respeite a numeração exata, a ordem das seções e os títulos em CAIXA ALTA do modelo.
+- Para Regimento Interno, use "CAPÍTULO I - ...", "CAPÍTULO II - ...", em algarismos romanos.
+- Se o modelo pede subitens (ex.: 6.1, 6.2), use-os.
+- Se o usuário enviar um rascunho desorganizado, MAPEIE/TRANSPONHA cada parágrafo para a seção correta do modelo. Não descarte conteúdo relevante.
+
+═══════════════════════════════════════════════════════════════════════
+INTELIGÊNCIA DE MAPEAMENTO (rascunhos do usuário)
+═══════════════════════════════════════════════════════════════════════
+- Cruze o conteúdo enviado com as seções obrigatórias do modelo selecionado.
+- Quando uma seção obrigatória não tiver conteúdo no rascunho, GERE conteúdo adequado com base em boas práticas hospitalares e no contexto fornecido.
+- Quando faltar dado factual indispensável (responsáveis, datas específicas, indicadores), insira o marcador "[A PREENCHER PELA UNIDADE]" para a unidade complementar.
+- A codificação do documento é sempre "[A PREENCHER PELA QUALIDADE]" (já vai no header).
+
+═══════════════════════════════════════════════════════════════════════
+REGRAS DE FORMATAÇÃO (interpretadas pelo frontend → DOCX)
+═══════════════════════════════════════════════════════════════════════
+1. Títulos de seção NUMERADOS em CAIXA ALTA, em linha própria (ex.: "1. APRESENTAÇÃO").
+2. Subitens com numeração decimal própria em linha (ex.: "6.1 Identificação").
+3. NÃO use marcações Markdown (sem **, sem ##, sem ---). Texto puro.
+4. Bullets com "- " ou "• ".
+5. Tabelas em texto, com "|" como separador de colunas; sempre inclua a linha de cabeçalho da tabela.
+6. NÃO escreva o título do documento (capa) no corpo. NÃO escreva "SUMÁRIO" se o tipo for Panfleto, Papel Timbrado ou Portaria.
+7. NÃO insira a linha "---QUEBRA_DE_PAGINA---".
+`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -211,9 +242,9 @@ serve(async (req) => {
 
     let userPrompt = "";
     if (mode === "upload") {
-      userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO e padronizado conforme a Norma Zero FGH.
+      userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
 
-REGRA ESPECIAL DE UPLOAD: Identifique os tópicos correspondentes no texto original e transponha-os para o modelo da Norma Zero. Se faltar algum tópico obrigatório (como Siglário, Histórico de Revisões, Abrangência, etc.), aponte a falta gerando o campo com "[A PREENCHER PELA UNIDADE]". A codificação deve ser "[A PREENCHER PELA QUALIDADE]".
+REGRA ESPECIAL DE UPLOAD: Faça o MAPEAMENTO INTELIGENTE — identifique cada parágrafo/seção do texto original e transponha para a seção correspondente da ESTRUTURA OBRIGATÓRIA abaixo. Se faltar conteúdo para uma seção obrigatória, gere conteúdo adequado com base no contexto e em boas práticas hospitalares. Se faltar dado factual da unidade, insira "[A PREENCHER PELA UNIDADE]". A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}
@@ -222,12 +253,12 @@ Tipo de documento: ${docType}
 CONTEÚDO DO ARQUIVO:
 ${content}
 
-ESTRUTURA OBRIGATÓRIA PARA ${docType}:
+ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
 
-Gere o documento completo padronizado com todas as seções.`;
+Gere o documento completo padronizado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
     } else if (mode === "paste") {
-      userPrompt = `O gestor colou o seguinte texto para ser transformado em documento padronizado FGH:
+      userPrompt = `O gestor colou o seguinte texto para ser transformado em documento padronizado FGH, seguindo a hierarquia: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}
@@ -236,12 +267,12 @@ Tipo de documento: ${docType}
 TEXTO COLADO:
 ${content}
 
-ESTRUTURA OBRIGATÓRIA PARA ${docType}:
+ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
 
-Analise o texto, extraia as informações relevantes e gere o documento completo padronizado.`;
+Faça o MAPEAMENTO INTELIGENTE do texto colado para as seções da estrutura. Preencha as seções faltantes com conteúdo profissional e detalhado. Comece DIRETAMENTE pela primeira seção numerada.`;
     } else {
-      userPrompt = `O gestor descreveu uma ideia para criação de um novo documento:
+      userPrompt = `O gestor descreveu uma ideia para criação de um novo documento, seguindo a hierarquia FGH: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}
@@ -250,10 +281,10 @@ Tipo de documento: ${docType}
 DESCRIÇÃO DA IDEIA:
 ${content}
 
-ESTRUTURA OBRIGATÓRIA PARA ${docType}:
+ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
 
-Crie o documento COMPLETO padronizado, preenchendo TODOS os tópicos com conteúdo profissional e detalhado.`;
+Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteúdo profissional, técnico e detalhado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
     }
 
     const response = await fetch(
