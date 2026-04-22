@@ -1,0 +1,31 @@
+---
+name: Hierarquia FGH (Norma Zero + Biblioteca de Modelos)
+description: Hierarquia de dois níveis aplicada à geração de documentos — Global (Norma Zero) + Específico (modelo da biblioteca)
+type: feature
+---
+A geração de documentos segue uma hierarquia de DOIS NÍVEIS, definida no edge function `process-document`:
+
+## Nível 1 — Global (NORM.QUAL-001 / Norma Zero)
+Aplica-se a TODO documento exportado, independentemente do tipo:
+- SEM CAPA. O corpo começa direto na primeira seção numerada (1. APRESENTAÇÃO ou CAPÍTULO I).
+- O título do documento aparece apenas no Header (não repetir no corpo).
+- Metadados (Codificação, Emissão, Versão, Título, Elaboração, Aprovação, Revisão) ficam no Header — não repetir no corpo.
+- Footer com nome da unidade + "Página X de Y".
+- Fonte Arial 12 corpo / 14 negrito títulos. Margens 2,5cm sup/inf e 3cm esq/dir. Espaçamento 1.5. Texto justificado.
+- ABRANGÊNCIA fixa: "Todas as áreas assistenciais e administrativas das unidades FGH".
+- Referências bibliográficas reais (ANVISA, OMS, MS, ONA, CFM, COFEN, RDCs).
+
+## Nível 2 — Específico (Biblioteca de Modelos)
+Cada tipo de documento segue rigorosamente a estrutura do arquivo oficial em `public/templates/MODELO_*.docx`. As estruturas exatas (numeração, títulos em CAIXA ALTA, capítulos romanos para Regimento) estão codificadas em `TEMPLATE_SECTIONS` no edge function.
+
+Tipos suportados: POP/PRS, Protocolo Clínico (apenas via biblioteca, não no menu de Novo Documento), Manual, Plano, Política Interna, Regimento Interno, Fluxograma, Carta de Anuência, Ata de Reunião, Panfleto, Portaria, Ementa de Treinamento, Papel Timbrado, Norma Zero.
+
+## Tabela HISTÓRICO DE REVISÕES (obrigatória)
+Layout fixo de 5 colunas extraído dos modelos oficiais:
+`VERSÃO | DATA DA REVISÃO | CONTROLE DAS ALTERAÇÕES | ELABORAÇÃO | APROVAÇÃO`
+Primeira linha sempre: `01 | [Data Atual] | Emissão Inicial | Mario Cabral | [A PREENCHER]`.
+
+Exceções (sem tabela de histórico): Panfleto e Papel Timbrado.
+
+## Inteligência de Mapeamento
+Quando o usuário envia rascunho (upload/paste), a IA cruza cada parágrafo com as seções do modelo selecionado e transpõe para a posição correta. Seções sem conteúdo recebem geração baseada em boas práticas; dados factuais ausentes recebem placeholder `[A PREENCHER PELA UNIDADE]`. A codificação é sempre `[A PREENCHER PELA QUALIDADE]`.
