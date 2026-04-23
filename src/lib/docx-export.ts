@@ -235,23 +235,21 @@ function createHeader(
 ): Header {
   const children: (Paragraph | Table)[] = [];
 
-  // Institutional blue stripe — anchored, behind document, page-relative.
-  // Acts as a full-page background watermark on every page.
+  // Institutional blue stripe — anchored, behind document.
+  // Horizontal anchor: COLUMN with offset 0 (encosta na borda esquerda da área útil).
+  // behindDocument:true + zIndex base garante tarja atrás de tabelas e textos.
   if (tarjaImage) {
     children.push(new Paragraph({
       spacing: { before: 0, after: 0 },
       children: [new ImageRun({
         type: "jpg",
         data: tarjaImage,
-        // docx-js uses pixels (9525 EMU/px). Values match Norma Zero spec:
-        // extent 7554246 x 10684621 EMU  → 793 x 1122 px
-        // offsetX -717605 EMU            → -75 px
-        // offsetY -160048 EMU            → -17 px
+        // Norma Zero: extent 7554246 x 10684621 EMU → 793 x 1122 px
         transformation: { width: 793, height: 1122 },
         floating: {
           horizontalPosition: {
-            relative: HorizontalPositionRelativeFrom.PAGE,
-            offset: -717605,
+            relative: HorizontalPositionRelativeFrom.COLUMN,
+            offset: 0,
           },
           verticalPosition: {
             relative: VerticalPositionRelativeFrom.PAGE,
@@ -260,13 +258,16 @@ function createHeader(
           behindDocument: true,
           wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
           allowOverlap: true,
+          zIndex: 251659264,
         },
-        altText: { title: "Tarja Azul FGH", description: "Tarja institucional FGH", name: "tarja-azul" },
+        altText: { title: "Tarja Azul FGH", description: "Tarja institucional FGH", name: "tarja_azul_imagem.jpeg" },
       })],
     }));
   }
 
   if (headerImage) {
+    // Logo institucional: largura fixa em cm (Norma Zero) — 18cm de largura útil,
+    // proporção 8:1 mantida (1248x156). 18cm ≈ 680px, altura ≈ 85px.
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER,
       indent: { left: 0, right: 0 },
@@ -274,8 +275,8 @@ function createHeader(
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 100, height: 13 },
-        altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header-logo" },
+        transformation: { width: 680, height: 85 },
+        altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header_logo.png" },
       })],
     }));
   }
