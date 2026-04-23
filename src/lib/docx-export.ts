@@ -459,8 +459,8 @@ export async function exportDocx(title: string, standardizedText: string): Promi
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
-  const headerImage = await loadHeaderImage();
-  const header = createHeader(title, headerImage);
+  const [headerImage, tarjaImage] = await Promise.all([loadHeaderImage(), loadTarjaImage()]);
+  const header = createHeader(title, headerImage, tarjaImage);
   const footer = createFooter();
 
   const pageProps = {
