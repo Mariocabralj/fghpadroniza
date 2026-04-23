@@ -249,7 +249,7 @@ function createHeader(
         floating: {
           horizontalPosition: {
             relative: HorizontalPositionRelativeFrom.COLUMN,
-            offset: 0,
+            offset: -717605,
           },
           verticalPosition: {
             relative: VerticalPositionRelativeFrom.PAGE,
