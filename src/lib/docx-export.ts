@@ -252,7 +252,7 @@ function createHeader(
             offset: -717605,
           },
           verticalPosition: {
-            relative: VerticalPositionRelativeFrom.PAGE,
+            relative: VerticalPositionRelativeFrom.PARAGRAPH,
             offset: -160048,
           },
           behindDocument: true,
