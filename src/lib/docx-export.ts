@@ -239,21 +239,23 @@ function createHeader(
   // Horizontal anchor: COLUMN with offset 0 (encosta na borda esquerda da área útil).
   // behindDocument:true + zIndex base garante tarja atrás de tabelas e textos.
   if (tarjaImage) {
+    // Full Page Background — A4 (21cm x 29.7cm = 7559675 x 10691495 EMU).
+    // Ancorada à PÁGINA, offsets 0/0, behindDoc para ficar atrás de tudo.
     children.push(new Paragraph({
       spacing: { before: 0, after: 0 },
       children: [new ImageRun({
         type: "jpg",
         data: tarjaImage,
-        // Norma Zero: extent 7554246 x 10684621 EMU → 793 x 1122 px
-        transformation: { width: 793, height: 1122 },
+        // 21cm x 29.7cm em pixels (96dpi): 794 x 1123
+        transformation: { width: 794, height: 1123 },
         floating: {
           horizontalPosition: {
-            relative: HorizontalPositionRelativeFrom.COLUMN,
-            offset: -717605,
+            relative: HorizontalPositionRelativeFrom.PAGE,
+            offset: 0,
           },
           verticalPosition: {
-            relative: VerticalPositionRelativeFrom.PARAGRAPH,
-            offset: -160048,
+            relative: VerticalPositionRelativeFrom.PAGE,
+            offset: 0,
           },
           behindDocument: true,
           wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
