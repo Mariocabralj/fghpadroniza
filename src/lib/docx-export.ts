@@ -2,9 +2,11 @@ import {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
   Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
   LevelFormat, Footer, Header, PageNumber,
-  ImageRun,
+  ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom,
+  HorizontalPositionAlign, VerticalPositionAlign, TextWrappingType, TextWrappingSide,
 } from "docx";
 import headerLogoUrl from "@/assets/header_logo.png";
+import tarjaAzulUrl from "@/assets/tarja-azul-fgh.jpeg";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
