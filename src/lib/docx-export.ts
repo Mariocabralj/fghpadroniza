@@ -8,13 +8,15 @@ import headerLogoUrl from "@/assets/header_logo.png";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
-// Margins: 2.5cm top/bottom, 3cm left/right (1cm = 567 DXA)
+// Margins: 2.5cm top/bottom, 1.5cm left/right (1cm ≈ 567 DXA)
+// Reduced lateral margins so header/footer tables stretch close to the page edges
+// (≈18cm of usable width on A4) while body text still has room to breathe.
 const MARGIN_TOP = 2268;       // extra room for header (image + metadata table)
 const MARGIN_BOTTOM = 2400;    // larger footer area
-const MARGIN_LEFT = 1701;
-const MARGIN_RIGHT = 1701;
-const PAGE_WIDTH = 11906;
-const PAGE_HEIGHT = 16838;
+const MARGIN_LEFT = 850;       // 1.5cm
+const MARGIN_RIGHT = 850;      // 1.5cm
+const PAGE_WIDTH = 11906;      // A4
+const PAGE_HEIGHT = 16838;     // A4
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
 
 const cellBorder = { style: BorderStyle.SINGLE, size: 1, color: "000000" };
