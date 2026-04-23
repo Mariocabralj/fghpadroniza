@@ -76,15 +76,23 @@ function buildTableFromRows(rows: string[][]): Table {
   });
 }
 
-async function loadHeaderImage(): Promise<Uint8Array | null> {
+async function loadBinary(url: string): Promise<Uint8Array | null> {
   try {
-    const response = await fetch(headerLogoUrl);
+    const response = await fetch(url);
     if (!response.ok) return null;
     const arrayBuffer = await response.arrayBuffer();
     return new Uint8Array(arrayBuffer);
   } catch {
     return null;
   }
+}
+
+async function loadHeaderImage(): Promise<Uint8Array | null> {
+  return loadBinary(headerLogoUrl);
+}
+
+async function loadTarjaImage(): Promise<Uint8Array | null> {
+  return loadBinary(tarjaAzulUrl);
 }
 
 function createHeaderTable(title: string): Table {
