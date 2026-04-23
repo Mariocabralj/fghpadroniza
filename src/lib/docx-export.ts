@@ -102,7 +102,7 @@ function createHeaderTable(title: string): Table {
 
   return new Table({
     alignment: AlignmentType.CENTER,
-    width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    width: { size: 100, type: WidthType.PERCENTAGE },
     indent: { size: 0, type: WidthType.DXA },
     columnWidths: [col1, col2, col3],
     rows: [
@@ -181,7 +181,7 @@ function createFooterTable(): Table {
 
   return new Table({
     alignment: AlignmentType.CENTER,
-    width: { size: CONTENT_WIDTH, type: WidthType.DXA },
+    width: { size: 100, type: WidthType.PERCENTAGE },
     indent: { size: 0, type: WidthType.DXA },
     columnWidths: [colW, colW, colW],
     rows: [
@@ -229,7 +229,7 @@ function createHeader(title: string, headerImage: Uint8Array | null): Header {
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 567, height: 71 },
+        transformation: { width: 100, height: 13 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header-logo" },
       })],
     }));
