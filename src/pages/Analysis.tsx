@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
-import { streamProcessDocument, readFileAsText } from "@/lib/ai-service";
+import { streamProcessDocument } from "@/lib/ai-service";
+import { extractTextFromFile } from "@/lib/file-extractors";
 import { Button } from "@/components/ui/button";
 
 const steps = [
@@ -32,11 +33,18 @@ export default function Analysis() {
 
       if (state.file) {
         try {
-          content = await readFileAsText(state.file);
+          content = await extractTextFromFile(state.file);
           mode = "upload";
-        } catch {
-          content = state.fileName || "";
-          mode = "upload";
+          if (!content.trim()) {
+            setError(
+              "Não foi possível extrair texto do arquivo. Verifique se o documento não é apenas uma imagem digitalizada."
+            );
+            return;
+          }
+        } catch (e) {
+          console.error("Erro ao extrair texto:", e);
+          setError("Erro ao ler o arquivo enviado. Tente outro formato (.pdf, .docx ou .txt).");
+          return;
         }
       } else if (state.pastedText) {
         content = state.pastedText;
