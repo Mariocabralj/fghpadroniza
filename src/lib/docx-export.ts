@@ -2,9 +2,11 @@ import {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
   Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
   LevelFormat, Footer, Header, PageNumber,
-  ImageRun,
+  ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom,
+  HorizontalPositionAlign, VerticalPositionAlign, TextWrappingType, TextWrappingSide,
 } from "docx";
 import headerLogoUrl from "@/assets/header_logo.png";
+import tarjaAzulUrl from "@/assets/tarja-azul-fgh.jpeg";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -74,15 +76,23 @@ function buildTableFromRows(rows: string[][]): Table {
   });
 }
 
-async function loadHeaderImage(): Promise<Uint8Array | null> {
+async function loadBinary(url: string): Promise<Uint8Array | null> {
   try {
-    const response = await fetch(headerLogoUrl);
+    const response = await fetch(url);
     if (!response.ok) return null;
     const arrayBuffer = await response.arrayBuffer();
     return new Uint8Array(arrayBuffer);
   } catch {
     return null;
   }
+}
+
+async function loadHeaderImage(): Promise<Uint8Array | null> {
+  return loadBinary(headerLogoUrl);
+}
+
+async function loadTarjaImage(): Promise<Uint8Array | null> {
+  return loadBinary(tarjaAzulUrl);
 }
 
 function createHeaderTable(title: string): Table {
@@ -218,8 +228,43 @@ function createFooterTable(): Table {
   });
 }
 
-function createHeader(title: string, headerImage: Uint8Array | null): Header {
+function createHeader(
+  title: string,
+  headerImage: Uint8Array | null,
+  tarjaImage: Uint8Array | null,
+): Header {
   const children: (Paragraph | Table)[] = [];
+
+  // Institutional blue stripe — anchored, behind document, page-relative.
+  // Acts as a full-page background watermark on every page.
+  if (tarjaImage) {
+    children.push(new Paragraph({
+      spacing: { before: 0, after: 0 },
+      children: [new ImageRun({
+        type: "jpg",
+        data: tarjaImage,
+        // docx-js uses pixels (9525 EMU/px). Values match Norma Zero spec:
+        // extent 7554246 x 10684621 EMU  → 793 x 1122 px
+        // offsetX -717605 EMU            → -75 px
+        // offsetY -160048 EMU            → -17 px
+        transformation: { width: 793, height: 1122 },
+        floating: {
+          horizontalPosition: {
+            relative: HorizontalPositionRelativeFrom.PAGE,
+            offset: -717605,
+          },
+          verticalPosition: {
+            relative: VerticalPositionRelativeFrom.PAGE,
+            offset: -160048,
+          },
+          behindDocument: true,
+          wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
+          allowOverlap: true,
+        },
+        altText: { title: "Tarja Azul FGH", description: "Tarja institucional FGH", name: "tarja-azul" },
+      })],
+    }));
+  }
 
   if (headerImage) {
     children.push(new Paragraph({
@@ -414,8 +459,8 @@ export async function exportDocx(title: string, standardizedText: string): Promi
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
-  const headerImage = await loadHeaderImage();
-  const header = createHeader(title, headerImage);
+  const [headerImage, tarjaImage] = await Promise.all([loadHeaderImage(), loadTarjaImage()]);
+  const header = createHeader(title, headerImage, tarjaImage);
   const footer = createFooter();
 
   const pageProps = {
