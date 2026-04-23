@@ -228,8 +228,43 @@ function createFooterTable(): Table {
   });
 }
 
-function createHeader(title: string, headerImage: Uint8Array | null): Header {
+function createHeader(
+  title: string,
+  headerImage: Uint8Array | null,
+  tarjaImage: Uint8Array | null,
+): Header {
   const children: (Paragraph | Table)[] = [];
+
+  // Institutional blue stripe — anchored, behind document, page-relative.
+  // Acts as a full-page background watermark on every page.
+  if (tarjaImage) {
+    children.push(new Paragraph({
+      spacing: { before: 0, after: 0 },
+      children: [new ImageRun({
+        type: "jpg",
+        data: tarjaImage,
+        // docx-js uses pixels (9525 EMU/px). Values match Norma Zero spec:
+        // extent 7554246 x 10684621 EMU  → 793 x 1122 px
+        // offsetX -717605 EMU            → -75 px
+        // offsetY -160048 EMU            → -17 px
+        transformation: { width: 793, height: 1122 },
+        floating: {
+          horizontalPosition: {
+            relative: HorizontalPositionRelativeFrom.PAGE,
+            offset: -717605,
+          },
+          verticalPosition: {
+            relative: VerticalPositionRelativeFrom.PAGE,
+            offset: -160048,
+          },
+          behindDocument: true,
+          wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
+          allowOverlap: true,
+        },
+        altText: { title: "Tarja Azul FGH", description: "Tarja institucional FGH", name: "tarja-azul" },
+      })],
+    }));
+  }
 
   if (headerImage) {
     children.push(new Paragraph({
