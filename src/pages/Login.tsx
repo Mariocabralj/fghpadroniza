@@ -40,6 +40,18 @@ export default function Login() {
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       navigate("/dashboard");
+    } else if (mode === "forgot") {
+      if (!email.trim()) {
+        setLoading(false);
+        return toast.error("Informe seu e-mail cadastrado");
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setLoading(false);
+      if (error) return toast.error(translateAuthError(error.message));
+      toast.success("Enviamos um link de recuperação para seu e-mail.");
+      setMode("login");
     } else {
       if (!name.trim() || !role.trim() || !sector.trim()) {
         setLoading(false);
