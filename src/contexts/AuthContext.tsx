@@ -14,6 +14,7 @@ interface Profile {
 interface AuthContextType {
   user: Profile | null;
   session: Session | null;
+  isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, data: { name: string; role: string; sector: string }) => Promise<{ error?: string }>;
@@ -57,7 +58,18 @@ async function loadProfile(supaUser: SupaUser): Promise<Profile> {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const checkAdmin = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    setIsAdmin(!!data);
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
@@ -65,15 +77,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (sess?.user) {
         setTimeout(() => {
           loadProfile(sess.user).then(setUser);
+          checkAdmin(sess.user.id);
         }, 0);
       } else {
         setUser(null);
+        setIsAdmin(false);
       }
     });
 
     supabase.auth.getSession().then(async ({ data: { session: sess } }) => {
       setSession(sess);
-      if (sess?.user) setUser(await loadProfile(sess.user));
+      if (sess?.user) {
+        setUser(await loadProfile(sess.user));
+        await checkAdmin(sess.user.id);
+      }
       setLoading(false);
     });
 
@@ -81,8 +98,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error ? { error: error.message } : {};
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    if (data.user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      if (prof?.status === "blocked") {
+        await supabase.auth.signOut();
+        return { error: "Sua conta foi bloqueada. Contate o administrador." };
+      }
+    }
+    return {};
   };
 
   const signUp = async (
@@ -108,7 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signUp, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

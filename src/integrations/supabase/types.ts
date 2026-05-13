@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_directives: {
+        Row: {
+          active: boolean
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_training_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
@@ -61,6 +112,7 @@ export type Database = {
           name: string
           role: string | null
           sector: string | null
+          status: string
           updated_at: string
           user_id: string
         }
@@ -71,6 +123,7 @@ export type Database = {
           name: string
           role?: string | null
           sector?: string | null
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -81,7 +134,59 @@ export type Database = {
           name?: string
           role?: string | null
           sector?: string | null
+          status?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          created_at: string
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level?: string
+          message: string
+          metadata?: Json | null
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -91,10 +196,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -221,6 +332,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

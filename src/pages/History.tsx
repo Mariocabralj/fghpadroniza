@@ -33,6 +33,7 @@ export default function History() {
     const { data, error } = await supabase
       .from("documents")
       .select("id, title, doc_type, status, created_at, updated_at")
+      .eq("user_id", user.user_id)
       .order("created_at", { ascending: false });
     if (error) return toast.error(error.message);
     setDocs(data || []);

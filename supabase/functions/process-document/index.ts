@@ -1,10 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function logError(supa: any, message: string, metadata: any) {
+  try {
+    await supa.from("system_logs").insert({
+      level: "error",
+      source: "process-document",
+      message,
+      metadata,
+    });
+  } catch (_) { /* ignore */ }
+}
+
+async function loadActiveDirectives(supa: any): Promise<string> {
+  const { data } = await supa.from("ai_directives").select("content").eq("active", true).order("created_at", { ascending: true });
+  if (!data || data.length === 0) return "";
+  return "\n\nDIRETRIZES INSTITUCIONAIS GLOBAIS (definidas pelo Admin — aplicar SEMPRE):\n" +
+    data.map((d: any, i: number) => `${i + 1}. ${d.content}`).join("\n");
+}
 
 // =============================================================================
 // NÍVEL ESPECÍFICO — Estrutura exata extraída dos modelos da Biblioteca FGH
@@ -223,6 +242,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supaAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -232,6 +255,7 @@ serve(async (req) => {
     const { content, docType, title, sector, mode } = await req.json();
 
     if (!content || !docType) {
+      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode });
       return new Response(
         JSON.stringify({ error: "content and docType are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -239,6 +263,7 @@ serve(async (req) => {
     }
 
     const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
+    const globalDirectives = await loadActiveDirectives(supaAdmin);
 
     let userPrompt = "";
     if (mode === "upload-format") {
@@ -318,7 +343,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: SYSTEM_PROMPT + globalDirectives },
             { role: "user", content: userPrompt },
           ],
           stream: true,
@@ -327,6 +352,8 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
     );
 
     if (!response.ok) {
+      const t = await response.text();
+      await logError(supaAdmin, `AI gateway ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode });
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
@@ -339,7 +366,6 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(
         JSON.stringify({ error: "Erro ao processar documento com IA" }),
@@ -353,6 +379,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
   } catch (e) {
     console.error("process-document error:", e);
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
+    await logError(supaAdmin, `Falha geral: ${errorMessage}`, { stack: e instanceof Error ? e.stack?.slice(0, 500) : null });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

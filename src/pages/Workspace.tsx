@@ -8,6 +8,8 @@ import { Download, Star, Sparkles, CheckCircle2, AlertTriangle } from "lucide-re
 import { exportDocx } from "@/lib/docx-export";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
+import { logSystemError } from "@/lib/system-log";
+import { toast } from "sonner";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -66,9 +68,14 @@ export default function Workspace() {
   if (!user) return <Navigate to="/" />;
 
   const handleExportDocx = async () => {
-    const elaboracao = user ? `${user.name}${user.role ? " - " + user.role : ""}` : "[A PREENCHER]";
-    const blob = await exportDocx(title, standardized, elaboracao);
-    saveAs(blob, `${title.replace(/\s+/g, "_")}_FGH.docx`);
+    try {
+      const elaboracao = user ? `${user.name}${user.role ? " - " + user.role : ""}` : "[A PREENCHER]";
+      const blob = await exportDocx(title, standardized, elaboracao);
+      saveAs(blob, `${title.replace(/\s+/g, "_")}_FGH.docx`);
+    } catch (e: any) {
+      await logSystemError("docx-export", `Falha ao gerar DOCX: ${e?.message || e}`, { title, docType });
+      toast.error("Erro ao gerar o arquivo .DOCX. O administrador foi notificado.");
+    }
   };
 
   const evaluateTool = () => {
