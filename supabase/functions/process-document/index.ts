@@ -1,10 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function logError(supa: any, message: string, metadata: any) {
+  try {
+    await supa.from("system_logs").insert({
+      level: "error",
+      source: "process-document",
+      message,
+      metadata,
+    });
+  } catch (_) { /* ignore */ }
+}
+
+async function loadActiveDirectives(supa: any): Promise<string> {
+  const { data } = await supa.from("ai_directives").select("content").eq("active", true).order("created_at", { ascending: true });
+  if (!data || data.length === 0) return "";
+  return "\n\nDIRETRIZES INSTITUCIONAIS GLOBAIS (definidas pelo Admin — aplicar SEMPRE):\n" +
+    data.map((d: any, i: number) => `${i + 1}. ${d.content}`).join("\n");
+}
 
 // =============================================================================
 // NÍVEL ESPECÍFICO — Estrutura exata extraída dos modelos da Biblioteca FGH
