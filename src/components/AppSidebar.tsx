@@ -1,4 +1,4 @@
-import { Home, FilePlus, BookOpen, ClipboardList, Settings, LogOut, Info } from "lucide-react";
+import { Home, FilePlus, BookOpen, ClipboardList, Settings, LogOut, Info, ShieldCheck, Brain, Users, AlertCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -23,10 +24,17 @@ const items = [
   { title: "Sobre", url: "/sobre", icon: Info },
 ];
 
+const adminItems = [
+  { title: "Dashboard Admin", url: "/admin", icon: ShieldCheck },
+  { title: "Treinamento de IA", url: "/admin/treinamento", icon: Brain },
+  { title: "Gestão de Usuários", url: "/admin/usuarios", icon: Users },
+  { title: "Logs do Sistema", url: "/admin/logs", icon: AlertCircle },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
