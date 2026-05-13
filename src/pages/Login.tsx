@@ -1,24 +1,41 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Lock, User } from "lucide-react";
+import { FileText, Lock, Mail, User, Briefcase, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const { login } = useAuth();
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [sector, setSector] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(username, password)) {
+    setLoading(true);
+    if (mode === "login") {
+      const { error } = await signIn(email, password);
+      setLoading(false);
+      if (error) return toast.error(error === "Invalid login credentials" ? "Credenciais inválidas" : error);
       navigate("/dashboard");
     } else {
-      setError("Credenciais inválidas");
+      if (!name.trim() || !role.trim() || !sector.trim()) {
+        setLoading(false);
+        return toast.error("Preencha nome, cargo e setor");
+      }
+      const { error } = await signUp(email, password, { name, role, sector });
+      setLoading(false);
+      if (error) return toast.error(error);
+      toast.success("Conta criada! Faça login para continuar.");
+      setMode("login");
     }
   };
 
@@ -35,40 +52,64 @@ export default function Login() {
         </div>
 
         <div className="bg-card rounded-2xl shadow-xl p-8">
-          <h2 className="text-lg font-semibold text-foreground mb-6 text-center">Acesso ao Sistema</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
+            {mode === "login" ? "Acesso ao Sistema" : "Criar nova conta"}
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome completo</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="name" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} className="pl-10" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Cargo</Label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="role" placeholder="Ex: Enfermeiro" value={role} onChange={(e) => setRole(e.target.value)} className="pl-10" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sector">Setor</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="sector" placeholder="Ex: UTI" value={sector} onChange={(e) => setSector(e.target.value)} className="pl-10" />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="user">Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="user"
-                  placeholder="Digite seu usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10"
-                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="pass">Senha</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="pass"
-                  type="password"
-                  placeholder="Digite sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                />
+                <Input id="pass" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
               </div>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold h-11">
-              Entrar
+            <Button type="submit" disabled={loading} className="w-full gradient-primary text-primary-foreground font-semibold h-11">
+              {loading ? "Processando..." : mode === "login" ? "Entrar" : "Criar conta"}
             </Button>
           </form>
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              {mode === "login" ? "Novo aqui? Crie sua conta!" : "Já tem conta? Entrar"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

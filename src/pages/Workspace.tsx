@@ -1,12 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Send, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Download, Star, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
 import { exportDocx } from "@/lib/docx-export";
 import { saveAs } from "file-saver";
+import { supabase } from "@/integrations/supabase/client";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -45,20 +46,33 @@ export default function Workspace() {
   const checklist = useMemo(() => analyzeChecklist(standardized), [standardized]);
   const completionPct = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
 
+  const savedRef = useRef(false);
+  useEffect(() => {
+    if (!user || !standardized || savedRef.current) return;
+    savedRef.current = true;
+    supabase.from("documents").insert({
+      user_id: user.user_id,
+      title,
+      doc_type: docType,
+      sector,
+      status: "Pronto",
+      original_content: original,
+      standardized_content: standardized,
+    }).then(({ error }) => {
+      if (error) console.error("Save document error:", error);
+    });
+  }, [user, standardized, title, docType, sector, original]);
+
   if (!user) return <Navigate to="/" />;
 
   const handleExportDocx = async () => {
-    const blob = await exportDocx(title, standardized);
+    const elaboracao = user ? `${user.name}${user.role ? " - " + user.role : ""}` : "[A PREENCHER]";
+    const blob = await exportDocx(title, standardized, elaboracao);
     saveAs(blob, `${title.replace(/\s+/g, "_")}_FGH.docx`);
   };
 
-  const sendToQuality = () => {
-    const code = standardized.match(/Codificação:\s*(.+)/i)?.[1]?.trim() || "[A PREENCHER PELA QUALIDADE]";
-    const subject = encodeURIComponent(`Documento para Revisão - ${title}`);
-    const body = encodeURIComponent(
-      `Prezado(a) Setor de Qualidade,\n\nSegue para revisão o documento:\n\nTítulo: ${title}\nTipo: ${docType}\nCodificação: ${code}\nVersão: 01\nElaborado por: ${user.name} - ${user.role}\nData: ${today}\n\nO documento foi padronizado através do sistema FGH Padroniza e está pronto para análise final.\n\nAtenciosamente,\n${user.name}\n${user.role}`
-    );
-    window.open(`mailto:hps.qualidade@hps.fghsaude.org.br?subject=${subject}&body=${body}`);
+  const evaluateTool = () => {
+    window.open("https://forms.cloud.microsoft/r/Y6xHtpLT1j", "_blank");
   };
 
   return (
@@ -70,8 +84,8 @@ export default function Workspace() {
             <Button onClick={handleExportDocx} className="bg-success text-success-foreground font-semibold gap-2 hover:bg-success/90">
               <Download className="w-4 h-4" /> Exportar .DOCX
             </Button>
-            <Button variant="outline" onClick={sendToQuality} className="gap-2">
-              <Send className="w-4 h-4" /> Enviar à Qualidade
+            <Button variant="outline" onClick={evaluateTool} className="gap-2">
+              <Star className="w-4 h-4" /> Avaliar Ferramenta
             </Button>
           </div>
         </div>

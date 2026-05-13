@@ -202,6 +202,8 @@ export default function Templates() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((t, i) => {
             const Icon = t.icon;
+            const restrictedTypes = ["Fluxograma", "Carta de Anuência", "Ata de Reunião", "Norma Zero", "Panfleto", "Portaria", "Ementa de Treinamento", "Papel Timbrado"];
+            const downloadOnly = restrictedTypes.includes(t.docType);
             return (
               <div key={i} className="bg-card rounded-xl border shadow-card hover:shadow-card-hover transition-all p-6 flex flex-col">
                 <div className="flex items-start justify-between mb-4">
@@ -224,11 +226,13 @@ export default function Templates() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="gap-2 flex-1" onClick={() => handleUseTemplate(t.docType)}>
-                    Usar modelo <ArrowRight className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDownload(t.downloadFile, t.title)} title="Baixar modelo original">
-                    <Download className="w-4 h-4" />
+                  {!downloadOnly && (
+                    <Button variant="outline" className="gap-2 flex-1" onClick={() => handleUseTemplate(t.docType)}>
+                      Usar modelo <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <Button variant={downloadOnly ? "outline" : "ghost"} className={downloadOnly ? "gap-2 flex-1" : ""} size={downloadOnly ? "default" : "icon"} onClick={() => handleDownload(t.downloadFile, t.title)} title="Baixar modelo original">
+                    <Download className="w-4 h-4" /> {downloadOnly && "Download"}
                   </Button>
                 </div>
               </div>
