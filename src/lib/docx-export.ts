@@ -95,7 +95,7 @@ async function loadTarjaImage(): Promise<Uint8Array | null> {
   return loadBinary(tarjaAzulUrl);
 }
 
-function createHeaderTable(title: string): Table {
+function createHeaderTable(title: string, elaboracao: string = "[A PREENCHER]"): Table {
   // Distribute header table across the full content width (no indent)
   const col1 = Math.floor(CONTENT_WIDTH * 0.44);
   const col2 = Math.floor(CONTENT_WIDTH * 0.36);
@@ -157,7 +157,7 @@ function createHeaderTable(title: string): Table {
           new TableCell({
             ...cellProps(col1),
             children: [new Paragraph({ spacing: { after: 0, line: 240 }, children: [
-              smallRun("Elaboração: ", true), smallRun("[A PREENCHER]"),
+              smallRun("Elaboração: ", true), smallRun(elaboracao),
             ] })],
           }),
           new TableCell({
