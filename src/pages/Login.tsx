@@ -7,6 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+const translateAuthError = (msg: string) => {
+  if (msg.toLowerCase().includes("password is known to be weak")) {
+    return "Senha muito fraca e fácil de adivinhar. Escolha uma senha mais forte com letras, números e caracteres especiais.";
+  }
+  if (msg.toLowerCase().includes("invalid login credentials")) {
+    return "Credenciais inválidas";
+  }
+  if (msg.toLowerCase().includes("user already registered")) {
+    return "Usuário já cadastrado. Faça login ou recupere sua senha.";
+  }
+  return msg;
+};
+
 export default function Login() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -24,7 +37,7 @@ export default function Login() {
     if (mode === "login") {
       const { error } = await signIn(email, password);
       setLoading(false);
-      if (error) return toast.error(error === "Invalid login credentials" ? "Credenciais inválidas" : error);
+      if (error) return toast.error(translateAuthError(error));
       navigate("/dashboard");
     } else {
       if (!name.trim() || !role.trim() || !sector.trim()) {
@@ -33,7 +46,7 @@ export default function Login() {
       }
       const { error } = await signUp(email, password, { name, role, sector });
       setLoading(false);
-      if (error) return toast.error(error);
+      if (error) return toast.error(translateAuthError(error));
       toast.success("Conta criada! Faça login para continuar.");
       setMode("login");
     }
