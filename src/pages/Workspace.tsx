@@ -66,7 +66,8 @@ export default function Workspace() {
   if (!user) return <Navigate to="/" />;
 
   const handleExportDocx = async () => {
-    const blob = await exportDocx(title, standardized);
+    const elaboracao = user ? `${user.name}${user.role ? " - " + user.role : ""}` : "[A PREENCHER]";
+    const blob = await exportDocx(title, standardized, elaboracao);
     saveAs(blob, `${title.replace(/\s+/g, "_")}_FGH.docx`);
   };
 

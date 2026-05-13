@@ -232,6 +232,7 @@ function createHeader(
   title: string,
   headerImage: Uint8Array | null,
   tarjaImage: Uint8Array | null,
+  elaboracao: string = "[A PREENCHER]",
 ): Header {
   const children: (Paragraph | Table)[] = [];
 
@@ -283,7 +284,7 @@ function createHeader(
     }));
   }
 
-  children.push(createHeaderTable(title));
+  children.push(createHeaderTable(title, elaboracao));
 
   // Small spacer paragraph after the header table
   children.push(new Paragraph({ spacing: { before: 0, after: 0 }, children: [] }));
@@ -458,12 +459,12 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
   return children;
 }
 
-export async function exportDocx(title: string, standardizedText: string): Promise<Blob> {
+export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[A PREENCHER]"): Promise<Blob> {
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
   const [headerImage, tarjaImage] = await Promise.all([loadHeaderImage(), loadTarjaImage()]);
-  const header = createHeader(title, headerImage, tarjaImage);
+  const header = createHeader(title, headerImage, tarjaImage, elaboracao);
   const footer = createFooter();
 
   const pageProps = {
