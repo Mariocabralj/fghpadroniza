@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { streamProcessDocument } from "@/lib/ai-service";
 import { extractTextFromFile } from "@/lib/file-extractors";
+import { logSystemError } from "@/lib/system-log";
 import { Button } from "@/components/ui/button";
 
 const steps = [
@@ -36,13 +37,15 @@ export default function Analysis() {
           content = await extractTextFromFile(state.file);
           mode = state.aiMode || "upload";
           if (!content.trim()) {
+            await logSystemError("file-extractor", "Arquivo sem texto extraível", { name: state.file?.name, type: state.file?.type, size: state.file?.size });
             setError(
               "Não foi possível extrair texto do arquivo. Verifique se o documento não é apenas uma imagem digitalizada."
             );
             return;
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error("Erro ao extrair texto:", e);
+          await logSystemError("file-extractor", `Erro ao ler arquivo: ${e?.message || e}`, { name: state.file?.name, type: state.file?.type });
           setError("Erro ao ler o arquivo enviado. Tente outro formato (.pdf, .docx ou .txt).");
           return;
         }
