@@ -79,7 +79,7 @@ export default function Login() {
 
         <div className="bg-card rounded-2xl shadow-xl p-8">
           <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
-            {mode === "login" ? "Acesso ao Sistema" : "Criar nova conta"}
+            {mode === "login" ? "Acesso ao Sistema" : mode === "signup" ? "Criar nova conta" : "Recuperar senha"}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
@@ -116,25 +116,48 @@ export default function Login() {
                 <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10" />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="pass">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="pass" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="pass">Senha</Label>
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={() => setMode("forgot")}
+                      className="text-xs text-primary hover:underline font-medium"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="pass" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
+                </div>
               </div>
-            </div>
+            )}
             <Button type="submit" disabled={loading} className="w-full gradient-primary text-primary-foreground font-semibold h-11">
-              {loading ? "Processando..." : mode === "login" ? "Entrar" : "Criar conta"}
+              {loading ? "Processando..." : mode === "login" ? "Entrar" : mode === "signup" ? "Criar conta" : "Enviar link de recuperação"}
             </Button>
           </form>
           <div className="text-center mt-4">
-            <button
-              type="button"
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="text-sm text-primary hover:underline font-medium"
-            >
-              {mode === "login" ? "Novo aqui? Crie sua conta!" : "Já tem conta? Entrar"}
-            </button>
+            {mode === "forgot" ? (
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="text-sm text-primary hover:underline font-medium"
+              >
+                Voltar para o login
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-sm text-primary hover:underline font-medium"
+              >
+                {mode === "login" ? "Novo aqui? Crie sua conta!" : "Já tem conta? Entrar"}
+              </button>
+            )}
           </div>
         </div>
       </div>
