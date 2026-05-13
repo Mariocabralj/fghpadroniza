@@ -24,7 +24,7 @@ export default function Login() {
     if (mode === "login") {
       const { error } = await signIn(email, password);
       setLoading(false);
-      if (error) return toast.error(error === "Invalid login credentials" ? "Credenciais inválidas" : error);
+      if (error) return toast.error(translateAuthError(error));
       navigate("/dashboard");
     } else {
       if (!name.trim() || !role.trim() || !sector.trim()) {
@@ -33,7 +33,7 @@ export default function Login() {
       }
       const { error } = await signUp(email, password, { name, role, sector });
       setLoading(false);
-      if (error) return toast.error(error);
+      if (error) return toast.error(translateAuthError(error));
       toast.success("Conta criada! Faça login para continuar.");
       setMode("login");
     }
