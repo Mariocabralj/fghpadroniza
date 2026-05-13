@@ -1,6 +1,6 @@
-import { Home, FilePlus, BookOpen, ClipboardList, Settings, LogOut } from "lucide-react";
+import { Home, FilePlus, BookOpen, ClipboardList, Settings, LogOut, Info } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
@@ -20,6 +20,7 @@ const items = [
   { title: "Biblioteca de Modelos", url: "/biblioteca", icon: BookOpen },
   { title: "Histórico", url: "/historico", icon: ClipboardList },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Sobre", url: "/sobre", icon: Info },
 ];
 
 export function AppSidebar() {
@@ -28,8 +29,8 @@ export function AppSidebar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 

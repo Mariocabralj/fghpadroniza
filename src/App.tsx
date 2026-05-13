@@ -11,6 +11,7 @@ import Workspace from "./pages/Workspace";
 import Templates from "./pages/Templates";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/biblioteca" element={<Templates />} />
             <Route path="/historico" element={<History />} />
             <Route path="/configuracoes" element={<Settings />} />
+            <Route path="/sobre" element={<About />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

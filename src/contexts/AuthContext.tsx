@@ -1,17 +1,24 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import type { Session, User as SupaUser } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-interface User {
+interface Profile {
   name: string;
   role: string;
   email: string;
   sector: string;
   initials: string;
+  user_id: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
+  user: Profile | null;
+  session: Session | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, data: { name: string; role: string; sector: string }) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,27 +29,86 @@ export const useAuth = () => {
   return ctx;
 };
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase() ?? "")
+    .join("") || "U";
 
-  const login = (username: string, _password: string) => {
-    if (username && _password) {
-      setUser({
-        name: "Mario Cabral",
-        role: "Analista de Processos",
-        email: "mario.cabral@fgh.org.br",
-        sector: "Processos e Qualidade",
-        initials: "MC",
-      });
-      return true;
-    }
-    return false;
+async function loadProfile(supaUser: SupaUser): Promise<Profile> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("name, role, sector, email")
+    .eq("user_id", supaUser.id)
+    .maybeSingle();
+  const name = data?.name || supaUser.email?.split("@")[0] || "Usuário";
+  return {
+    name,
+    role: data?.role || "",
+    sector: data?.sector || "",
+    email: data?.email || supaUser.email || "",
+    initials: initials(name),
+    user_id: supaUser.id,
+  };
+}
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+      if (sess?.user) {
+        setTimeout(() => {
+          loadProfile(sess.user).then(setUser);
+        }, 0);
+      } else {
+        setUser(null);
+      }
+    });
+
+    supabase.auth.getSession().then(async ({ data: { session: sess } }) => {
+      setSession(sess);
+      if (sess?.user) setUser(await loadProfile(sess.user));
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return error ? { error: error.message } : {};
   };
 
-  const logout = () => setUser(null);
+  const signUp = async (
+    email: string,
+    password: string,
+    data: { name: string; role: string; sector: string }
+  ) => {
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: redirectUrl, data },
+    });
+    return error ? { error: error.message } : {};
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const refreshProfile = async () => {
+    if (session?.user) setUser(await loadProfile(session.user));
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
