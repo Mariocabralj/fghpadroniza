@@ -29,12 +29,12 @@ export default function Analysis() {
 
     const processDocument = async () => {
       let content = "";
-      let mode: "upload" | "paste" | "idea" = "idea";
+      let mode: "upload" | "upload-improve" | "upload-format" | "paste" | "idea" = "idea";
 
       if (state.file) {
         try {
           content = await extractTextFromFile(state.file);
-          mode = "upload";
+          mode = state.aiMode || "upload";
           if (!content.trim()) {
             setError(
               "Não foi possível extrair texto do arquivo. Verifique se o documento não é apenas uma imagem digitalizada."
