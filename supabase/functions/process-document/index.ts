@@ -241,10 +241,30 @@ serve(async (req) => {
     const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
 
     let userPrompt = "";
-    if (mode === "upload") {
-      userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
+    if (mode === "upload-format") {
+      userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
 
-REGRA ESPECIAL DE UPLOAD: Faça o MAPEAMENTO INTELIGENTE — identifique cada parágrafo/seção do texto original e transponha para a seção correspondente da ESTRUTURA OBRIGATÓRIA abaixo. Se faltar conteúdo para uma seção obrigatória, gere conteúdo adequado com base no contexto e em boas práticas hospitalares. Se faltar dado factual da unidade, insira "[A PREENCHER PELA UNIDADE]". A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
+REGRAS DE FORMATAÇÃO ESTRITA:
+- Não reescreva, não resuma, não enriqueça e não acrescente conteúdo novo.
+- Apenas reorganize o texto enviado nas seções obrigatórias do modelo.
+- Se faltar conteúdo para uma seção obrigatória, insira "[A PREENCHER PELA UNIDADE]".
+- A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
+
+Título: ${title || "A definir"}
+Setor: ${sector || "A definir"}
+Tipo de documento: ${docType}
+
+CONTEÚDO ORIGINAL DO ARQUIVO (preserve a redação):
+${content}
+
+ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
+${templateStructure}
+
+Gere o documento padronizado começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
+    } else if (mode === "upload" || mode === "upload-improve") {
+      userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO, APRIMORADO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
+
+REGRA ESPECIAL DE UPLOAD: Faça o MAPEAMENTO INTELIGENTE — identifique cada parágrafo/seção do texto original e transponha para a seção correspondente da ESTRUTURA OBRIGATÓRIA abaixo. Aprimore a clareza, a redação técnica e complete seções faltantes com base em boas práticas hospitalares. Se faltar dado factual da unidade, insira "[A PREENCHER PELA UNIDADE]". A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}
