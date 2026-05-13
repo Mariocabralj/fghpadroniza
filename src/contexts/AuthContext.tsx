@@ -98,8 +98,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error ? { error: error.message } : {};
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    if (data.user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      if (prof?.status === "blocked") {
+        await supabase.auth.signOut();
+        return { error: "Sua conta foi bloqueada. Contate o administrador." };
+      }
+    }
+    return {};
   };
 
   const signUp = async (

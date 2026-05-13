@@ -379,6 +379,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
   } catch (e) {
     console.error("process-document error:", e);
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
+    await logError(supaAdmin, `Falha geral: ${errorMessage}`, { stack: e instanceof Error ? e.stack?.slice(0, 500) : null });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
