@@ -1,33 +1,62 @@
+import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
-import { FileText, AlertTriangle, CheckCircle2, Archive, Plus, Upload, ClipboardPaste, Lightbulb } from "lucide-react";
+import { FileText, AlertTriangle, CheckCircle2, Archive, Plus, Upload, ClipboardPaste } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const statusCards = [
-  { label: "Rascunhos", count: 8, icon: FileText, color: "bg-info/10 text-info", border: "border-info/20" },
-  { label: "Com Pendências", count: 2, icon: AlertTriangle, color: "bg-warning/10 text-warning", border: "border-warning/20" },
-  { label: "Prontos para Envio", count: 5, icon: CheckCircle2, color: "bg-success/10 text-success", border: "border-success/20" },
-  { label: "Finalizados", count: 24, icon: Archive, color: "bg-muted text-muted-foreground", border: "border-border" },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const steps = [
   { icon: Upload, title: "Envie seu conteúdo", desc: "Upload, cole texto ou descreva sua ideia" },
   { icon: ClipboardPaste, title: "Padronização automática", desc: "O sistema organiza no padrão FGH" },
-  { icon: CheckCircle2, title: "Documento pronto", desc: "Exporte em .DOCX ou envie à Qualidade" },
+  { icon: CheckCircle2, title: "Documento pronto", desc: "Exporte em .DOCX ou avalie a ferramenta" },
 ];
 
-const recentDocs = [
-  { title: "POP Higienização das Mãos", type: "POP", status: "Pronto", date: "05/04/2026", statusColor: "bg-success/10 text-success" },
-  { title: "IT Coleta de Exames Laboratoriais", type: "IT", status: "Rascunho", date: "04/04/2026", statusColor: "bg-info/10 text-info" },
-  { title: "Protocolo Sepse Pediátrica", type: "Protocolo", status: "Pendência", date: "03/04/2026", statusColor: "bg-warning/10 text-warning" },
-  { title: "Checklist Cirurgia Segura", type: "Checklist", status: "Finalizado", date: "01/04/2026", statusColor: "bg-muted text-muted-foreground" },
-];
+interface Doc {
+  id: string;
+  title: string;
+  doc_type: string;
+  status: string;
+  created_at: string;
+}
+
+const statusColor = (s: string) =>
+  s === "Pronto" ? "bg-success/10 text-success" :
+  s === "Pendência" ? "bg-warning/10 text-warning" :
+  s === "Finalizado" ? "bg-muted text-muted-foreground" :
+  "bg-info/10 text-info";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [docs, setDocs] = useState<Doc[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("documents")
+      .select("id, title, doc_type, status, created_at")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setDocs(data || []));
+  }, [user]);
+
   if (!user) return <Navigate to="/" />;
+
+  const counts = {
+    rascunhos: docs.filter((d) => d.status === "Rascunho").length,
+    pendencias: docs.filter((d) => d.status === "Pendência").length,
+    prontos: docs.filter((d) => d.status === "Pronto").length,
+    finalizados: docs.filter((d) => d.status === "Finalizado").length,
+  };
+
+  const statusCards = [
+    { label: "Rascunhos", count: counts.rascunhos, icon: FileText, color: "bg-info/10 text-info", border: "border-info/20" },
+    { label: "Com Pendências", count: counts.pendencias, icon: AlertTriangle, color: "bg-warning/10 text-warning", border: "border-warning/20" },
+    { label: "Prontos para Envio", count: counts.prontos, icon: CheckCircle2, color: "bg-success/10 text-success", border: "border-success/20" },
+    { label: "Finalizados", count: counts.finalizados, icon: Archive, color: "bg-muted text-muted-foreground", border: "border-border" },
+  ];
+
+  const recentDocs = docs.slice(0, 5);
 
   return (
     <AppLayout>
@@ -79,18 +108,21 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold text-foreground">Documentos Recentes</h2>
           </div>
           <div className="divide-y">
-            {recentDocs.map((d, i) => (
-              <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+            {recentDocs.length === 0 && (
+              <p className="p-6 text-sm text-muted-foreground text-center">Você ainda não criou nenhum documento.</p>
+            )}
+            {recentDocs.map((d) => (
+              <div key={d.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <FileText className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium text-foreground text-sm">{d.title}</p>
-                    <p className="text-xs text-muted-foreground">{d.type}</p>
+                    <p className="text-xs text-muted-foreground">{d.doc_type}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${d.statusColor}`}>{d.status}</span>
-                  <span className="text-xs text-muted-foreground">{d.date}</span>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColor(d.status)}`}>{d.status}</span>
+                  <span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString("pt-BR")}</span>
                 </div>
               </div>
             ))}
