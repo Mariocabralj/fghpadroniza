@@ -242,6 +242,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supaAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -251,6 +255,7 @@ serve(async (req) => {
     const { content, docType, title, sector, mode } = await req.json();
 
     if (!content || !docType) {
+      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode });
       return new Response(
         JSON.stringify({ error: "content and docType are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -258,6 +263,7 @@ serve(async (req) => {
     }
 
     const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
+    const globalDirectives = await loadActiveDirectives(supaAdmin);
 
     let userPrompt = "";
     if (mode === "upload-format") {
@@ -337,7 +343,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: SYSTEM_PROMPT + globalDirectives },
             { role: "user", content: userPrompt },
           ],
           stream: true,
@@ -346,6 +352,8 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
     );
 
     if (!response.ok) {
+      const t = await response.text();
+      await logError(supaAdmin, `AI gateway ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode });
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
@@ -358,7 +366,6 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(
         JSON.stringify({ error: "Erro ao processar documento com IA" }),
