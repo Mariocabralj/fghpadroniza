@@ -45,6 +45,47 @@ function parseTableLines(lines: string[]): string[][] {
   return rows;
 }
 
+function normalizePlainText(text: string): string {
+  return stripMarkdown(text)
+    .replace(/\[(?:COR|MARCA):#[0-9a-fA-F]{3,8}\]/g, "")
+    .replace(/\[\/(?:COR|MARCA)\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function collectStrictBoldWhitelist(lines: string[]): Set<string> {
+  const whitelist = new Set<string>();
+  let inSummary = false;
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const upper = normalizePlainText(trimmed);
+    if (upper === "SUMÁRIO" || upper === "ÍNDICE") {
+      inSummary = true;
+      whitelist.add(upper);
+      continue;
+    }
+    const topLevel = trimmed.match(/^(\d+)\.\s+(.+)$/);
+    const chapter = trimmed.match(/^(CAPÍTULO\s+[IVXLCDM]+\s*[-–—]\s*.+)$/i);
+    if (inSummary && (topLevel || chapter)) {
+      whitelist.add(upper.replace(/\s*\.{2,}\s*\d+$/, ""));
+      continue;
+    }
+    if (inSummary && (/^\d+\.\d+/.test(trimmed) || /^[\-•●]/.test(trimmed))) continue;
+    if (topLevel || chapter) {
+      whitelist.add(upper);
+      inSummary = false;
+    }
+  }
+  return whitelist;
+}
+
+function isStrictBoldAllowed(line: string, whitelist: Set<string>): boolean {
+  const normalized = normalizePlainText(line).replace(/\s*\.{2,}\s*\d+$/, "");
+  return whitelist.has(normalized);
+}
+
 function buildTableFromRows(rows: string[][]): Table {
   const numCols = Math.max(...rows.map(r => r.length), 1);
   const colWidth = Math.floor(CONTENT_WIDTH / numCols);
@@ -65,7 +106,7 @@ function buildTableFromRows(rows: string[][]): Table {
               alignment: AlignmentType.CENTER,
               children: [new TextRun({
                 text: row[i] || "",
-                bold: rowIdx === 0,
+                bold: false,
                 font: "Calibri",
                 size: 22,
               })],
@@ -109,7 +150,7 @@ function createHeaderTable(title: string, elaboracao: string = "[a preencher]"):
   });
 
   const smallRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Calibri", size: 20, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold: false });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -188,7 +229,7 @@ function createFooterTable(): Table {
   });
   // Calibri 10pt = size 20 (half-points)
   const footerRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Calibri", size: 20, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold: false });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -318,6 +359,7 @@ function parseContentLines(
 ): (Paragraph | Table)[] {
   const children: (Paragraph | Table)[] = [];
   const upperTitle = title.trim().toUpperCase();
+  const boldWhitelist = collectStrictBoldWhitelist(lines);
   let i = 0;
   let firstSectionSeen = false;
 
@@ -397,7 +439,7 @@ function parseContentLines(
       children.push(new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { before: 120, after: 120 },
-        children: [new TextRun({ text: "[INSERIR IMAGEM DO BIZAGI AQUI]", bold: true, italics: true, font: "Calibri", size: 22, color: "0F3460" })],
+        children: [new TextRun({ text: "[INSERIR IMAGEM DO BIZAGI AQUI]", bold: false, italics: true, font: "Calibri", size: 22, color: "0F3460" })],
       }));
       i++;
       continue;
@@ -430,7 +472,7 @@ function parseContentLines(
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { before: 300, after: 200 },
-        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Calibri", size: 28 })],
+        children: [new TextRun({ text: trimmed.toUpperCase(), bold: isStrictBoldAllowed(trimmed, boldWhitelist), font: "Calibri", size: 28 })],
       }));
       i++;
       continue;
@@ -444,7 +486,7 @@ function parseContentLines(
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
+        children: parseInlineRuns(line, { bold: isStrictBoldAllowed(line, boldWhitelist), size: 24 }),
       }));
       i++;
       continue;
@@ -454,7 +496,7 @@ function parseContentLines(
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
+        children: parseInlineRuns(line, { bold: isStrictBoldAllowed(line, boldWhitelist), size: 24 }),
       }));
       i++;
       continue;
@@ -463,20 +505,11 @@ function parseContentLines(
     // Subitens (6.1, 6.1.1) — máximo 3 níveis, com iterador sequencial estável.
     if (line.match(/^\d+\.\d+/)) {
       const renumbered = renumberSubsection(line, seqState);
-      const { headingText, bodyText } = splitSubsectionTitleAndBody(renumbered);
-      const headingRuns: TextRun[] = [
-        new TextRun({ text: headingText, bold: true, font: "Calibri", size: 22 }),
-      ];
-      if (bodyText) {
-        // CORPO após o título de subseção: NUNCA em negrito.
-        headingRuns.push(...parseInlineRuns(" " + bodyText, { bold: false, size: 22 }));
-      }
       children.push(new Paragraph({
-        heading: HeadingLevel.HEADING_2,
         indent: { left: 360 },
         spacing: { before: 100, after: 60 },
         alignment: AlignmentType.JUSTIFIED,
-        children: headingRuns,
+        children: parseInlineRuns(renumbered, { bold: false, size: 22 }),
       }));
       i++;
       continue;
@@ -573,31 +606,46 @@ function splitSubsectionTitleAndBody(line: string): { headingText: string; bodyT
 }
 
 /**
- * Suporta cores inline via [COR:#hex]texto[/COR]. Preserva formatação aplicada
- * pelo usuário (vermelhos, azul institucional, etc.).
+ * Suporta cores inline via [COR:#hex] e marca-texto via [MARCA:#hex].
+ * Mesmo com opts.bold=true, só os títulos whitelisted devem chamar essa opção.
  */
 function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }): TextRun[] {
-  const runs: TextRun[] = [];
   const size = opts.size ?? 22;
   const bold = !!opts.bold;
-  const regex = /\[COR:(#?[0-9a-fA-F]{3,8})\](.*?)\[\/COR\]/g;
-  let lastIdx = 0;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(text)) !== null) {
-    if (m.index > lastIdx) {
-      runs.push(new TextRun({ text: text.slice(lastIdx, m.index), font: "Calibri", size, bold }));
+  const buildRun = (value: string, style: { color?: string; highlight?: string }) => new TextRun({
+    text: value,
+    font: "Calibri",
+    size,
+    bold,
+    color: style.color,
+    shading: style.highlight ? { type: ShadingType.CLEAR, fill: style.highlight, color: "auto" } : undefined,
+  });
+  const parse = (value: string, style: { color?: string; highlight?: string } = {}): TextRun[] => {
+    const out: TextRun[] = [];
+    let cursor = 0;
+    const open = /\[(COR|MARCA):(#?[0-9a-fA-F]{3,8})\]/g;
+    let m: RegExpExecArray | null;
+    while ((m = open.exec(value)) !== null) {
+      if (m.index > cursor) out.push(buildRun(value.slice(cursor, m.index), style));
+      const tag = m[1];
+      const hex = m[2].replace("#", "").toUpperCase();
+      const close = `[/${tag}]`;
+      const closeIdx = value.indexOf(close, open.lastIndex);
+      if (closeIdx === -1) {
+        out.push(buildRun(value.slice(m.index), style));
+        cursor = value.length;
+        break;
+      }
+      const nextStyle = tag === "COR" ? { ...style, color: hex } : { ...style, highlight: hex };
+      out.push(...parse(value.slice(open.lastIndex, closeIdx), nextStyle));
+      cursor = closeIdx + close.length;
+      open.lastIndex = cursor;
     }
-    const color = m[1].replace("#", "").toUpperCase();
-    runs.push(new TextRun({ text: m[2], font: "Calibri", size, bold, color }));
-    lastIdx = m.index + m[0].length;
-  }
-  if (lastIdx < text.length) {
-    runs.push(new TextRun({ text: text.slice(lastIdx), font: "Calibri", size, bold }));
-  }
-  if (runs.length === 0) {
-    runs.push(new TextRun({ text, font: "Calibri", size, bold }));
-  }
-  return runs;
+    if (cursor < value.length) out.push(buildRun(value.slice(cursor), style));
+    return out;
+  };
+  const runs = parse(text).filter((run: any) => run);
+  return runs.length ? runs : [buildRun(text, {})];
 }
 
 export async function exportDocx(
@@ -651,10 +699,10 @@ export async function exportDocx(
       default: { document: { run: { font: "Calibri", size: 22 } } },
       paragraphStyles: [
         { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 28, bold: true, font: "Calibri" },
+          run: { size: 28, bold: false, font: "Calibri" },
           paragraph: { spacing: { before: 300, after: 200 }, outlineLevel: 0 } },
         { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 24, bold: true, font: "Calibri" },
+          run: { size: 24, bold: false, font: "Calibri" },
           paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 1 } },
       ],
     },
