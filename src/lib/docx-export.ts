@@ -299,12 +299,12 @@ function createFooter(): Footer {
       createFooterTable(),
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 160, after: 0 },
+        spacing: { before: 120, after: 0 },
         children: [
-          new TextRun({ text: "Página ", font: "Calibri", size: 22 }),
-          new TextRun({ children: [PageNumber.CURRENT], font: "Calibri", size: 22 }),
-          new TextRun({ text: " de ", font: "Calibri", size: 22 }),
-          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Calibri", size: 22 }),
+          new TextRun({ text: "Página ", font: "Calibri", size: 20 }),
+          new TextRun({ children: [PageNumber.CURRENT], font: "Calibri", size: 20 }),
+          new TextRun({ text: " de ", font: "Calibri", size: 20 }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Calibri", size: 20 }),
         ],
       }),
     ],
