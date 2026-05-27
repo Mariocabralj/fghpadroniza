@@ -359,6 +359,7 @@ function parseContentLines(
 ): (Paragraph | Table)[] {
   const children: (Paragraph | Table)[] = [];
   const upperTitle = title.trim().toUpperCase();
+  const boldWhitelist = collectStrictBoldWhitelist(lines);
   let i = 0;
   let firstSectionSeen = false;
 
@@ -471,7 +472,7 @@ function parseContentLines(
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { before: 300, after: 200 },
-        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Calibri", size: 28 })],
+        children: [new TextRun({ text: trimmed.toUpperCase(), bold: isStrictBoldAllowed(trimmed, boldWhitelist), font: "Calibri", size: 28 })],
       }));
       i++;
       continue;
@@ -485,7 +486,7 @@ function parseContentLines(
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
+        children: parseInlineRuns(line, { bold: isStrictBoldAllowed(line, boldWhitelist), size: 24 }),
       }));
       i++;
       continue;
@@ -495,7 +496,7 @@ function parseContentLines(
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
+        children: parseInlineRuns(line, { bold: isStrictBoldAllowed(line, boldWhitelist), size: 24 }),
       }));
       i++;
       continue;
@@ -504,20 +505,11 @@ function parseContentLines(
     // Subitens (6.1, 6.1.1) — máximo 3 níveis, com iterador sequencial estável.
     if (line.match(/^\d+\.\d+/)) {
       const renumbered = renumberSubsection(line, seqState);
-      const { headingText, bodyText } = splitSubsectionTitleAndBody(renumbered);
-      const headingRuns: TextRun[] = [
-        new TextRun({ text: headingText, bold: true, font: "Calibri", size: 22 }),
-      ];
-      if (bodyText) {
-        // CORPO após o título de subseção: NUNCA em negrito.
-        headingRuns.push(...parseInlineRuns(" " + bodyText, { bold: false, size: 22 }));
-      }
       children.push(new Paragraph({
-        heading: HeadingLevel.HEADING_2,
         indent: { left: 360 },
         spacing: { before: 100, after: 60 },
         alignment: AlignmentType.JUSTIFIED,
-        children: headingRuns,
+        children: parseInlineRuns(renumbered, { bold: false, size: 22 }),
       }));
       i++;
       continue;
