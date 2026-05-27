@@ -158,7 +158,7 @@ async function extractRichTextStyleSegments(buffer: ArrayBuffer): Promise<RichTe
     if (!xml || typeof window === "undefined") return [];
     const doc = new DOMParser().parseFromString(xml, "text/xml");
     return Array.from(doc.getElementsByTagName("w:r"))
-      .map((run) => {
+      .map((run): RichTextStyleSegment | null => {
         const text = Array.from(run.getElementsByTagName("w:t")).map((t) => t.textContent || "").join("");
         if (!text.trim()) return null;
         const rPr = run.getElementsByTagName("w:rPr")[0];
@@ -173,7 +173,7 @@ async function extractRichTextStyleSegments(buffer: ArrayBuffer): Promise<RichTe
         );
         return color || highlight ? { text, color, highlight } : null;
       })
-      .filter((x): x is RichTextStyleSegment => !!x);
+      .filter((x): x is RichTextStyleSegment => x !== null);
   } catch {
     return [];
   }
