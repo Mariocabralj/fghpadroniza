@@ -186,9 +186,9 @@ function createFooterTable(): Table {
     width: { size: w, type: WidthType.DXA },
     margins: { top: 100, bottom: 100, left: 120, right: 120 },
   });
-  // Arial 11pt = size 22 (half-points)
+  // Calibri 10pt = size 20 (half-points)
   const footerRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Calibri", size: 22, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold });
 
   return new Table({
     alignment: AlignmentType.CENTER,
