@@ -288,6 +288,8 @@ serve(async (req) => {
     const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
     const globalDirectives = await loadActiveDirectives(supaAdmin);
 
+    const flowchartFlag = `\n[Sinal do extrator] hasFlowchartImage=${hasImages ? "true" : "false"}. Use esse sinal para decidir se deve ou não inserir a linha "[INSERIR IMAGEM DO BIZAGI AQUI]" na seção FLUXOGRAMA(S), conforme a REGRA DE FLUXOGRAMA (CONDICIONAL).`;
+
     let userPrompt = "";
     if (mode === "upload-format") {
       userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
@@ -308,7 +310,7 @@ ${content}
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
 
-Gere o documento padronizado começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
+Gere o documento padronizado começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
     } else if (mode === "upload" || mode === "upload-improve") {
       userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO, APRIMORADO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
 
@@ -324,7 +326,7 @@ ${content}
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
 
-Gere o documento completo padronizado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
+Gere o documento completo padronizado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
     } else if (mode === "paste") {
       userPrompt = `O gestor colou o seguinte texto para ser transformado em documento padronizado FGH, seguindo a hierarquia: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
 
