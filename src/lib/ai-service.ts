@@ -6,6 +6,7 @@ export interface ProcessDocumentParams {
   title: string;
   sector: string;
   mode: "upload" | "upload-improve" | "upload-format" | "paste" | "idea";
+  hasImages?: boolean;
 }
 
 export async function streamProcessDocument(
