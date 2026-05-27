@@ -45,6 +45,47 @@ function parseTableLines(lines: string[]): string[][] {
   return rows;
 }
 
+function normalizePlainText(text: string): string {
+  return stripMarkdown(text)
+    .replace(/\[(?:COR|MARCA):#[0-9a-fA-F]{3,8}\]/g, "")
+    .replace(/\[\/(?:COR|MARCA)\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function collectStrictBoldWhitelist(lines: string[]): Set<string> {
+  const whitelist = new Set<string>();
+  let inSummary = false;
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const upper = normalizePlainText(trimmed);
+    if (upper === "SUMÁRIO" || upper === "ÍNDICE") {
+      inSummary = true;
+      whitelist.add(upper);
+      continue;
+    }
+    const topLevel = trimmed.match(/^(\d+)\.\s+(.+)$/);
+    const chapter = trimmed.match(/^(CAPÍTULO\s+[IVXLCDM]+\s*[-–—]\s*.+)$/i);
+    if (inSummary && (topLevel || chapter)) {
+      whitelist.add(upper.replace(/\s*\.{2,}\s*\d+$/, ""));
+      continue;
+    }
+    if (inSummary && (/^\d+\.\d+/.test(trimmed) || /^[\-•●]/.test(trimmed))) continue;
+    if (topLevel || chapter) {
+      whitelist.add(upper);
+      inSummary = false;
+    }
+  }
+  return whitelist;
+}
+
+function isStrictBoldAllowed(line: string, whitelist: Set<string>): boolean {
+  const normalized = normalizePlainText(line).replace(/\s*\.{2,}\s*\d+$/, "");
+  return whitelist.has(normalized);
+}
+
 function buildTableFromRows(rows: string[][]): Table {
   const numCols = Math.max(...rows.map(r => r.length), 1);
   const colWidth = Math.floor(CONTENT_WIDTH / numCols);
@@ -65,7 +106,7 @@ function buildTableFromRows(rows: string[][]): Table {
               alignment: AlignmentType.CENTER,
               children: [new TextRun({
                 text: row[i] || "",
-                bold: rowIdx === 0,
+                bold: false,
                 font: "Calibri",
                 size: 22,
               })],
