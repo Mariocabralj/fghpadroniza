@@ -11,12 +11,13 @@ import tarjaAzulUrl from "@/assets/tarja-azul-fgh.jpeg";
 const today = new Date().toLocaleDateString("pt-BR");
 
 // Margins: 2.5cm top/bottom, 1.5cm left/right (1cm ≈ 567 DXA)
-// Reduced lateral margins so header/footer tables stretch close to the page edges
-// (≈18cm of usable width on A4) while body text still has room to breathe.
-const MARGIN_TOP = 2268;       // extra room for header (image + metadata table)
+// Header anchored 0.2cm from top of page (≈113 DXA) per Norma Zero refinada.
+const MARGIN_TOP = 2000;       // body starts below header table
 const MARGIN_BOTTOM = 2400;    // larger footer area
 const MARGIN_LEFT = 850;       // 1.5cm
 const MARGIN_RIGHT = 850;      // 1.5cm
+const MARGIN_HEADER = 113;     // 0,2cm — distância do topo da página até o cabeçalho
+const MARGIN_FOOTER = 567;     // 1cm
 const PAGE_WIDTH = 11906;      // A4
 const PAGE_HEIGHT = 16838;     // A4
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
