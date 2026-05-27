@@ -65,7 +65,7 @@ function buildTableFromRows(rows: string[][]): Table {
               children: [new TextRun({
                 text: row[i] || "",
                 bold: rowIdx === 0,
-                font: "Arial",
+                font: "Calibri",
                 size: 22,
               })],
             })],
@@ -108,7 +108,7 @@ function createHeaderTable(title: string, elaboracao: string = "[A PREENCHER]"):
   });
 
   const smallRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Arial", size: 20, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -187,7 +187,7 @@ function createFooterTable(): Table {
   });
   // Arial 11pt = size 22 (half-points)
   const footerRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Arial", size: 22, bold });
+    new TextRun({ text, font: "Calibri", size: 22, bold });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -300,10 +300,10 @@ function createFooter(): Footer {
         alignment: AlignmentType.CENTER,
         spacing: { before: 160, after: 0 },
         children: [
-          new TextRun({ text: "Página ", font: "Arial", size: 22 }),
-          new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 22 }),
-          new TextRun({ text: " de ", font: "Arial", size: 22 }),
-          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Arial", size: 22 }),
+          new TextRun({ text: "Página ", font: "Calibri", size: 22 }),
+          new TextRun({ children: [PageNumber.CURRENT], font: "Calibri", size: 22 }),
+          new TextRun({ text: " de ", font: "Calibri", size: 22 }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Calibri", size: 22 }),
         ],
       }),
     ],
@@ -395,7 +395,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { before: 300, after: 200 },
-        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Arial", size: 28 })],
+        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Calibri", size: 28 })],
       }));
       i++;
       continue;
@@ -406,7 +406,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Arial", size: 24 })],
+        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
       }));
       i++;
       continue;
@@ -417,7 +417,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Arial", size: 24 })],
+        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
       }));
       i++;
       continue;
@@ -429,7 +429,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
         heading: HeadingLevel.HEADING_2,
         indent: { left: 360 },
         spacing: { before: 100, after: 60 },
-        children: [new TextRun({ text: line, bold: true, font: "Arial", size: 22 })],
+        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 22 })],
       }));
       i++;
       continue;
@@ -441,7 +441,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
         numbering: { reference: "bullets", level: 0 },
         spacing: { before: 40, after: 40 },
         alignment: AlignmentType.JUSTIFIED,
-        children: [new TextRun({ text: line.replace(/^[\-•●]\s*/, ""), font: "Arial", size: 22 })],
+        children: [new TextRun({ text: line.replace(/^[\-•●]\s*/, ""), font: "Calibri", size: 22 })],
       }));
       i++;
       continue;
@@ -451,7 +451,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
     children.push(new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
       spacing: { before: 40, after: 40, line: 360 },
-      children: [new TextRun({ text: line, font: "Arial", size: 22 })],
+      children: [new TextRun({ text: line, font: "Calibri", size: 22 })],
     }));
     i++;
   }
@@ -494,24 +494,24 @@ export async function exportDocx(title: string, standardizedText: string, elabor
   const sectionChildren = bodyChildren.length > 0 ? bodyChildren : [
     new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
-      children: [new TextRun({ text: standardizedText, font: "Arial", size: 22 })],
+      children: [new TextRun({ text: standardizedText, font: "Calibri", size: 22 })],
     }),
   ];
 
   const doc = new Document({
     styles: {
       default: {
-        document: { run: { font: "Arial", size: 22 } },
+        document: { run: { font: "Calibri", size: 22 } },
       },
       paragraphStyles: [
         {
           id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 28, bold: true, font: "Arial" },
+          run: { size: 28, bold: true, font: "Calibri" },
           paragraph: { spacing: { before: 300, after: 200 }, outlineLevel: 0 },
         },
         {
           id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 24, bold: true, font: "Arial" },
+          run: { size: 24, bold: true, font: "Calibri" },
           paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 1 },
         },
       ],
