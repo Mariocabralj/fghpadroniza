@@ -96,7 +96,7 @@ async function loadTarjaImage(): Promise<Uint8Array | null> {
   return loadBinary(tarjaAzulUrl);
 }
 
-function createHeaderTable(title: string, elaboracao: string = "[A PREENCHER]"): Table {
+function createHeaderTable(title: string, elaboracao: string = "[a preencher]"): Table {
   // Distribute header table across the full content width (no indent)
   const col1 = Math.floor(CONTENT_WIDTH * 0.44);
   const col2 = Math.floor(CONTENT_WIDTH * 0.36);
