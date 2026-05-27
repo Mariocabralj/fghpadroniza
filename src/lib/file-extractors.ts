@@ -149,6 +149,82 @@ function cssColorToHex(c: string): string | null {
   return "#" + hex(+m[1]) + hex(+m[2]) + hex(+m[3]);
 }
 
+type RichTextStyleSegment = { text: string; color?: string; highlight?: string };
+
+async function extractRichTextStyleSegments(buffer: ArrayBuffer): Promise<RichTextStyleSegment[]> {
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    const xml = await zip.file("word/document.xml")?.async("string");
+    if (!xml || typeof window === "undefined") return [];
+    const doc = new DOMParser().parseFromString(xml, "text/xml");
+    return Array.from(doc.getElementsByTagName("w:r"))
+      .map((run) => {
+        const text = Array.from(run.getElementsByTagName("w:t")).map((t) => t.textContent || "").join("");
+        if (!text.trim()) return null;
+        const rPr = run.getElementsByTagName("w:rPr")[0];
+        if (!rPr) return null;
+        const colorNode = rPr.getElementsByTagName("w:color")[0];
+        const highlightNode = rPr.getElementsByTagName("w:highlight")[0];
+        const shadingNode = rPr.getElementsByTagName("w:shd")[0];
+        const color = normalizeDocxHex(colorNode?.getAttribute("w:val"));
+        const highlight = normalizeDocxHex(
+          highlightToHex(highlightNode?.getAttribute("w:val")) || shadingNode?.getAttribute("w:fill"),
+          { allowWhite: false },
+        );
+        return color || highlight ? { text, color, highlight } : null;
+      })
+      .filter((x): x is RichTextStyleSegment => !!x);
+  } catch {
+    return [];
+  }
+}
+
+function normalizeDocxHex(value?: string | null, opts: { allowWhite?: boolean } = {}): string | undefined {
+  if (!value) return undefined;
+  const raw = value.replace("#", "").trim().toUpperCase();
+  if (!/^[0-9A-F]{6}$/.test(raw)) return undefined;
+  if (raw === "000000" || (!opts.allowWhite && raw === "FFFFFF")) return undefined;
+  return `#${raw}`;
+}
+
+function highlightToHex(value?: string | null): string | undefined {
+  const map: Record<string, string> = {
+    yellow: "FFFF00", green: "00FF00", cyan: "00FFFF", magenta: "FF00FF", blue: "0000FF", red: "FF0000",
+    darkBlue: "000080", darkCyan: "008080", darkGreen: "008000", darkMagenta: "800080", darkRed: "800000",
+    darkYellow: "808000", darkGray: "808080", lightGray: "C0C0C0", black: "000000",
+  };
+  if (!value || value === "none") return undefined;
+  return map[value] || value;
+}
+
+function applyStyleSegmentsToText(text: string, segments: RichTextStyleSegment[]): string {
+  let output = text;
+  const unique = Array.from(new Map(
+    segments
+      .filter((s) => s.text.trim().length >= 2)
+      .map((s) => [`${s.text}|${s.color || ""}|${s.highlight || ""}`, s]),
+  ).values()).sort((a, b) => b.text.length - a.text.length);
+
+  for (const segment of unique) {
+    const escaped = escapeRegExp(segment.text);
+    if (!escaped) continue;
+    const replacement = wrapWithRichTextTags(segment.text, segment);
+    output = output.replace(new RegExp(`(?<!\])${escaped}(?!\[\/COR\]|\[\/MARCA\])`, "g"), replacement);
+  }
+  return output;
+}
+
+function wrapWithRichTextTags(value: string, segment: RichTextStyleSegment): string {
+  let wrapped = value;
+  if (segment.highlight) wrapped = `[MARCA:${segment.highlight}]${wrapped}[/MARCA]`;
+  if (segment.color) wrapped = `[COR:${segment.color}]${wrapped}[/COR]`;
+  return wrapped;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** Extrai texto + imagens de um arquivo enviado pelo usuário. */
 export async function extractDocumentFromFile(file: File): Promise<ExtractedDoc> {
   const name = file.name.toLowerCase();
