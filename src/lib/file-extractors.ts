@@ -6,6 +6,7 @@ import * as pdfjsLib from "pdfjs-dist";
 // @ts-ignore - vite worker import
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
 import mammoth from "mammoth";
+import JSZip from "jszip";
 
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
 
@@ -56,6 +57,7 @@ async function extractFromDocx(file: File): Promise<ExtractedDoc> {
   const buffer = await readFileAsArrayBuffer(file);
   const images: Record<string, string> = {};
   const imageTypes: Record<string, string> = {};
+  const styleSegments = await extractRichTextStyleSegments(buffer);
   let counter = 0;
 
   try {
@@ -74,10 +76,11 @@ async function extractFromDocx(file: File): Promise<ExtractedDoc> {
         ),
       } as any,
     );
-    return { text: htmlToPipeText(html.value || ""), images, imageTypes };
+    const textWithStructure = htmlToPipeText(html.value || "");
+    return { text: applyStyleSegmentsToText(textWithStructure, styleSegments), images, imageTypes };
   } catch {
     const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-    return { text: result.value || "", images, imageTypes };
+    return { text: applyStyleSegmentsToText(result.value || "", styleSegments), images, imageTypes };
   }
 }
 
