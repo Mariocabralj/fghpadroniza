@@ -540,7 +540,7 @@ function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }):
   return runs;
 }
 
-export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[A PREENCHER]"): Promise<Blob> {
+export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[a preencher]"): Promise<Blob> {
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
@@ -551,7 +551,14 @@ export async function exportDocx(title: string, standardizedText: string, elabor
   const pageProps = {
     page: {
       size: { width: PAGE_WIDTH, height: PAGE_HEIGHT },
-      margin: { top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT },
+      margin: {
+        top: MARGIN_TOP,
+        right: MARGIN_RIGHT,
+        bottom: MARGIN_BOTTOM,
+        left: MARGIN_LEFT,
+        header: MARGIN_HEADER, // 0,2 cm — cabeçalho colado no topo da página
+        footer: MARGIN_FOOTER,
+      },
     },
     titlePage: false, // ensure header/footer are identical on the first page
   };
