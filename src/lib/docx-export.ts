@@ -233,7 +233,7 @@ function createHeader(
   title: string,
   headerImage: Uint8Array | null,
   tarjaImage: Uint8Array | null,
-  elaboracao: string = "[A PREENCHER]",
+  elaboracao: string = "[a preencher]",
 ): Header {
   const children: (Paragraph | Table)[] = [];
 
