@@ -439,7 +439,7 @@ function parseContentLines(
       children.push(new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { before: 120, after: 120 },
-        children: [new TextRun({ text: "[INSERIR IMAGEM DO BIZAGI AQUI]", bold: true, italics: true, font: "Calibri", size: 22, color: "0F3460" })],
+        children: [new TextRun({ text: "[INSERIR IMAGEM DO BIZAGI AQUI]", bold: false, italics: true, font: "Calibri", size: 22, color: "0F3460" })],
       }));
       i++;
       continue;
@@ -606,22 +606,27 @@ function splitSubsectionTitleAndBody(line: string): { headingText: string; bodyT
 }
 
 /**
- * Suporta cores inline via [COR:#hex]texto[/COR]. Preserva formatação aplicada
- * pelo usuário (vermelhos, azul institucional, etc.).
+ * Suporta cores inline via [COR:#hex] e marca-texto via [MARCA:#hex].
+ * Mesmo com opts.bold=true, só os títulos whitelisted devem chamar essa opção.
  */
 function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }): TextRun[] {
   const runs: TextRun[] = [];
   const size = opts.size ?? 22;
   const bold = !!opts.bold;
-  const regex = /\[COR:(#?[0-9a-fA-F]{3,8})\](.*?)\[\/COR\]/g;
+  const regex = /\[(COR|MARCA):(#?[0-9a-fA-F]{3,8})\](.*?)\[\/\1\]/g;
   let lastIdx = 0;
   let m: RegExpExecArray | null;
   while ((m = regex.exec(text)) !== null) {
     if (m.index > lastIdx) {
       runs.push(new TextRun({ text: text.slice(lastIdx, m.index), font: "Calibri", size, bold }));
     }
-    const color = m[1].replace("#", "").toUpperCase();
-    runs.push(new TextRun({ text: m[2], font: "Calibri", size, bold, color }));
+    const hex = m[2].replace("#", "").toUpperCase();
+    const styledText = m[3];
+    if (m[1] === "COR") {
+      runs.push(new TextRun({ text: styledText, font: "Calibri", size, bold, color: hex }));
+    } else {
+      runs.push(new TextRun({ text: styledText, font: "Calibri", size, bold, shading: { type: ShadingType.CLEAR, fill: hex, color: "auto" } }));
+    }
     lastIdx = m.index + m[0].length;
   }
   if (lastIdx < text.length) {
