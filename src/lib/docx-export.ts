@@ -150,7 +150,7 @@ function createHeaderTable(title: string, elaboracao: string = "[a preencher]"):
   });
 
   const smallRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Calibri", size: 20, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold: false });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -229,7 +229,7 @@ function createFooterTable(): Table {
   });
   // Calibri 10pt = size 20 (half-points)
   const footerRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Calibri", size: 20, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold: false });
 
   return new Table({
     alignment: AlignmentType.CENTER,
