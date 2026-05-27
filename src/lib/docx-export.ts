@@ -311,86 +311,120 @@ function createFooter(): Footer {
   });
 }
 
-function parseContentLines(lines: string[], title: string): (Paragraph | Table)[] {
+function parseContentLines(
+  lines: string[],
+  title: string,
+  imageAssets: { images: Record<string, string>; imageTypes: Record<string, string> },
+): (Paragraph | Table)[] {
   const children: (Paragraph | Table)[] = [];
   const upperTitle = title.trim().toUpperCase();
   let i = 0;
   let firstSectionSeen = false;
 
+  // Estado do iterador de numeração — evita duplicatas ao achatar níveis profundos.
+  const seqState = new Map<string, number>();
+
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Skip metadata lines (now in header)
+    // Metadados (já no header)
     if (trimmed.match(/^(Codificação|Código|Emissão|Versão|Título|Elaboração|Aprovação|Revisão|Setor):/i)) {
       i++;
       continue;
     }
 
-    // Skip page break markers (no cover anymore — render as a single flow)
-    if (trimmed === "---QUEBRA_DE_PAGINA---") {
-      i++;
-      continue;
-    }
+    if (trimmed === "---QUEBRA_DE_PAGINA---") { i++; continue; }
 
-    // Skip duplicated title lines from the body (title now lives only in header)
-    if (trimmed && trimmed.toUpperCase() === upperTitle) {
-      i++;
-      continue;
-    }
+    if (trimmed && trimmed.toUpperCase() === upperTitle) { i++; continue; }
 
-    // Before the first numbered section (e.g. "1. APRESENTAÇÃO"),
-    // skip any standalone heading-like lines that the AI may have emitted
-    // as a body title (all caps without numbering, or starting with #).
     if (!firstSectionSeen && trimmed) {
       const isNumberedSection = /^\d+\.?\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ\/ ]{3,}/.test(line);
       const isSummary = ["SUMÁRIO", "ÍNDICE"].includes(trimmed.toUpperCase());
-      if (isNumberedSection || isSummary) {
+      const isChapter = /^CAPÍTULO/i.test(line);
+      if (isNumberedSection || isSummary || isChapter) {
         firstSectionSeen = true;
       } else {
         const looksLikeTitle =
           /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9\/\-\s]{4,}$/.test(trimmed) ||
           /^#{1,3}\s/.test(line) ||
           trimmed.toUpperCase().includes(upperTitle);
-        if (looksLikeTitle) {
-          i++;
-          continue;
-        }
+        if (looksLikeTitle) { i++; continue; }
       }
     }
 
-    // Empty lines
+    // Marcador de imagem preservada do documento original — re-insere o blob real.
+    const imgMatch = trimmed.match(/^\[IMAGEM:([^\]]+)\]$/);
+    if (imgMatch) {
+      const id = imgMatch[1];
+      const b64 = imageAssets.images[id];
+      if (b64) {
+        const mime = imageAssets.imageTypes[id] || "image/png";
+        const type: any = mime.includes("jpeg") || mime.includes("jpg") ? "jpg"
+          : mime.includes("gif") ? "gif"
+          : mime.includes("bmp") ? "bmp"
+          : "png";
+        try {
+          const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+          children.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 120, after: 120 },
+            children: [new ImageRun({
+              type,
+              data: bin,
+              transformation: { width: 520, height: 360 },
+              altText: { title: id, description: "Imagem preservada do documento original", name: id },
+            })],
+          }));
+        } catch {
+          children.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: `[IMAGEM ${id} — não foi possível carregar]`, italics: true, font: "Calibri", size: 20, color: "999999" })],
+          }));
+        }
+      } else {
+        children.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: "[IMAGEM PRESERVADA DO DOCUMENTO ORIGINAL]", italics: true, font: "Calibri", size: 20 })],
+        }));
+      }
+      i++;
+      continue;
+    }
+
+    // Marcador especial Bizagi
+    if (trimmed.toUpperCase() === "[INSERIR IMAGEM DO BIZAGI AQUI]") {
+      children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 120, after: 120 },
+        children: [new TextRun({ text: "[INSERIR IMAGEM DO BIZAGI AQUI]", bold: true, italics: true, font: "Calibri", size: 22, color: "0F3460" })],
+      }));
+      i++;
+      continue;
+    }
+
     if (!trimmed) {
       children.push(new Paragraph({ spacing: { before: 60, after: 60 }, children: [] }));
       i++;
       continue;
     }
 
-    // Table blocks (lines with leading |)
+    // Tabelas
     if (line.includes("|") && line.trim().startsWith("|")) {
       const tableLines: string[] = [];
-      while (i < lines.length && lines[i].includes("|")) {
-        tableLines.push(lines[i]);
-        i++;
-      }
+      while (i < lines.length && lines[i].includes("|")) { tableLines.push(lines[i]); i++; }
       const rows = parseTableLines(tableLines);
       if (rows.length > 0) children.push(buildTableFromRows(rows));
       continue;
     }
-
-    // Pipe-separated table without leading pipe
     if (line.includes("|") && line.split("|").length >= 3) {
       const tableLines: string[] = [];
-      while (i < lines.length && lines[i].includes("|") && lines[i].split("|").length >= 3) {
-        tableLines.push(lines[i]);
-        i++;
-      }
+      while (i < lines.length && lines[i].includes("|") && lines[i].split("|").length >= 3) { tableLines.push(lines[i]); i++; }
       const rows = parseTableLines(tableLines);
       if (rows.length > 0) children.push(buildTableFromRows(rows));
       continue;
     }
 
-    // SUMÁRIO heading
     if (trimmed.toUpperCase() === "SUMÁRIO" || trimmed.toUpperCase() === "ÍNDICE") {
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
@@ -402,8 +436,11 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       continue;
     }
 
-    // Section headers (numbered, all caps like "1. APRESENTAÇÃO")
+    // Seções numeradas top-level (ex. "1. APRESENTAÇÃO") — negrito apenas no título.
     if (line.match(/^\d+\.?\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ\/ ]{3,}/)) {
+      // top-level — registra contador para parent="" sob este número.
+      const numMatch = line.match(/^(\d+)/);
+      if (numMatch) seqState.set("", Math.max(seqState.get("") ?? 0, parseInt(numMatch[1], 10)));
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
@@ -413,7 +450,6 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       continue;
     }
 
-    // CAPÍTULO headers
     if (line.match(/^CAPÍTULO/i)) {
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
@@ -424,16 +460,15 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       continue;
     }
 
-    // Sub-items (6.1, 6.2, 6.1.1)
-    // Limite hierárquico: no máximo 3 níveis (ex.: 1.1.1). Padroniza profundidades >3
-    // colapsando para o nível 3 ao reescrever o prefixo numérico.
+    // Subitens (6.1, 6.1.1) — máximo 3 níveis, com iterador sequencial estável.
     if (line.match(/^\d+\.\d+/)) {
-      const collapsed = collapseNumberingDepth(line);
-      const { headingText, bodyText } = splitSubsectionTitleAndBody(collapsed);
+      const renumbered = renumberSubsection(line, seqState);
+      const { headingText, bodyText } = splitSubsectionTitleAndBody(renumbered);
       const headingRuns: TextRun[] = [
         new TextRun({ text: headingText, bold: true, font: "Calibri", size: 22 }),
       ];
       if (bodyText) {
+        // CORPO após o título de subseção: NUNCA em negrito.
         headingRuns.push(...parseInlineRuns(" " + bodyText, { bold: false, size: 22 }));
       }
       children.push(new Paragraph({
@@ -447,7 +482,6 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       continue;
     }
 
-    // Bullet items
     if (line.match(/^[\-•●]\s/)) {
       children.push(new Paragraph({
         numbering: { reference: "bullets", level: 0 },
@@ -459,7 +493,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       continue;
     }
 
-    // Regular paragraph - justified (NUNCA em negrito)
+    // Parágrafo regular — NUNCA em negrito.
     children.push(new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
       spacing: { before: 40, after: 40, line: 360 },
@@ -472,49 +506,75 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helpers de hierarquia + cores inline + tags de mídia
+// Helpers de hierarquia + cores inline
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Limita a numeração de subitens a no máximo 3 níveis (ex.: 1.1.1).
- * "1.1.1.2.3 Verificação" → "1.1.1 Verificação".
+ * Renumera uma linha de subseção respeitando o limite de 3 níveis E garantindo
+ * que o último dígito SEJA sequencial dentro do mesmo "parent" (ex.: 6.2.1,
+ * 6.2.2, 6.2.3...). Achatar um nível profundo (ex.: 6.2.2.1.1) NUNCA pode
+ * produzir números repetidos no mesmo bloco.
  */
-function collapseNumberingDepth(line: string): string {
-  const match = line.match(/^(\d+(?:\.\d+){0,9})(\s*)(.*)$/);
+function renumberSubsection(line: string, state: Map<string, number>): string {
+  const match = line.match(/^(\d+(?:\.\d+){1,9})(\s*)(.*)$/);
   if (!match) return line;
-  const parts = match[1].split(".");
-  const capped = parts.slice(0, 3).join(".");
-  return `${capped}${match[2] || " "}${match[3] || ""}`.trimEnd();
+  const originalParts = match[1].split(".").map(Number);
+  const sep = match[2] || " ";
+  const rest = match[3] || "";
+
+  const wasDeeper = originalParts.length > 3;
+  const capped = originalParts.slice(0, 3);
+  const parentKey = capped.slice(0, -1).join(".");
+  const lastUsed = state.get(parentKey) ?? 0;
+
+  let lastDigit = capped[capped.length - 1];
+  if (wasDeeper || lastDigit <= lastUsed) {
+    lastDigit = lastUsed + 1;
+  }
+  capped[capped.length - 1] = lastDigit;
+  state.set(parentKey, lastDigit);
+
+  // Reset de filhos: ao avançar 6.2 → 6.3, esquece contadores de 6.2.*
+  const fullKey = capped.join(".");
+  for (const k of Array.from(state.keys())) {
+    if (k.startsWith(fullKey + ".")) state.delete(k);
+  }
+
+  return `${capped.join(".")}${sep}${rest}`.trimEnd();
 }
 
 /**
- * Para subseções "6.1 Título: corpo do texto..." separa o título curto (negrito)
- * do corpo (não negrito). Evita o bug de negritar a linha inteira.
+ * Separa título curto (negrito) e corpo (não negrito) de subseções como
+ * "6.1 Identificação: descrição...". Se a linha não tem um separador claro
+ * (":" ou "—"/"–" antes de 60 chars), trata APENAS a numeração como título;
+ * todo o restante vira corpo (não negrito) — evita o bug de negritar parágrafo.
  */
 function splitSubsectionTitleAndBody(line: string): { headingText: string; bodyText: string } {
-  const prefixMatch = line.match(/^(\d+(?:\.\d+){1,2}\s+)(.*)$/);
+  const prefixMatch = line.match(/^(\d+(?:\.\d+){1,2})(\s+)(.*)$/);
   if (!prefixMatch) return { headingText: line, bodyText: "" };
   const prefix = prefixMatch[1];
-  const rest = prefixMatch[2];
-  // Procura ponto-final, dois-pontos ou travessão para cortar o título do corpo
-  const splitIdx = rest.search(/[:.]\s|\s[—–-]\s/);
-  if (splitIdx > 0 && splitIdx < 120) {
-    const sep = rest[splitIdx];
-    const headingText = `${prefix}${rest.slice(0, splitIdx)}${sep === ":" ? ":" : ""}`.trim();
-    const bodyText = rest.slice(splitIdx + 1).trim();
-    return { headingText, bodyText };
+  const rest = prefixMatch[3];
+
+  // Procura separador EXPLÍCITO de "título: corpo" no início da linha.
+  const sepMatch = rest.match(/^([^:\n—–]{1,60}?)(:|\s[—–-]\s)\s*(.*)$/);
+  if (sepMatch) {
+    const titlePart = sepMatch[1].trim();
+    const body = sepMatch[3].trim();
+    return { headingText: `${prefix} ${titlePart}${sepMatch[2] === ":" ? ":" : ""}`.trim(), bodyText: body };
   }
-  // Sem separador — se a linha for muito longa, trate tudo como corpo (sem negrito)
-  if (rest.length > 80) {
-    return { headingText: prefix.trim(), bodyText: rest };
+
+  // Sem separador. Linha curta sem pontuação interna → título inteiro.
+  if (rest.length <= 60 && !/[.;]/.test(rest)) {
+    return { headingText: `${prefix} ${rest}`.trim(), bodyText: "" };
   }
-  return { headingText: line, bodyText: "" };
+
+  // Caso geral: só a numeração é negrito; tudo o mais é corpo.
+  return { headingText: prefix, bodyText: rest };
 }
 
 /**
- * Suporte a cores inline via tag [COR:#hex]texto[/COR]. Preserva formatação local
- * aplicada pelo usuário (ex.: destaques em vermelho, azul institucional, etc.).
- * Também converte a tag visual [INSERIR IMAGEM DO BIZAGI AQUI] em um realce centralizado.
+ * Suporta cores inline via [COR:#hex]texto[/COR]. Preserva formatação aplicada
+ * pelo usuário (vermelhos, azul institucional, etc.).
  */
 function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }): TextRun[] {
   const runs: TextRun[] = [];
@@ -540,7 +600,12 @@ function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }):
   return runs;
 }
 
-export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[a preencher]"): Promise<Blob> {
+export async function exportDocx(
+  title: string,
+  standardizedText: string,
+  elaboracao: string = "[a preencher]",
+  imageAssets: { images: Record<string, string>; imageTypes: Record<string, string> } = { images: {}, imageTypes: {} },
+): Promise<Blob> {
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
@@ -552,15 +617,11 @@ export async function exportDocx(title: string, standardizedText: string, elabor
     page: {
       size: { width: PAGE_WIDTH, height: PAGE_HEIGHT },
       margin: {
-        top: MARGIN_TOP,
-        right: MARGIN_RIGHT,
-        bottom: MARGIN_BOTTOM,
-        left: MARGIN_LEFT,
-        header: MARGIN_HEADER, // 0,2 cm — cabeçalho colado no topo da página
-        footer: MARGIN_FOOTER,
+        top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT,
+        header: MARGIN_HEADER, footer: MARGIN_FOOTER,
       },
     },
-    titlePage: false, // ensure header/footer are identical on the first page
+    titlePage: false,
   };
 
   const numbering = {
@@ -576,8 +637,7 @@ export async function exportDocx(title: string, standardizedText: string, elabor
     }],
   };
 
-  // No cover. Document starts directly on "1. APRESENTAÇÃO".
-  const bodyChildren = parseContentLines(allLines, title);
+  const bodyChildren = parseContentLines(allLines, title, imageAssets);
 
   const sectionChildren = bodyChildren.length > 0 ? bodyChildren : [
     new Paragraph({
@@ -588,20 +648,14 @@ export async function exportDocx(title: string, standardizedText: string, elabor
 
   const doc = new Document({
     styles: {
-      default: {
-        document: { run: { font: "Calibri", size: 22 } },
-      },
+      default: { document: { run: { font: "Calibri", size: 22 } } },
       paragraphStyles: [
-        {
-          id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+        { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
           run: { size: 28, bold: true, font: "Calibri" },
-          paragraph: { spacing: { before: 300, after: 200 }, outlineLevel: 0 },
-        },
-        {
-          id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+          paragraph: { spacing: { before: 300, after: 200 }, outlineLevel: 0 } },
+        { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
           run: { size: 24, bold: true, font: "Calibri" },
-          paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 1 },
-        },
+          paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 1 } },
       ],
     },
     numbering,
@@ -615,3 +669,4 @@ export async function exportDocx(title: string, standardizedText: string, elabor
 
   return Packer.toBlob(doc);
 }
+
