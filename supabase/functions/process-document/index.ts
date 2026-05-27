@@ -203,10 +203,10 @@ REGRA DE HIERARQUIA NUMÉRICA (OBRIGATÓRIA):
 - Se precisar de muitos itens no mesmo nível, expanda HORIZONTALMENTE (1.1.1 até 1.1.99) — nunca verticalmente.
 - Se o conteúdo original tiver hierarquia mais profunda, SIMPLIFIQUE para caber em 3 níveis.
 
-REGRA DE NEGRITO (OBRIGATÓRIA):
-- Apenas SUMÁRIO, títulos de seção/capítulo (ex.: "1. APRESENTAÇÃO"), títulos de subseção (ex.: "6.1 Identificação") e cabeçalhos de tabela devem ser sinalizados como títulos.
-- O CORPO do texto JAMAIS deve ser destacado em negrito. Não use ** em nenhum trecho corrido (incluindo Objetivos, Competências, Fluxogramas, Disposições Gerais, Informações Adicionais e Referências Bibliográficas).
-- Não tente negritar parágrafos inteiros nem rótulos como "Objetivo:", "Responsável:" — apenas escreva o texto normal.
+REGRA ABSOLUTA DE NEGRITO — STRICT BOLD WHITELIST (OBRIGATÓRIA):
+- O negrito é permitido APENAS nos itens principais do SUMÁRIO/ÍNDICE e nos títulos de seção/capítulo correspondentes chamados novamente no corpo do documento (ex.: "1. APRESENTAÇÃO", "2. OBJETIVOS", "CAPÍTULO I - ...").
+- PROIBIDO usar negrito em subtópicos (4.1, 6.2.1 etc.), parágrafos, listas, textos descritivos, rótulos como "Objetivo:"/"Responsável:" e cabeçalhos de tabela.
+- Não use **, <b>, <strong> ou qualquer marcação de negrito no conteúdo gerado. O frontend aplicará negrito somente à whitelist do Sumário e títulos equivalentes.
 
 REGRA DE FLUXOGRAMA (CONDICIONAL):
 - Se o conteúdo do usuário JÁ contiver um marcador [IMAGEM:id] dentro (ou imediatamente após) o título da seção "FLUXOGRAMA(S)", PRESERVE esse marcador exatamente como está — NÃO escreva "[INSERIR IMAGEM DO BIZAGI AQUI]".
@@ -217,6 +217,8 @@ REGRA DE PRESERVAÇÃO DE MÍDIA E FORMATAÇÃO ORIGINAL (CRÍTICO):
 - Marcadores [IMAGEM:id] (ex.: [IMAGEM:img_1], [IMAGEM:img_2]…) representam IMAGENS REAIS extraídas do upload. Você DEVE mantê-los exatamente como vieram, em linha própria, na MESMA seção/tópico em que apareciam no documento original. NUNCA remova, renomeie ou agrupe esses marcadores — o motor de exportação substitui cada marcador pela imagem original. Se uma seção do modelo recebe imagens do upload, intercale o marcador entre os parágrafos correspondentes.
 - Marcadores antigos como "[IMAGEM: ...]", "[FIGURA n]", "[FLUXO BIZAGI]" também devem ser preservados quando vierem do texto.
 - Tags de cor inline no formato [COR:#hex]texto[/COR] representam destaques de cor aplicados pelo usuário no documento original. PRESERVE-as EXATAMENTE como vieram (mesmo hex, mesmo trecho de texto entre as tags) — o motor de exportação aplica essa cor no DOCX final.
+- Tags de marca-texto no formato [MARCA:#hex]texto[/MARCA] representam background-color/highlight aplicado pelo usuário. PRESERVE-as EXATAMENTE como vieram.
+- Se você reescrever ou melhorar uma frase marcada por [COR] ou [MARCA], a frase nova que substitui aquele trecho DEVE permanecer dentro das mesmas tags e com o mesmo hex. Nunca remova, altere ou espalhe essas tags para fora do trecho correspondente.
 
 REGRA TABELA — HISTÓRICO DE REVISÕES (OBRIGATÓRIA em quase todos os tipos):
 Use SEMPRE este formato exato, com 5 colunas:
