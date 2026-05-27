@@ -425,12 +425,23 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
     }
 
     // Sub-items (6.1, 6.2, 6.1.1)
+    // Limite hierárquico: no máximo 3 níveis (ex.: 1.1.1). Padroniza profundidades >3
+    // colapsando para o nível 3 ao reescrever o prefixo numérico.
     if (line.match(/^\d+\.\d+/)) {
+      const collapsed = collapseNumberingDepth(line);
+      const { headingText, bodyText } = splitSubsectionTitleAndBody(collapsed);
+      const headingRuns: TextRun[] = [
+        new TextRun({ text: headingText, bold: true, font: "Calibri", size: 22 }),
+      ];
+      if (bodyText) {
+        headingRuns.push(...parseInlineRuns(" " + bodyText, { bold: false, size: 22 }));
+      }
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_2,
         indent: { left: 360 },
         spacing: { before: 100, after: 60 },
-        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 22 })],
+        alignment: AlignmentType.JUSTIFIED,
+        children: headingRuns,
       }));
       i++;
       continue;
@@ -442,22 +453,91 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
         numbering: { reference: "bullets", level: 0 },
         spacing: { before: 40, after: 40 },
         alignment: AlignmentType.JUSTIFIED,
-        children: [new TextRun({ text: line.replace(/^[\-•●]\s*/, ""), font: "Calibri", size: 22 })],
+        children: parseInlineRuns(line.replace(/^[\-•●]\s*/, ""), { bold: false, size: 22 }),
       }));
       i++;
       continue;
     }
 
-    // Regular paragraph - justified
+    // Regular paragraph - justified (NUNCA em negrito)
     children.push(new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
       spacing: { before: 40, after: 40, line: 360 },
-      children: [new TextRun({ text: line, font: "Calibri", size: 22 })],
+      children: parseInlineRuns(line, { bold: false, size: 22 }),
     }));
     i++;
   }
 
   return children;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers de hierarquia + cores inline + tags de mídia
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Limita a numeração de subitens a no máximo 3 níveis (ex.: 1.1.1).
+ * "1.1.1.2.3 Verificação" → "1.1.1 Verificação".
+ */
+function collapseNumberingDepth(line: string): string {
+  const match = line.match(/^(\d+(?:\.\d+){0,9})(\s*)(.*)$/);
+  if (!match) return line;
+  const parts = match[1].split(".");
+  const capped = parts.slice(0, 3).join(".");
+  return `${capped}${match[2] || " "}${match[3] || ""}`.trimEnd();
+}
+
+/**
+ * Para subseções "6.1 Título: corpo do texto..." separa o título curto (negrito)
+ * do corpo (não negrito). Evita o bug de negritar a linha inteira.
+ */
+function splitSubsectionTitleAndBody(line: string): { headingText: string; bodyText: string } {
+  const prefixMatch = line.match(/^(\d+(?:\.\d+){1,2}\s+)(.*)$/);
+  if (!prefixMatch) return { headingText: line, bodyText: "" };
+  const prefix = prefixMatch[1];
+  const rest = prefixMatch[2];
+  // Procura ponto-final, dois-pontos ou travessão para cortar o título do corpo
+  const splitIdx = rest.search(/[:.]\s|\s[—–-]\s/);
+  if (splitIdx > 0 && splitIdx < 120) {
+    const sep = rest[splitIdx];
+    const headingText = `${prefix}${rest.slice(0, splitIdx)}${sep === ":" ? ":" : ""}`.trim();
+    const bodyText = rest.slice(splitIdx + 1).trim();
+    return { headingText, bodyText };
+  }
+  // Sem separador — se a linha for muito longa, trate tudo como corpo (sem negrito)
+  if (rest.length > 80) {
+    return { headingText: prefix.trim(), bodyText: rest };
+  }
+  return { headingText: line, bodyText: "" };
+}
+
+/**
+ * Suporte a cores inline via tag [COR:#hex]texto[/COR]. Preserva formatação local
+ * aplicada pelo usuário (ex.: destaques em vermelho, azul institucional, etc.).
+ * Também converte a tag visual [INSERIR IMAGEM DO BIZAGI AQUI] em um realce centralizado.
+ */
+function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }): TextRun[] {
+  const runs: TextRun[] = [];
+  const size = opts.size ?? 22;
+  const bold = !!opts.bold;
+  const regex = /\[COR:(#?[0-9a-fA-F]{3,8})\](.*?)\[\/COR\]/g;
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > lastIdx) {
+      runs.push(new TextRun({ text: text.slice(lastIdx, m.index), font: "Calibri", size, bold }));
+    }
+    const color = m[1].replace("#", "").toUpperCase();
+    runs.push(new TextRun({ text: m[2], font: "Calibri", size, bold, color }));
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) {
+    runs.push(new TextRun({ text: text.slice(lastIdx), font: "Calibri", size, bold }));
+  }
+  if (runs.length === 0) {
+    runs.push(new TextRun({ text, font: "Calibri", size, bold }));
+  }
+  return runs;
 }
 
 export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[A PREENCHER]"): Promise<Blob> {
