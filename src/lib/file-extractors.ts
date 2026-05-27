@@ -1,13 +1,21 @@
 // Text extraction helpers for upload files (PDF, DOCX, TXT).
-// All extractors return plain text suitable for the AI pipeline.
+// All extractors return plain text + image binaries (base64) suitable for the
+// AI pipeline AND for re-insertion no DOCX final.
 
 import * as pdfjsLib from "pdfjs-dist";
 // @ts-ignore - vite worker import
 import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker";
 import mammoth from "mammoth";
 
-// Configure pdf.js worker once
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+
+export interface ExtractedDoc {
+  text: string;
+  /** id → base64 (sem prefixo data:) */
+  images: Record<string, string>;
+  /** id → mime (image/png, image/jpeg…) */
+  imageTypes: Record<string, string>;
+}
 
 async function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
@@ -27,7 +35,7 @@ async function readFileAsPlainText(file: File): Promise<string> {
   });
 }
 
-async function extractFromPdf(file: File): Promise<string> {
+async function extractFromPdf(file: File): Promise<ExtractedDoc> {
   const buffer = await readFileAsArrayBuffer(file);
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
   const parts: string[] = [];
@@ -41,36 +49,40 @@ async function extractFromPdf(file: File): Promise<string> {
       .trim();
     if (pageText) parts.push(pageText);
   }
-  return parts.join("\n\n");
+  return { text: parts.join("\n\n"), images: {}, imageTypes: {} };
 }
 
-async function extractFromDocx(file: File): Promise<string> {
+async function extractFromDocx(file: File): Promise<ExtractedDoc> {
   const buffer = await readFileAsArrayBuffer(file);
-  // Converte para HTML para preservar tabelas e marcadores de imagem,
-  // depois transforma em texto/markdown leve que o motor da IA e o exportador
-  // DOCX conseguem reaproveitar (tabelas em pipe + placeholders de imagem).
+  const images: Record<string, string> = {};
+  const imageTypes: Record<string, string> = {};
+  let counter = 0;
+
   try {
     const html = await mammoth.convertToHtml(
       { arrayBuffer: buffer },
       {
-        convertImage: mammoth.images.imgElement(() =>
-          Promise.resolve({ src: "[IMAGEM PRESERVADA DO DOCUMENTO ORIGINAL]" })
+        convertImage: mammoth.images.imgElement((image: any) =>
+          image.read("base64").then((b64: string) => {
+            counter += 1;
+            const id = `img_${counter}`;
+            images[id] = b64;
+            imageTypes[id] = image.contentType || "image/png";
+            // src serve como marcador para o htmlToPipeText converter em [IMAGEM:id]
+            return { src: `__FGH_IMG__${id}__` };
+          }),
         ),
       } as any,
     );
-    return htmlToPipeText(html.value || "");
+    return { text: htmlToPipeText(html.value || ""), images, imageTypes };
   } catch {
     const result = await mammoth.extractRawText({ arrayBuffer: buffer });
-    return result.value || "";
+    return { text: result.value || "", images, imageTypes };
   }
 }
 
-/**
- * Conversão leve de HTML (saída do mammoth) para texto puro com:
- *  - tabelas em formato pipe (mantidas para o exportador)
- *  - marcadores [IMAGEM PRESERVADA DO DOCUMENTO ORIGINAL] em linha própria
- *  - tags [COR:#hex]...[/COR] para cores aplicadas pelo usuário no texto
- */
+/** HTML do mammoth → texto puro com tabelas em pipe, marcadores [IMAGEM:id]
+ * e tags [COR:#hex]...[/COR] para cores inline definidas pelo usuário. */
 function htmlToPipeText(html: string): string {
   if (typeof window === "undefined" || !html) return html;
   const doc = new DOMParser().parseFromString(html, "text/html");
@@ -81,7 +93,12 @@ function htmlToPipeText(html: string): string {
     const el = node as HTMLElement;
     const tag = el.tagName.toLowerCase();
 
-    if (tag === "img") return "\n[IMAGEM PRESERVADA DO DOCUMENTO ORIGINAL]\n";
+    if (tag === "img") {
+      const src = el.getAttribute("src") || "";
+      const m = src.match(/__FGH_IMG__(.+?)__/);
+      if (m) return `\n[IMAGEM:${m[1]}]\n`;
+      return "\n[IMAGEM PRESERVADA DO DOCUMENTO ORIGINAL]\n";
+    }
     if (tag === "br") return "\n";
 
     if (tag === "table") {
@@ -102,7 +119,6 @@ function htmlToPipeText(html: string): string {
 
     const inner = Array.from(el.childNodes).map(walk).join("");
 
-    // Cor inline aplicada pelo usuário (style="color: rgb(...)") — preserva via tag.
     const style = el.getAttribute("style") || "";
     const colorMatch = style.match(/color:\s*([^;]+)/i);
     let wrapped = inner;
@@ -119,9 +135,7 @@ function htmlToPipeText(html: string): string {
     return wrapped;
   };
 
-  return walk(doc.body)
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return walk(doc.body).replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function cssColorToHex(c: string): string | null {
@@ -132,17 +146,19 @@ function cssColorToHex(c: string): string | null {
   return "#" + hex(+m[1]) + hex(+m[2]) + hex(+m[3]);
 }
 
-/**
- * Extracts plain text from a user-uploaded file.
- * Supports: .pdf, .docx, .txt (fallback for any text/* file).
- */
-export async function extractTextFromFile(file: File): Promise<string> {
+/** Extrai texto + imagens de um arquivo enviado pelo usuário. */
+export async function extractDocumentFromFile(file: File): Promise<ExtractedDoc> {
   const name = file.name.toLowerCase();
   if (name.endsWith(".pdf")) return extractFromPdf(file);
   if (name.endsWith(".docx")) return extractFromDocx(file);
   if (name.endsWith(".txt") || file.type.startsWith("text/")) {
-    return readFileAsPlainText(file);
+    return { text: await readFileAsPlainText(file), images: {}, imageTypes: {} };
   }
-  // Best-effort fallback
-  return readFileAsPlainText(file);
+  return { text: await readFileAsPlainText(file), images: {}, imageTypes: {} };
+}
+
+/** Compat: mantém retorno só de texto para chamadas antigas. */
+export async function extractTextFromFile(file: File): Promise<string> {
+  const doc = await extractDocumentFromFile(file);
+  return doc.text;
 }
