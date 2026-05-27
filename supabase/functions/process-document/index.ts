@@ -208,13 +208,15 @@ REGRA DE NEGRITO (OBRIGATÓRIA):
 - O CORPO do texto JAMAIS deve ser destacado em negrito. Não use ** em nenhum trecho corrido (incluindo Objetivos, Competências, Fluxogramas, Disposições Gerais, Informações Adicionais e Referências Bibliográficas).
 - Não tente negritar parágrafos inteiros nem rótulos como "Objetivo:", "Responsável:" — apenas escreva o texto normal.
 
-REGRA DE FLUXOGRAMA:
-- Sempre que existir seção "FLUXOGRAMA(S)" e o usuário NÃO tiver enviado uma imagem real do fluxo, escreva em linha própria, centralizado: "[INSERIR IMAGEM DO BIZAGI AQUI]" (assim, literalmente entre colchetes). Em seguida descreva textualmente o fluxo (etapas, decisões SIM/NÃO, responsáveis).
+REGRA DE FLUXOGRAMA (CONDICIONAL):
+- Se o conteúdo do usuário JÁ contiver um marcador [IMAGEM:id] dentro (ou imediatamente após) o título da seção "FLUXOGRAMA(S)", PRESERVE esse marcador exatamente como está — NÃO escreva "[INSERIR IMAGEM DO BIZAGI AQUI]".
+- Se NÃO houver nenhum marcador de imagem na seção de fluxograma (o sistema vai informar via flag hasFlowchartImage=false), escreva em linha própria, ANTES de qualquer texto descritivo, a string literal: [INSERIR IMAGEM DO BIZAGI AQUI]. Só então descreva o fluxo textualmente.
 
-REGRA DE PRESERVAÇÃO DE MÍDIA E FORMATAÇÃO ORIGINAL:
-- Quando o usuário enviar um documento (upload), PRESERVE qualquer tabela em formato pipe ("|") que aparecer no conteúdo original.
-- Para imagens/gráficos/fluxogramas declarados no texto original (marcadores como "[IMAGEM: ...]", "[FIGURA n]", "[FLUXO BIZAGI]"), mantenha esses marcadores na seção correspondente — não os remova.
-- Se o texto original trouxer tags de cor inline no formato [COR:#hex]texto[/COR], PRESERVE-as exatamente como vieram para que o motor de exportação aplique a cor naquele trecho.
+REGRA DE PRESERVAÇÃO DE MÍDIA E FORMATAÇÃO ORIGINAL (CRÍTICO):
+- Quando o usuário enviar um documento, PRESERVE qualquer tabela em formato pipe ("|") do conteúdo original.
+- Marcadores [IMAGEM:id] (ex.: [IMAGEM:img_1], [IMAGEM:img_2]…) representam IMAGENS REAIS extraídas do upload. Você DEVE mantê-los exatamente como vieram, em linha própria, na MESMA seção/tópico em que apareciam no documento original. NUNCA remova, renomeie ou agrupe esses marcadores — o motor de exportação substitui cada marcador pela imagem original. Se uma seção do modelo recebe imagens do upload, intercale o marcador entre os parágrafos correspondentes.
+- Marcadores antigos como "[IMAGEM: ...]", "[FIGURA n]", "[FLUXO BIZAGI]" também devem ser preservados quando vierem do texto.
+- Tags de cor inline no formato [COR:#hex]texto[/COR] representam destaques de cor aplicados pelo usuário no documento original. PRESERVE-as EXATAMENTE como vieram (mesmo hex, mesmo trecho de texto entre as tags) — o motor de exportação aplica essa cor no DOCX final.
 
 REGRA TABELA — HISTÓRICO DE REVISÕES (OBRIGATÓRIA em quase todos os tipos):
 Use SEMPRE este formato exato, com 5 colunas:
@@ -273,7 +275,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { content, docType, title, sector, mode } = await req.json();
+    const { content, docType, title, sector, mode, hasImages } = await req.json();
 
     if (!content || !docType) {
       await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode });
