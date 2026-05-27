@@ -11,12 +11,13 @@ import tarjaAzulUrl from "@/assets/tarja-azul-fgh.jpeg";
 const today = new Date().toLocaleDateString("pt-BR");
 
 // Margins: 2.5cm top/bottom, 1.5cm left/right (1cm ≈ 567 DXA)
-// Reduced lateral margins so header/footer tables stretch close to the page edges
-// (≈18cm of usable width on A4) while body text still has room to breathe.
-const MARGIN_TOP = 2268;       // extra room for header (image + metadata table)
+// Header anchored 0.2cm from top of page (≈113 DXA) per Norma Zero refinada.
+const MARGIN_TOP = 2000;       // body starts below header table
 const MARGIN_BOTTOM = 2400;    // larger footer area
 const MARGIN_LEFT = 850;       // 1.5cm
 const MARGIN_RIGHT = 850;      // 1.5cm
+const MARGIN_HEADER = 113;     // 0,2cm — distância do topo da página até o cabeçalho
+const MARGIN_FOOTER = 567;     // 1cm
 const PAGE_WIDTH = 11906;      // A4
 const PAGE_HEIGHT = 16838;     // A4
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
@@ -65,7 +66,7 @@ function buildTableFromRows(rows: string[][]): Table {
               children: [new TextRun({
                 text: row[i] || "",
                 bold: rowIdx === 0,
-                font: "Arial",
+                font: "Calibri",
                 size: 22,
               })],
             })],
@@ -95,7 +96,7 @@ async function loadTarjaImage(): Promise<Uint8Array | null> {
   return loadBinary(tarjaAzulUrl);
 }
 
-function createHeaderTable(title: string, elaboracao: string = "[A PREENCHER]"): Table {
+function createHeaderTable(title: string, elaboracao: string = "[a preencher]"): Table {
   // Distribute header table across the full content width (no indent)
   const col1 = Math.floor(CONTENT_WIDTH * 0.44);
   const col2 = Math.floor(CONTENT_WIDTH * 0.36);
@@ -108,7 +109,7 @@ function createHeaderTable(title: string, elaboracao: string = "[A PREENCHER]"):
   });
 
   const smallRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Arial", size: 20, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -185,9 +186,9 @@ function createFooterTable(): Table {
     width: { size: w, type: WidthType.DXA },
     margins: { top: 100, bottom: 100, left: 120, right: 120 },
   });
-  // Arial 11pt = size 22 (half-points)
+  // Calibri 10pt = size 20 (half-points)
   const footerRun = (text: string, bold = false) =>
-    new TextRun({ text, font: "Arial", size: 22, bold });
+    new TextRun({ text, font: "Calibri", size: 20, bold });
 
   return new Table({
     alignment: AlignmentType.CENTER,
@@ -232,7 +233,7 @@ function createHeader(
   title: string,
   headerImage: Uint8Array | null,
   tarjaImage: Uint8Array | null,
-  elaboracao: string = "[A PREENCHER]",
+  elaboracao: string = "[a preencher]",
 ): Header {
   const children: (Paragraph | Table)[] = [];
 
@@ -298,12 +299,12 @@ function createFooter(): Footer {
       createFooterTable(),
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 160, after: 0 },
+        spacing: { before: 120, after: 0 },
         children: [
-          new TextRun({ text: "Página ", font: "Arial", size: 22 }),
-          new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 22 }),
-          new TextRun({ text: " de ", font: "Arial", size: 22 }),
-          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Arial", size: 22 }),
+          new TextRun({ text: "Página ", font: "Calibri", size: 20 }),
+          new TextRun({ children: [PageNumber.CURRENT], font: "Calibri", size: 20 }),
+          new TextRun({ text: " de ", font: "Calibri", size: 20 }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Calibri", size: 20 }),
         ],
       }),
     ],
@@ -395,7 +396,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
         heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
         spacing: { before: 300, after: 200 },
-        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Arial", size: 28 })],
+        children: [new TextRun({ text: trimmed.toUpperCase(), bold: true, font: "Calibri", size: 28 })],
       }));
       i++;
       continue;
@@ -406,7 +407,7 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Arial", size: 24 })],
+        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
       }));
       i++;
       continue;
@@ -417,19 +418,30 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 300, after: 120 },
-        children: [new TextRun({ text: line, bold: true, font: "Arial", size: 24 })],
+        children: [new TextRun({ text: line, bold: true, font: "Calibri", size: 24 })],
       }));
       i++;
       continue;
     }
 
     // Sub-items (6.1, 6.2, 6.1.1)
+    // Limite hierárquico: no máximo 3 níveis (ex.: 1.1.1). Padroniza profundidades >3
+    // colapsando para o nível 3 ao reescrever o prefixo numérico.
     if (line.match(/^\d+\.\d+/)) {
+      const collapsed = collapseNumberingDepth(line);
+      const { headingText, bodyText } = splitSubsectionTitleAndBody(collapsed);
+      const headingRuns: TextRun[] = [
+        new TextRun({ text: headingText, bold: true, font: "Calibri", size: 22 }),
+      ];
+      if (bodyText) {
+        headingRuns.push(...parseInlineRuns(" " + bodyText, { bold: false, size: 22 }));
+      }
       children.push(new Paragraph({
         heading: HeadingLevel.HEADING_2,
         indent: { left: 360 },
         spacing: { before: 100, after: 60 },
-        children: [new TextRun({ text: line, bold: true, font: "Arial", size: 22 })],
+        alignment: AlignmentType.JUSTIFIED,
+        children: headingRuns,
       }));
       i++;
       continue;
@@ -441,17 +453,17 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
         numbering: { reference: "bullets", level: 0 },
         spacing: { before: 40, after: 40 },
         alignment: AlignmentType.JUSTIFIED,
-        children: [new TextRun({ text: line.replace(/^[\-•●]\s*/, ""), font: "Arial", size: 22 })],
+        children: parseInlineRuns(line.replace(/^[\-•●]\s*/, ""), { bold: false, size: 22 }),
       }));
       i++;
       continue;
     }
 
-    // Regular paragraph - justified
+    // Regular paragraph - justified (NUNCA em negrito)
     children.push(new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
       spacing: { before: 40, after: 40, line: 360 },
-      children: [new TextRun({ text: line, font: "Arial", size: 22 })],
+      children: parseInlineRuns(line, { bold: false, size: 22 }),
     }));
     i++;
   }
@@ -459,7 +471,76 @@ function parseContentLines(lines: string[], title: string): (Paragraph | Table)[
   return children;
 }
 
-export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[A PREENCHER]"): Promise<Blob> {
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers de hierarquia + cores inline + tags de mídia
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Limita a numeração de subitens a no máximo 3 níveis (ex.: 1.1.1).
+ * "1.1.1.2.3 Verificação" → "1.1.1 Verificação".
+ */
+function collapseNumberingDepth(line: string): string {
+  const match = line.match(/^(\d+(?:\.\d+){0,9})(\s*)(.*)$/);
+  if (!match) return line;
+  const parts = match[1].split(".");
+  const capped = parts.slice(0, 3).join(".");
+  return `${capped}${match[2] || " "}${match[3] || ""}`.trimEnd();
+}
+
+/**
+ * Para subseções "6.1 Título: corpo do texto..." separa o título curto (negrito)
+ * do corpo (não negrito). Evita o bug de negritar a linha inteira.
+ */
+function splitSubsectionTitleAndBody(line: string): { headingText: string; bodyText: string } {
+  const prefixMatch = line.match(/^(\d+(?:\.\d+){1,2}\s+)(.*)$/);
+  if (!prefixMatch) return { headingText: line, bodyText: "" };
+  const prefix = prefixMatch[1];
+  const rest = prefixMatch[2];
+  // Procura ponto-final, dois-pontos ou travessão para cortar o título do corpo
+  const splitIdx = rest.search(/[:.]\s|\s[—–-]\s/);
+  if (splitIdx > 0 && splitIdx < 120) {
+    const sep = rest[splitIdx];
+    const headingText = `${prefix}${rest.slice(0, splitIdx)}${sep === ":" ? ":" : ""}`.trim();
+    const bodyText = rest.slice(splitIdx + 1).trim();
+    return { headingText, bodyText };
+  }
+  // Sem separador — se a linha for muito longa, trate tudo como corpo (sem negrito)
+  if (rest.length > 80) {
+    return { headingText: prefix.trim(), bodyText: rest };
+  }
+  return { headingText: line, bodyText: "" };
+}
+
+/**
+ * Suporte a cores inline via tag [COR:#hex]texto[/COR]. Preserva formatação local
+ * aplicada pelo usuário (ex.: destaques em vermelho, azul institucional, etc.).
+ * Também converte a tag visual [INSERIR IMAGEM DO BIZAGI AQUI] em um realce centralizado.
+ */
+function parseInlineRuns(text: string, opts: { bold?: boolean; size?: number }): TextRun[] {
+  const runs: TextRun[] = [];
+  const size = opts.size ?? 22;
+  const bold = !!opts.bold;
+  const regex = /\[COR:(#?[0-9a-fA-F]{3,8})\](.*?)\[\/COR\]/g;
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > lastIdx) {
+      runs.push(new TextRun({ text: text.slice(lastIdx, m.index), font: "Calibri", size, bold }));
+    }
+    const color = m[1].replace("#", "").toUpperCase();
+    runs.push(new TextRun({ text: m[2], font: "Calibri", size, bold, color }));
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) {
+    runs.push(new TextRun({ text: text.slice(lastIdx), font: "Calibri", size, bold }));
+  }
+  if (runs.length === 0) {
+    runs.push(new TextRun({ text, font: "Calibri", size, bold }));
+  }
+  return runs;
+}
+
+export async function exportDocx(title: string, standardizedText: string, elaboracao: string = "[a preencher]"): Promise<Blob> {
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
@@ -470,7 +551,14 @@ export async function exportDocx(title: string, standardizedText: string, elabor
   const pageProps = {
     page: {
       size: { width: PAGE_WIDTH, height: PAGE_HEIGHT },
-      margin: { top: MARGIN_TOP, right: MARGIN_RIGHT, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT },
+      margin: {
+        top: MARGIN_TOP,
+        right: MARGIN_RIGHT,
+        bottom: MARGIN_BOTTOM,
+        left: MARGIN_LEFT,
+        header: MARGIN_HEADER, // 0,2 cm — cabeçalho colado no topo da página
+        footer: MARGIN_FOOTER,
+      },
     },
     titlePage: false, // ensure header/footer are identical on the first page
   };
@@ -494,24 +582,24 @@ export async function exportDocx(title: string, standardizedText: string, elabor
   const sectionChildren = bodyChildren.length > 0 ? bodyChildren : [
     new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
-      children: [new TextRun({ text: standardizedText, font: "Arial", size: 22 })],
+      children: [new TextRun({ text: standardizedText, font: "Calibri", size: 22 })],
     }),
   ];
 
   const doc = new Document({
     styles: {
       default: {
-        document: { run: { font: "Arial", size: 22 } },
+        document: { run: { font: "Calibri", size: 22 } },
       },
       paragraphStyles: [
         {
           id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 28, bold: true, font: "Arial" },
+          run: { size: 28, bold: true, font: "Calibri" },
           paragraph: { spacing: { before: 300, after: 200 }, outlineLevel: 0 },
         },
         {
           id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 24, bold: true, font: "Arial" },
+          run: { size: 24, bold: true, font: "Calibri" },
           paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 1 },
         },
       ],
