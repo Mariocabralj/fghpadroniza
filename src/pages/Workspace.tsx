@@ -70,7 +70,17 @@ export default function Workspace() {
   const handleExportDocx = async () => {
     try {
       const elaboracao = user ? `${user.name}${user.role ? " - " + user.role : ""}` : "[A PREENCHER]";
-      const blob = await exportDocx(title, standardized, elaboracao);
+      let images: Record<string, string> = {};
+      let imageTypes: Record<string, string> = {};
+      try {
+        const raw = sessionStorage.getItem("fgh:lastImages");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          images = parsed.images || {};
+          imageTypes = parsed.imageTypes || {};
+        }
+      } catch { /* ignore */ }
+      const blob = await exportDocx(title, standardized, elaboracao, { images, imageTypes });
       saveAs(blob, `${title.replace(/\s+/g, "_")}_FGH.docx`);
     } catch (e: any) {
       await logSystemError("docx-export", `Falha ao gerar DOCX: ${e?.message || e}`, { title, docType });

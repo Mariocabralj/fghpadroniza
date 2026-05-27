@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { streamProcessDocument } from "@/lib/ai-service";
-import { extractTextFromFile } from "@/lib/file-extractors";
+import { extractDocumentFromFile } from "@/lib/file-extractors";
 import { logSystemError } from "@/lib/system-log";
 import { Button } from "@/components/ui/button";
 
@@ -30,11 +30,16 @@ export default function Analysis() {
 
     const processDocument = async () => {
       let content = "";
+      let images: Record<string, string> = {};
+      let imageTypes: Record<string, string> = {};
       let mode: "upload" | "upload-improve" | "upload-format" | "paste" | "idea" = "idea";
 
       if (state.file) {
         try {
-          content = await extractTextFromFile(state.file);
+          const extracted = await extractDocumentFromFile(state.file);
+          content = extracted.text;
+          images = extracted.images;
+          imageTypes = extracted.imageTypes;
           mode = state.aiMode || "upload";
           if (!content.trim()) {
             await logSystemError("file-extractor", "Arquivo sem texto extraível", { name: state.file?.name, type: state.file?.type, size: state.file?.size });
@@ -65,6 +70,8 @@ export default function Analysis() {
         setCurrentStep((prev) => Math.min(prev + 1, steps.length - 2));
       }, 2000);
 
+      const hasImages = Object.keys(images).length > 0;
+
       streamProcessDocument(
         {
           content,
@@ -72,6 +79,7 @@ export default function Analysis() {
           title: state.title || "",
           sector: state.sector || "",
           mode,
+          hasImages,
         },
         (delta) => {
           resultRef.current += delta;
@@ -80,10 +88,15 @@ export default function Analysis() {
           clearInterval(stepTimer);
           setCurrentStep(steps.length - 1);
           setTimeout(() => {
+            // imagens vão por sessionStorage (location.state não serializa bem dados grandes)
+            try {
+              sessionStorage.setItem("fgh:lastImages", JSON.stringify({ images, imageTypes }));
+            } catch { /* quota */ }
             navigate("/workspace", {
               state: {
                 ...state,
                 standardizedText: resultRef.current,
+                hasImages,
               },
             });
           }, 800);
