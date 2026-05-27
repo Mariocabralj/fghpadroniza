@@ -699,10 +699,10 @@ export async function exportDocx(
       default: { document: { run: { font: "Calibri", size: 22 } } },
       paragraphStyles: [
         { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 28, bold: true, font: "Calibri" },
+          run: { size: 28, bold: false, font: "Calibri" },
           paragraph: { spacing: { before: 300, after: 200 }, outlineLevel: 0 } },
         { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-          run: { size: 24, bold: true, font: "Calibri" },
+          run: { size: 24, bold: false, font: "Calibri" },
           paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 1 } },
       ],
     },
