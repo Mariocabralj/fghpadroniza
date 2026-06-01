@@ -4,6 +4,7 @@ import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSortable, SortIcon } from "@/hooks/use-sortable";
 
 interface LogRow {
   id: string;
