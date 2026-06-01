@@ -62,7 +62,7 @@ export default function Login() {
         return toast.error("Preencha nome, cargo e setor");
       }
       const salaryValue = salaryOptOut ? "" : salary.replace(",", ".").trim();
-      const { error } = await signUp(email, password, { name, role, sector, salary: salaryValue });
+      const { error } = await signUp(email, password, { name, role, sector, salary: salaryValue, salary_opt_out: salaryOptOut });
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       toast.success("Conta criada! Faça login para continuar.");
