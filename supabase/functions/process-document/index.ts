@@ -256,7 +256,11 @@ REGRAS DE FORMATAÇÃO (interpretadas pelo frontend → DOCX)
 1. Títulos de seção NUMERADOS em CAIXA ALTA, em linha própria (ex.: "1. APRESENTAÇÃO"). Nada de texto corrido na mesma linha do título.
 2. Subitens com numeração decimal própria em linha (ex.: "6.1 Identificação"). Coloque o título curto da subseção e, em linhas seguintes, o corpo do texto.
 3. NÃO use marcações Markdown (sem **, sem ##, sem ---). Texto puro.
-4. Bullets SEMPRE com "• " (caractere bullet U+2022). NUNCA use "- ", "* " ou números soltos para listar tópicos. SEMPRE QUE houver itens, enumerações ou tópicos — inclusive em seções como Objetivos, Competências, Atribuições, Responsabilidades, Diretrizes, Materiais, Recursos, Indicadores, Conteúdo Programático etc. — cada item deve estar em linha própria começando por "• ".
+4. CRITÉRIO DE FORMATAÇÃO DE CONTEÚDO — escolha consciente entre três formas:
+   (a) SUBSEÇÕES NUMERADAS (6.1, 6.2, 6.2.1...): use quando o item é um BLOCO COM TÍTULO PRÓPRIO + corpo explicativo (ex.: "6.1 Identificação", "6.2 Critérios de Inclusão"). Cada subseção tem um nome curto e parágrafos descritivos abaixo. Nunca use subseção numerada para um item de uma única linha.
+   (b) BULLETS COM "• ": use quando há uma LISTA HOMOGÊNEA DE ITENS CURTOS (palavras, frases curtas, enumerações paralelas) que NÃO precisam de título próprio nem de parágrafo explicativo — ex.: lista de materiais, EPIs, documentos exigidos, competências curtas, etapas rápidas, público-alvo, indicadores listados. Cada bullet em linha própria começando por "• " (U+2022). NUNCA use "- ", "* " ou números soltos.
+   (c) TEXTO CORRIDO (parágrafo): use quando o conteúdo é EXPLICAÇÃO/JUSTIFICATIVA/CONTEXTO, ou quando há 1-2 ideias que fluem melhor em prosa que em lista. Seções como "Apresentação", "Objetivo Geral", "Justificativa", introduções de capítulo, descrições de processo geralmente são texto corrido.
+   REGRA DE OURO: não fragmente prosa em bullets só para "organizar", e não force subseções numeradas para listas simples. Leia o conteúdo, decida se cada item merece título+corpo (numerado), se é lista paralela curta (bullet), ou se é prosa (parágrafo). Misturar as três formas dentro de uma mesma seção é normal e esperado.
 5. Tabelas em texto, com "|" como separador de colunas; sempre inclua a linha de cabeçalho da tabela.
 6. NÃO escreva o título do documento (capa) no corpo. NÃO escreva "SUMÁRIO" se o tipo for Panfleto, Papel Timbrado ou Portaria.
 7. NÃO insira a linha "---QUEBRA_DE_PAGINA---".
