@@ -15,7 +15,7 @@ const MARGIN_TOP = 2000;       // body starts below header table
 const MARGIN_BOTTOM = 2400;    // larger footer area
 const MARGIN_LEFT = 850;       // 1.5cm
 const MARGIN_RIGHT = 850;      // 1.5cm
-const MARGIN_HEADER = 283;     // ~0,5cm — distância do topo da página até o cabeçalho (máx. 1cm)
+const MARGIN_HEADER = 567;     // 1cm — distância do topo da página até a logo do cabeçalho
 const MARGIN_FOOTER = 567;     // 1cm
 const PAGE_WIDTH = 11906;      // A4
 const PAGE_HEIGHT = 16838;     // A4
@@ -278,7 +278,7 @@ function createHeader(
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER,
       indent: { left: 0, right: 0 },
-      spacing: { before: 0, after: 120 },
+      spacing: { before: 0, after: 567 },
       children: [new ImageRun({
         type: "png",
         data: headerImage,
