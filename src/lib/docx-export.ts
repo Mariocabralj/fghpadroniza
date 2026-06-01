@@ -282,7 +282,7 @@ function createHeader(
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 350, height: 63 },
+        transformation: { width: 228, height: 41 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header_logo.png" },
       })],
     }));
