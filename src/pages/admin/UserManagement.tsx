@@ -87,12 +87,15 @@ export default function UserManagement() {
       toast.error("Valor inválido");
       return;
     }
+    // Admin edits são confidenciais: marcamos salary_opt_out=true para que
+    // o valor NÃO apareça em "Configurações" do usuário (ele não pode saber
+    // que o salário foi preenchido manualmente pelo admin).
     const { error } = await supabase
       .from("profiles")
-      .update({ salary: num })
+      .update({ salary: num, salary_opt_out: true })
       .eq("user_id", userId);
     if (error) toast.error(error.message);
-    else toast.success("Salário atualizado");
+    else toast.success("Salário atualizado (oculto para o usuário)");
     setEditingId(null);
   };
 
