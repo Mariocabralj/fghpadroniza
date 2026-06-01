@@ -278,7 +278,7 @@ function createHeader(
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER,
       indent: { left: 0, right: 0 },
-      spacing: { before: 0, after: 120 },
+      spacing: { before: 0, after: 567 },
       children: [new ImageRun({
         type: "png",
         data: headerImage,
