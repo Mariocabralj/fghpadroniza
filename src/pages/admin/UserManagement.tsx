@@ -145,7 +145,20 @@ export default function UserManagement() {
                       <SortableTh onClick={() => pToggle("email")} active={pKey === "email"} dir={pDir}>E-mail</SortableTh>
                       <SortableTh onClick={() => pToggle("role")} active={pKey === "role"} dir={pDir}>Cargo</SortableTh>
                       <SortableTh onClick={() => pToggle("sector")} active={pKey === "sector"} dir={pDir}>Setor</SortableTh>
-                      <SortableTh onClick={() => pToggle("salary")} active={pKey === "salary"} dir={pDir}>Salário</SortableTh>
+                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">
+                        <span className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => pToggle("salary")}>
+                          Salário
+                          <SortIcon active={pKey === "salary"} dir={pDir} />
+                        </span>
+                        <button
+                          onClick={() => setSalaryVisible((v) => !v)}
+                          className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition"
+                          title={salaryVisible ? "Ocultar salários" : "Mostrar salários"}
+                        >
+                          {salaryVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          {salaryVisible ? "Ocultar" : "Mostrar"}
+                        </button>
+                      </th>
                       <SortableTh onClick={() => pToggle("status")} active={pKey === "status"} dir={pDir}>Status</SortableTh>
                       <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Ações</th>
                     </tr>
