@@ -4,11 +4,12 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Star, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2 } from "lucide-react";
 import { exportDocx } from "@/lib/docx-export";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
+import { streamProcessDocument } from "@/lib/ai-service";
 import { toast } from "sonner";
 
 const today = new Date().toLocaleDateString("pt-BR");
@@ -44,6 +45,8 @@ export default function Workspace() {
     state?.pastedText || state?.ideaText || state?.fileName || ""
   );
   const [standardized, setStandardized] = useState(state?.standardizedText || "");
+  const [refineInstructions, setRefineInstructions] = useState("");
+  const [refining, setRefining] = useState(false);
 
   const checklist = useMemo(() => analyzeChecklist(standardized), [standardized]);
   const completionPct = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
@@ -92,6 +95,45 @@ export default function Workspace() {
     window.open("https://forms.cloud.microsoft/r/Y6xHtpLT1j", "_blank");
   };
 
+  const handleRefine = () => {
+    const instr = refineInstructions.trim();
+    if (!instr) {
+      toast.info("Digite as orientações de refinamento.");
+      return;
+    }
+    if (!standardized.trim()) {
+      toast.error("Nenhum documento para refinar.");
+      return;
+    }
+    setRefining(true);
+    let acc = "";
+    setStandardized(""); // limpar para receber streaming
+    streamProcessDocument(
+      {
+        content: standardized,
+        docType,
+        title,
+        sector,
+        mode: "refine",
+        instructions: instr,
+      },
+      (delta) => {
+        acc += delta;
+        setStandardized(acc);
+      },
+      () => {
+        setRefining(false);
+        setRefineInstructions("");
+        toast.success("Documento refinado.");
+      },
+      (err) => {
+        setRefining(false);
+        setStandardized(acc || standardized);
+        toast.error(err || "Erro ao refinar.");
+      }
+    );
+  };
+
   return (
     <AppLayout>
       <div className="p-4 h-[calc(100vh-4rem)] flex flex-col gap-4 animate-fade-in">
@@ -132,6 +174,28 @@ export default function Workspace() {
                 <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-success/10 text-success">Pronto</span>
               </div>
               <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
+            </div>
+
+            {/* Refinamento por IA */}
+            <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-foreground text-sm">Deseja refinar este documento?</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">Digite novas orientações para a IA (ex.: "deixe mais conciso", "detalhe melhor as competências").</p>
+              <div className="flex gap-2">
+                <Textarea
+                  value={refineInstructions}
+                  onChange={(e) => setRefineInstructions(e.target.value)}
+                  placeholder="Suas instruções de refinamento..."
+                  className="min-h-[60px] text-sm flex-1"
+                  disabled={refining}
+                />
+                <Button onClick={handleRefine} disabled={refining || !refineInstructions.trim()} className="gap-2 self-end">
+                  {refining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                  {refining ? "Refinando..." : "Refinar"}
+                </Button>
+              </div>
             </div>
 
             <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">

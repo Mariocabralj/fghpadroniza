@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { Eye, Pencil, Download, Trash2, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -76,12 +75,11 @@ export default function History() {
                   <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Status</th>
                   <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Elaborado em</th>
                   <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Última modificação</th>
-                  <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-sm text-muted-foreground p-8">Nenhum documento encontrado.</td></tr>
+                  <tr><td colSpan={5} className="text-center text-sm text-muted-foreground p-8">Nenhum documento encontrado.</td></tr>
                 )}
                 {filtered.map((d) => (
                   <tr key={d.id} className="hover:bg-muted/30 transition-colors">
@@ -92,14 +90,6 @@ export default function History() {
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{fmt(d.created_at)}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{fmt(d.updated_at)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><Download className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(d.id)}><Trash2 className="w-4 h-4" /></Button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
