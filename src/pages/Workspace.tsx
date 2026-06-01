@@ -176,6 +176,28 @@ export default function Workspace() {
               <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
             </div>
 
+            {/* Refinamento por IA */}
+            <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                <h3 className="font-semibold text-foreground text-sm">Deseja refinar este documento?</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">Digite novas orientações para a IA (ex.: "deixe mais conciso", "detalhe melhor as competências").</p>
+              <div className="flex gap-2">
+                <Textarea
+                  value={refineInstructions}
+                  onChange={(e) => setRefineInstructions(e.target.value)}
+                  placeholder="Suas instruções de refinamento..."
+                  className="min-h-[60px] text-sm flex-1"
+                  disabled={refining}
+                />
+                <Button onClick={handleRefine} disabled={refining || !refineInstructions.trim()} className="gap-2 self-end">
+                  {refining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                  {refining ? "Refinando..." : "Refinar"}
+                </Button>
+              </div>
+            </div>
+
             <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-foreground text-sm">Checklist de Conformidade</h3>
