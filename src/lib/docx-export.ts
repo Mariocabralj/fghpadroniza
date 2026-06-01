@@ -478,12 +478,12 @@ function parseContentLines(
       continue;
     }
 
-    if (line.match(/^[\-•●]\s/)) {
+    if (line.match(/^[\-•●\*]\s/)) {
       children.push(new Paragraph({
         numbering: { reference: "bullets", level: 0 },
         spacing: { before: 40, after: 40 },
         alignment: AlignmentType.JUSTIFIED,
-        children: parseInlineRuns(line.replace(/^[\-•●]\s*/, ""), { bold: false, size: 22 }),
+        children: parseInlineRuns(line.replace(/^[\-•●\*]\s*/, ""), { bold: false, size: 22 }),
       }));
       i++;
       continue;
