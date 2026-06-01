@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AppLayout from "@/components/AppLayout";
 import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Users, CheckCircle2, Ban, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Users, CheckCircle2, Ban, FileText, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { useSortable, SortIcon } from "@/hooks/use-sortable";
 
 interface ProfileRow {
   user_id: string;
@@ -13,6 +15,7 @@ interface ProfileRow {
   role: string;
   sector: string;
   status: string;
+  salary: number | null;
   created_at: string;
 }
 
@@ -25,17 +28,25 @@ interface DocRow {
   created_at: string;
 }
 
+const fmtBRL = (v: number | null | undefined) =>
+  v == null
+    ? ""
+    : v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 export default function UserManagement() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [tab, setTab] = useState<"users" | "docs">("users");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     const { data: p } = await supabase
       .from("profiles")
-      .select("user_id, name, email, role, sector, status, created_at")
+      .select("user_id, name, email, role, sector, status, salary, created_at")
       .order("created_at", { ascending: false });
-    setProfiles(p || []);
+    setProfiles((p as ProfileRow[]) || []);
     const { data: d } = await supabase
       .from("documents")
       .select("id, user_id, title, doc_type, status, created_at")
@@ -44,17 +55,58 @@ export default function UserManagement() {
     setDocs(d || []);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel("user-management-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "documents" }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const setStatus = async (userId: string, status: string) => {
     const { error } = await supabase.from("profiles").update({ status }).eq("user_id", userId);
     if (error) return toast.error(error.message);
     toast.success(`Usuário ${status === "approved" ? "aprovado" : "bloqueado"}`);
-    load();
+  };
+
+  const startEdit = (p: ProfileRow) => {
+    setEditingId(p.user_id);
+    setEditValue(p.salary == null ? "" : String(p.salary));
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const saveEdit = async (userId: string) => {
+    const trimmed = editValue.trim().replace(",", ".");
+    const num = trimmed === "" ? null : Number(trimmed);
+    if (num !== null && (isNaN(num) || num < 0)) {
+      toast.error("Valor inválido");
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ salary: num })
+      .eq("user_id", userId);
+    if (error) toast.error(error.message);
+    else toast.success("Salário atualizado");
+    setEditingId(null);
   };
 
   const userMap: Record<string, ProfileRow> = {};
   profiles.forEach((p) => (userMap[p.user_id] = p));
+
+  const { sorted: sortedProfiles, sortKey: pKey, sortDir: pDir, toggle: pToggle } =
+    useSortable<ProfileRow>(profiles);
+  const docsWithMeta = docs.map((d) => ({
+    ...d,
+    author: userMap[d.user_id]?.name || "—",
+    authorSector: userMap[d.user_id]?.sector || "—",
+  }));
+  const { sorted: sortedDocs, sortKey: dKey, sortDir: dDir, toggle: dToggle } =
+    useSortable<typeof docsWithMeta[number]>(docsWithMeta);
 
   return (
     <AdminGuard>
@@ -88,16 +140,49 @@ export default function UserManagement() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr className="border-b">
-                      <Th>Nome</Th><Th>E-mail</Th><Th>Cargo</Th><Th>Setor</Th><Th>Status</Th><Th className="text-right">Ações</Th>
+                      <SortableTh onClick={() => pToggle("name")} active={pKey === "name"} dir={pDir}>Nome</SortableTh>
+                      <SortableTh onClick={() => pToggle("email")} active={pKey === "email"} dir={pDir}>E-mail</SortableTh>
+                      <SortableTh onClick={() => pToggle("role")} active={pKey === "role"} dir={pDir}>Cargo</SortableTh>
+                      <SortableTh onClick={() => pToggle("sector")} active={pKey === "sector"} dir={pDir}>Setor</SortableTh>
+                      <SortableTh onClick={() => pToggle("salary")} active={pKey === "salary"} dir={pDir}>Salário</SortableTh>
+                      <SortableTh onClick={() => pToggle("status")} active={pKey === "status"} dir={pDir}>Status</SortableTh>
+                      <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {profiles.map((p) => (
+                    {sortedProfiles.map((p) => (
                       <tr key={p.user_id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 text-sm font-medium">{p.name}</td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">{p.email}</td>
                         <td className="px-4 py-3 text-sm">{p.role || "-"}</td>
                         <td className="px-4 py-3 text-sm">{p.sector || "-"}</td>
+                        <td
+                          className="px-4 py-3 text-sm cursor-pointer group"
+                          onClick={() => editingId !== p.user_id && startEdit(p)}
+                          title="Clique para editar"
+                        >
+                          {editingId === p.user_id ? (
+                            <Input
+                              ref={inputRef}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={() => saveEdit(p.user_id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") saveEdit(p.user_id);
+                                if (e.key === "Escape") setEditingId(null);
+                              }}
+                              className="h-8 w-32"
+                            />
+                          ) : (
+                            <span className="flex items-center gap-1.5">
+                              <span className="text-foreground">{fmtBRL(p.salary)}</span>
+                              <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${p.status === "approved" ? "bg-success/10 text-success" : p.status === "blocked" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>
                             {p.status === "approved" ? "Aprovado" : p.status === "blocked" ? "Bloqueado" : "Pendente"}
@@ -125,25 +210,27 @@ export default function UserManagement() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr className="border-b">
-                      <Th>Documento</Th><Th>Tipo</Th><Th>Autor</Th><Th>Setor</Th><Th>Status</Th><Th>Data</Th>
+                      <SortableTh onClick={() => dToggle("title")} active={dKey === "title"} dir={dDir}>Documento</SortableTh>
+                      <SortableTh onClick={() => dToggle("doc_type")} active={dKey === "doc_type"} dir={dDir}>Tipo</SortableTh>
+                      <SortableTh onClick={() => dToggle("author")} active={dKey === "author"} dir={dDir}>Autor</SortableTh>
+                      <SortableTh onClick={() => dToggle("authorSector")} active={dKey === "authorSector"} dir={dDir}>Setor</SortableTh>
+                      <SortableTh onClick={() => dToggle("status")} active={dKey === "status"} dir={dDir}>Status</SortableTh>
+                      <SortableTh onClick={() => dToggle("created_at")} active={dKey === "created_at"} dir={dDir}>Data</SortableTh>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {docs.map((d) => {
-                      const u = userMap[d.user_id];
-                      return (
-                        <tr key={d.id} className="hover:bg-muted/30">
-                          <td className="px-4 py-3 text-sm font-medium flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-primary" /> {d.title}
-                          </td>
-                          <td className="px-4 py-3 text-sm">{d.doc_type}</td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground">{u?.name || "—"}</td>
-                          <td className="px-4 py-3 text-sm">{u?.sector || "—"}</td>
-                          <td className="px-4 py-3 text-sm">{d.status}</td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(d.created_at).toLocaleDateString("pt-BR")}</td>
-                        </tr>
-                      );
-                    })}
+                    {sortedDocs.map((d) => (
+                      <tr key={d.id} className="hover:bg-muted/30">
+                        <td className="px-4 py-3 text-sm font-medium flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-primary" /> {d.title}
+                        </td>
+                        <td className="px-4 py-3 text-sm">{d.doc_type}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{d.author}</td>
+                        <td className="px-4 py-3 text-sm">{d.authorSector}</td>
+                        <td className="px-4 py-3 text-sm">{d.status}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(d.created_at).toLocaleDateString("pt-BR")}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -155,6 +242,12 @@ export default function UserManagement() {
   );
 }
 
-const Th = ({ children, className = "" }: any) => (
-  <th className={`text-left text-xs font-semibold text-muted-foreground px-4 py-3 ${className}`}>{children}</th>
+const SortableTh = ({ children, onClick, active, dir }: any) => (
+  <th
+    onClick={onClick}
+    className="text-left text-xs font-semibold text-muted-foreground px-4 py-3 cursor-pointer select-none hover:text-foreground"
+  >
+    {children}
+    <SortIcon active={active} dir={dir} />
+  </th>
 );

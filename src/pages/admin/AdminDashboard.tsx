@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3 } from "lucide-react";
+import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useSortable, SortIcon } from "@/hooks/use-sortable";
 import {
   ResponsiveContainer,
   BarChart,
@@ -29,6 +30,7 @@ interface ProfileRow {
   user_id: string;
   name: string;
   sector: string | null;
+  salary: number | null;
 }
 
 const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--accent-foreground))"];
@@ -42,6 +44,8 @@ const TIME_WEIGHTS: Record<string, number> = {
 };
 
 const CATEGORIES = ["POP", "Protocolo Clínico", "Manual", "Plano", "Política", "Regimento Interno"];
+const COST_FACTOR = 1.4508; // encargos
+const MONTHLY_HOURS = 220;
 
 const matchCategory = (docType: string | null): string | null => {
   if (!docType) return null;
@@ -62,6 +66,9 @@ const minutesForDoc = (docType: string | null): number => {
 
 const isExported = (d: DocRow) => d.status === "Pronto" || d.status === "Finalizado";
 
+const fmtBRL = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 });
+
 export default function AdminDashboard() {
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
@@ -74,7 +81,7 @@ export default function AdminDashboard() {
   };
 
   const loadProfiles = async () => {
-    const { data } = await supabase.from("profiles").select("user_id, name, sector");
+    const { data } = await supabase.from("profiles").select("user_id, name, sector, salary");
     const map: Record<string, ProfileRow> = {};
     (data || []).forEach((p: any) => { map[p.user_id] = p; });
     setProfiles(map);
@@ -86,12 +93,8 @@ export default function AdminDashboard() {
 
     const channel = supabase
       .channel("admin-documents-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "documents" }, () => {
-        loadDocs();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
-        loadProfiles();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "documents" }, () => loadDocs())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => loadProfiles())
       .subscribe();
 
     return () => {
@@ -106,6 +109,15 @@ export default function AdminDashboard() {
   const minutosEconomizados = exportados.reduce((acc, d) => acc + minutesForDoc(d.doc_type), 0);
   const horasEconomizadas = (minutosEconomizados / 60).toFixed(1);
 
+  // Custo de oportunidade poupado
+  const custoOportunidade = exportados.reduce((acc, d) => {
+    const sal = profiles[d.user_id]?.salary;
+    if (!sal || sal <= 0) return acc;
+    const hours = minutesForDoc(d.doc_type) / 60;
+    const hourlyCost = (sal / MONTHLY_HOURS) * COST_FACTOR;
+    return acc + hourlyCost * hours;
+  }, 0);
+
   const now = new Date();
   const exportadosMes = exportados.filter((d) => {
     const dt = new Date(d.updated_at);
@@ -116,38 +128,43 @@ export default function AdminDashboard() {
   );
   const diversidade = categoriasUsadas.size;
 
-  // Ranking por setor — usa setor do documento OU do profile do autor
+  // Ranking por setor — FIEL ao setor cadastrado no perfil do autor
   const sectorMap: Record<string, { count: number; minutes: number }> = {};
   docs.forEach((d) => {
-    const s = ((d.sector || profiles[d.user_id]?.sector || "Não informado").trim() || "Não informado");
+    const profSector = profiles[d.user_id]?.sector?.trim();
+    const s = profSector && profSector.length > 0 ? profSector : "Não informado";
     if (!sectorMap[s]) sectorMap[s] = { count: 0, minutes: 0 };
     sectorMap[s].count += 1;
     if (isExported(d)) sectorMap[s].minutes += minutesForDoc(d.doc_type);
   });
-  const sectorData = Object.entries(sectorMap)
-    .map(([sector, v]) => ({ sector, count: v.count, hours: +(v.minutes / 60).toFixed(1) }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
+  const sectorDataAll = Object.entries(sectorMap)
+    .map(([sector, v]) => ({ sector, count: v.count, hours: +(v.minutes / 60).toFixed(1) }));
+  const { sorted: sectorSorted, sortKey: sKey, sortDir: sDir, toggle: sToggle } =
+    useSortable<{ sector: string; count: number; hours: number }>(sectorDataAll, "count", "desc");
+  const sectorData = sectorSorted.slice(0, 8);
 
-  // Ranking por usuário/gestor
+  // Ranking por usuário (puxa setor do perfil — mesma fonte do ranking por setor)
   const userMap: Record<string, number> = {};
   docs.forEach((d) => {
     userMap[d.user_id] = (userMap[d.user_id] || 0) + 1;
   });
-  const userData = Object.entries(userMap)
+  const userDataAll = Object.entries(userMap)
     .map(([uid, count]) => ({
       name: profiles[uid]?.name || "Usuário",
       sector: profiles[uid]?.sector || "—",
       count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
+    }));
+  const { sorted: userSorted, sortKey: uKey, sortDir: uDir, toggle: uToggle } =
+    useSortable<{ name: string; sector: string; count: number }>(userDataAll, "count", "desc");
+  const userData = userSorted.slice(0, 10);
 
-  // Ranking por tipo de documento (6 categorias)
-  const typeData = CATEGORIES.map((cat) => ({
+  // Ranking por tipo (mesma fonte: docs)
+  const typeDataAll = CATEGORIES.map((cat) => ({
     type: cat,
     count: docs.filter((d) => matchCategory(d.doc_type) === cat).length,
-  })).sort((a, b) => b.count - a.count);
+  }));
+  const { sorted: typeSorted, sortKey: tKey, sortDir: tDir, toggle: tToggle } =
+    useSortable<{ type: string; count: number }>(typeDataAll, "count", "desc");
 
   return (
     <AdminGuard>
@@ -191,6 +208,34 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Custo de Oportunidade Poupado */}
+          <div className="bg-gradient-to-br from-success to-success/70 rounded-xl p-6 shadow-card text-primary-foreground">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm opacity-90">Custo de Oportunidade Poupado (R$)</p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button type="button" className="rounded-full p-1 hover:bg-primary-foreground/10 transition" aria-label="Ver fórmula">
+                        <Info className="w-4 h-4 opacity-90" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-80">
+                      <div className="space-y-2 text-xs text-muted-foreground">
+                        <p className="font-semibold text-sm text-foreground">Fórmula por documento exportado</p>
+                        <p>(Salário do autor ÷ 220) × 1,4508 × horas economizadas pelo documento.</p>
+                        <p>Usuários sem salário informado computam R$ 0,00.</p>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <p className="text-4xl font-bold mt-2">{fmtBRL(custoOportunidade)}</p>
+                <p className="text-xs opacity-80 mt-1">com base nos salários informados</p>
+              </div>
+              <DollarSign className="w-12 h-12 opacity-80" />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="bg-info/10 text-info" />
             <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="bg-success/10 text-success" />
@@ -208,10 +253,16 @@ export default function AdminDashboard() {
               <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado disponível ainda.</p>
             ) : (
               <>
-                <div className="grid grid-cols-12 text-xs font-medium text-muted-foreground border-b pb-2 mb-2">
-                  <div className="col-span-5">Setor</div>
-                  <div className="col-span-4 text-right">Total de Documentos</div>
-                  <div className="col-span-3 text-right">Horas Economizadas</div>
+                <div className="grid grid-cols-12 text-xs font-medium text-muted-foreground border-b pb-2 mb-2 select-none">
+                  <button type="button" onClick={() => sToggle("sector")} className="col-span-5 text-left hover:text-foreground">
+                    Setor <SortIcon active={sKey === "sector"} dir={sDir} />
+                  </button>
+                  <button type="button" onClick={() => sToggle("count")} className="col-span-4 text-right hover:text-foreground">
+                    Total de Documentos <SortIcon active={sKey === "count"} dir={sDir} />
+                  </button>
+                  <button type="button" onClick={() => sToggle("hours")} className="col-span-3 text-right hover:text-foreground">
+                    Horas Economizadas <SortIcon active={sKey === "hours"} dir={sDir} />
+                  </button>
                 </div>
                 <div className="space-y-1 mb-6">
                   {sectorData.map((row, i) => (
@@ -253,11 +304,17 @@ export default function AdminDashboard() {
               <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado disponível ainda.</p>
             ) : (
               <div className="space-y-1">
-                <div className="grid grid-cols-12 text-xs font-medium text-muted-foreground border-b pb-2 mb-2">
+                <div className="grid grid-cols-12 text-xs font-medium text-muted-foreground border-b pb-2 mb-2 select-none">
                   <div className="col-span-1">#</div>
-                  <div className="col-span-6">Usuário</div>
-                  <div className="col-span-3">Setor</div>
-                  <div className="col-span-2 text-right">Documentos</div>
+                  <button type="button" onClick={() => uToggle("name")} className="col-span-6 text-left hover:text-foreground">
+                    Usuário <SortIcon active={uKey === "name"} dir={uDir} />
+                  </button>
+                  <button type="button" onClick={() => uToggle("sector")} className="col-span-3 text-left hover:text-foreground">
+                    Setor <SortIcon active={uKey === "sector"} dir={uDir} />
+                  </button>
+                  <button type="button" onClick={() => uToggle("count")} className="col-span-2 text-right hover:text-foreground">
+                    Documentos <SortIcon active={uKey === "count"} dir={uDir} />
+                  </button>
                 </div>
                 {userData.map((row, i) => (
                   <div key={row.name + i} className="grid grid-cols-12 items-center py-2 text-sm border-b last:border-b-0">
@@ -273,21 +330,31 @@ export default function AdminDashboard() {
 
           {/* Ranking por Tipo */}
           <div className="bg-card rounded-xl border p-6 shadow-card">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Tipos de Documentos Mais Criados</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                <h2 className="font-semibold text-foreground">Tipos de Documentos Mais Criados</h2>
+              </div>
+              <div className="flex gap-2 text-xs">
+                <button onClick={() => tToggle("type")} className="text-muted-foreground hover:text-foreground">
+                  Tipo <SortIcon active={tKey === "type"} dir={tDir} />
+                </button>
+                <button onClick={() => tToggle("count")} className="text-muted-foreground hover:text-foreground">
+                  Qtd <SortIcon active={tKey === "count"} dir={tDir} />
+                </button>
+              </div>
             </div>
-            {typeData.every((t) => t.count === 0) ? (
+            {typeSorted.every((t) => t.count === 0) ? (
               <p className="text-sm text-muted-foreground py-8 text-center">Nenhum documento criado ainda.</p>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={typeData}>
+                <BarChart data={typeSorted}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="type" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                   <Bar dataKey="count" name="Documentos" radius={[6, 6, 0, 0]}>
-                    {typeData.map((_, i) => (
+                    {typeSorted.map((_, i) => (
                       <Cell key={i} fill={SECTOR_COLORS[i % SECTOR_COLORS.length]} />
                     ))}
                   </Bar>

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Lock, Mail, User, Briefcase, Building2 } from "lucide-react";
+import { FileText, Lock, Mail, User, Briefcase, Building2, DollarSign, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,6 +30,8 @@ export default function Login() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [sector, setSector] = useState("");
+  const [salary, setSalary] = useState("");
+  const [salaryOptOut, setSalaryOptOut] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -57,7 +61,8 @@ export default function Login() {
         setLoading(false);
         return toast.error("Preencha nome, cargo e setor");
       }
-      const { error } = await signUp(email, password, { name, role, sector });
+      const salaryValue = salaryOptOut ? "" : salary.replace(",", ".").trim();
+      const { error } = await signUp(email, password, { name, role, sector, salary: salaryValue, salary_opt_out: salaryOptOut });
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       toast.success("Conta criada! Faça login para continuar.");
@@ -106,6 +111,41 @@ export default function Login() {
                       <Input id="sector" placeholder="Ex: UTI" value={sector} onChange={(e) => setSector(e.target.value)} className="pl-10" />
                     </div>
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="salary">Salário Base Mensal (opcional)</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="Por que pedimos isso?">
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">
+                          Usamos essa informação de forma confidencial para calcular o retorno financeiro das horas economizadas no hospital.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="salary"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 4500"
+                      value={salaryOptOut ? "" : salary}
+                      onChange={(e) => setSalary(e.target.value)}
+                      disabled={salaryOptOut}
+                      className="pl-10"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                    <Checkbox checked={salaryOptOut} onCheckedChange={(v) => setSalaryOptOut(!!v)} />
+                    Prefiro não dizer
+                  </label>
                 </div>
               </>
             )}

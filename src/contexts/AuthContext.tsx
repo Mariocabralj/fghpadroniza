@@ -17,7 +17,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string, data: { name: string; role: string; sector: string }) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, data: { name: string; role: string; sector: string; salary?: string; salary_opt_out?: boolean }) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (
     email: string,
     password: string,
-    data: { name: string; role: string; sector: string }
+    data: { name: string; role: string; sector: string; salary?: string; salary_opt_out?: boolean }
   ) => {
     const redirectUrl = `${window.location.origin}/dashboard`;
     const { error } = await supabase.auth.signUp({

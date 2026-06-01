@@ -4,6 +4,7 @@ import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSortable, SortIcon } from "@/hooks/use-sortable";
 
 interface LogRow {
   id: string;
@@ -32,10 +33,22 @@ export default function SystemLogs() {
 
   useEffect(() => { load(); }, []);
 
+  const { sorted, sortKey, sortDir, toggle } = useSortable<LogRow>(logs, "created_at", "desc");
+
   const levelColor = (l: string) =>
     l === "error" ? "bg-destructive/10 text-destructive" :
     l === "warning" ? "bg-warning/10 text-warning" :
     "bg-info/10 text-info";
+
+  const Th = ({ children, k }: any) => (
+    <th
+      onClick={() => toggle(k)}
+      className="text-left text-xs font-semibold text-muted-foreground px-4 py-3 cursor-pointer select-none hover:text-foreground"
+    >
+      {children}
+      <SortIcon active={sortKey === k} dir={sortDir} />
+    </th>
+  );
 
   return (
     <AdminGuard>
@@ -58,18 +71,18 @@ export default function SystemLogs() {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr className="border-b">
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Data/Hora</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Nível</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Origem</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Mensagem</th>
+                    <Th k="created_at">Data/Hora</Th>
+                    <Th k="level">Nível</Th>
+                    <Th k="source">Origem</Th>
+                    <Th k="message">Mensagem</Th>
                     <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Metadados</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {logs.length === 0 && (
+                  {sorted.length === 0 && (
                     <tr><td colSpan={5} className="text-center text-sm text-muted-foreground p-8">Nenhum log registrado.</td></tr>
                   )}
-                  {logs.map((l) => (
+                  {sorted.map((l) => (
                     <tr key={l.id} className="hover:bg-muted/30">
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(l.created_at).toLocaleString("pt-BR")}
