@@ -30,6 +30,8 @@ export default function Login() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [sector, setSector] = useState("");
+  const [salary, setSalary] = useState("");
+  const [salaryOptOut, setSalaryOptOut] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
