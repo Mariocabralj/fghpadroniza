@@ -4,11 +4,12 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Star, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2 } from "lucide-react";
 import { exportDocx } from "@/lib/docx-export";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
+import { streamProcessDocument } from "@/lib/ai-service";
 import { toast } from "sonner";
 
 const today = new Date().toLocaleDateString("pt-BR");
