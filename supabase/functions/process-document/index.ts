@@ -277,7 +277,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { content, docType, title, sector, mode, hasImages } = await req.json();
+    const { content, docType, title, sector, mode, hasImages, instructions } = await req.json();
 
     if (!content || !docType) {
       await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode });
@@ -293,7 +293,24 @@ serve(async (req) => {
     const flowchartFlag = `\n[Sinal do extrator] hasFlowchartImage=${hasImages ? "true" : "false"}. Use esse sinal para decidir se deve ou não inserir a linha "[INSERIR IMAGEM DO BIZAGI AQUI]" na seção FLUXOGRAMA(S), conforme a REGRA DE FLUXOGRAMA (CONDICIONAL).`;
 
     let userPrompt = "";
-    if (mode === "upload-format") {
+    if (mode === "refine") {
+      userPrompt = `O gestor já recebeu um documento padronizado FGH e agora deseja REFINÁ-LO com novas orientações. NÃO recomece do zero — apenas aplique as alterações pedidas mantendo a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", a Norma Zero e todos os marcadores especiais ([IMAGEM:id], [COR:#hex], [MARCA:#hex], tabelas em pipe).
+
+Título: ${title || "A definir"}
+Setor: ${sector || "A definir"}
+Tipo de documento: ${docType}
+
+DOCUMENTO ATUAL (refine este conteúdo):
+${content}
+
+NOVAS ORIENTAÇÕES DO GESTOR:
+${instructions || "(sem orientações específicas — apenas revise o documento atual)"}
+
+ESTRUTURA OBRIGATÓRIA PARA ${docType}:
+${templateStructure}
+
+Devolva o documento COMPLETO já refinado, começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados). Preserve numeração, marcadores e tabelas.`;
+    } else if (mode === "upload-format") {
       userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
 
 REGRAS DE FORMATAÇÃO ESTRITA:
