@@ -112,6 +112,41 @@ export default function Login() {
                     </div>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="salary">Salário Base Mensal (opcional)</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="text-muted-foreground hover:text-foreground" aria-label="Por que pedimos isso?">
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">
+                          Usamos essa informação de forma confidencial para calcular o retorno financeiro das horas economizadas no hospital.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="salary"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Ex: 4500"
+                      value={salaryOptOut ? "" : salary}
+                      onChange={(e) => setSalary(e.target.value)}
+                      disabled={salaryOptOut}
+                      className="pl-10"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                    <Checkbox checked={salaryOptOut} onCheckedChange={(v) => setSalaryOptOut(!!v)} />
+                    Prefiro não dizer
+                  </label>
+                </div>
               </>
             )}
             <div className="space-y-2">
