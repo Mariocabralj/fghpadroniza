@@ -256,7 +256,7 @@ REGRAS DE FORMATAÇÃO (interpretadas pelo frontend → DOCX)
 1. Títulos de seção NUMERADOS em CAIXA ALTA, em linha própria (ex.: "1. APRESENTAÇÃO"). Nada de texto corrido na mesma linha do título.
 2. Subitens com numeração decimal própria em linha (ex.: "6.1 Identificação"). Coloque o título curto da subseção e, em linhas seguintes, o corpo do texto.
 3. NÃO use marcações Markdown (sem **, sem ##, sem ---). Texto puro.
-4. Bullets com "- " ou "• ".
+4. Bullets SEMPRE com "• " (caractere bullet U+2022). NUNCA use "- ", "* " ou números soltos para listar tópicos. SEMPRE QUE houver itens, enumerações ou tópicos — inclusive em seções como Objetivos, Competências, Atribuições, Responsabilidades, Diretrizes, Materiais, Recursos, Indicadores, Conteúdo Programático etc. — cada item deve estar em linha própria começando por "• ".
 5. Tabelas em texto, com "|" como separador de colunas; sempre inclua a linha de cabeçalho da tabela.
 6. NÃO escreva o título do documento (capa) no corpo. NÃO escreva "SUMÁRIO" se o tipo for Panfleto, Papel Timbrado ou Portaria.
 7. NÃO insira a linha "---QUEBRA_DE_PAGINA---".
