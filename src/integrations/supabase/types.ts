@@ -198,6 +198,7 @@ export type Database = {
           id: string
           name: string
           role: string | null
+          salary: number | null
           sector: string | null
           status: string
           updated_at: string
@@ -209,6 +210,7 @@ export type Database = {
           id?: string
           name: string
           role?: string | null
+          salary?: number | null
           sector?: string | null
           status?: string
           updated_at?: string
@@ -220,6 +222,7 @@ export type Database = {
           id?: string
           name?: string
           role?: string | null
+          salary?: number | null
           sector?: string | null
           status?: string
           updated_at?: string
