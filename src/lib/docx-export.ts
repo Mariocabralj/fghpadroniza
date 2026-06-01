@@ -6,7 +6,6 @@ import {
   HorizontalPositionAlign, VerticalPositionAlign, TextWrappingType, TextWrappingSide,
 } from "docx";
 import headerLogoUrl from "@/assets/header_logo.png";
-import tarjaAzulUrl from "@/assets/tarja-azul-fgh.jpeg";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
