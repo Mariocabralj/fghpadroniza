@@ -40,6 +40,7 @@ export default function UserManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [salaryVisible, setSalaryVisible] = useState(true);
 
   const load = async () => {
     const { data: p } = await supabase
