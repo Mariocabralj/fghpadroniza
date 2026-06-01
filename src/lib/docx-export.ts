@@ -269,46 +269,12 @@ function createFooterTable(): Table {
 function createHeader(
   title: string,
   headerImage: Uint8Array | null,
-  tarjaImage: Uint8Array | null,
   elaboracao: string = "[a preencher]",
 ): Header {
   const children: (Paragraph | Table)[] = [];
 
-  // Institutional blue stripe — anchored, behind document.
-  // Horizontal anchor: COLUMN with offset 0 (encosta na borda esquerda da área útil).
-  // behindDocument:true + zIndex base garante tarja atrás de tabelas e textos.
-  if (tarjaImage) {
-    // Full Page Background — A4 (21cm x 29.7cm = 7559675 x 10691495 EMU).
-    // Ancorada à PÁGINA, offsets 0/0, behindDoc para ficar atrás de tudo.
-    children.push(new Paragraph({
-      spacing: { before: 0, after: 0 },
-      children: [new ImageRun({
-        type: "jpg",
-        data: tarjaImage,
-        // 21cm x 29.7cm em pixels (96dpi): 794 x 1123
-        transformation: { width: 794, height: 1123 },
-        floating: {
-          horizontalPosition: {
-            relative: HorizontalPositionRelativeFrom.PAGE,
-            offset: 0,
-          },
-          verticalPosition: {
-            relative: VerticalPositionRelativeFrom.PAGE,
-            offset: 0,
-          },
-          behindDocument: true,
-          wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
-          allowOverlap: true,
-          zIndex: 251659264,
-        },
-        altText: { title: "Tarja Azul FGH", description: "Tarja institucional FGH", name: "tarja_azul_imagem.jpeg" },
-      })],
-    }));
-  }
-
   if (headerImage) {
-    // Logo institucional: largura fixa em cm (Norma Zero) — 18cm de largura útil,
-    // proporção 8:1 mantida (1248x156). 18cm ≈ 680px, altura ≈ 85px.
+    // Logo institucional FGH — centralizada, proporção original preservada (232x42 ≈ 5.52:1).
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER,
       indent: { left: 0, right: 0 },
@@ -316,11 +282,12 @@ function createHeader(
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 680, height: 85 },
+        transformation: { width: 350, height: 63 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header_logo.png" },
       })],
     }));
   }
+
 
   children.push(createHeaderTable(title, elaboracao));
 
