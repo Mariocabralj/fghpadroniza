@@ -45,7 +45,7 @@ const TIME_WEIGHTS: Record<string, number> = {
 
 const CATEGORIES = ["POP", "Protocolo Clínico", "Manual", "Plano", "Política", "Regimento Interno"];
 const COST_FACTOR = 1.4508; // encargos
-const MONTHLY_HOURS = 220;
+const MONTHLY_HOURS = 200;
 
 const matchCategory = (docType: string | null): string | null => {
   if (!docType) return null;
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
                     <PopoverContent align="start" className="w-80">
                       <div className="space-y-2 text-xs text-muted-foreground">
                         <p className="font-semibold text-sm text-foreground">Fórmula por documento exportado</p>
-                        <p>(Salário do autor ÷ 220) × 1,4508 × horas economizadas pelo documento.</p>
+                        <p>(Salário do autor ÷ 200) × 1,4508 × horas economizadas pelo documento.</p>
                         <p>Usuários sem salário informado computam R$ 0,00.</p>
                       </div>
                     </PopoverContent>
