@@ -4,7 +4,7 @@ import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, CheckCircle2, Ban, FileText, Pencil } from "lucide-react";
+import { Users, CheckCircle2, Ban, FileText, Pencil, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
 
@@ -40,6 +40,7 @@ export default function UserManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [salaryVisible, setSalaryVisible] = useState(true);
 
   const load = async () => {
     const { data: p } = await supabase
@@ -144,7 +145,20 @@ export default function UserManagement() {
                       <SortableTh onClick={() => pToggle("email")} active={pKey === "email"} dir={pDir}>E-mail</SortableTh>
                       <SortableTh onClick={() => pToggle("role")} active={pKey === "role"} dir={pDir}>Cargo</SortableTh>
                       <SortableTh onClick={() => pToggle("sector")} active={pKey === "sector"} dir={pDir}>Setor</SortableTh>
-                      <SortableTh onClick={() => pToggle("salary")} active={pKey === "salary"} dir={pDir}>Salário</SortableTh>
+                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">
+                        <span className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => pToggle("salary")}>
+                          Salário
+                          <SortIcon active={pKey === "salary"} dir={pDir} />
+                        </span>
+                        <button
+                          onClick={() => setSalaryVisible((v) => !v)}
+                          className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition"
+                          title={salaryVisible ? "Ocultar salários" : "Mostrar salários"}
+                        >
+                          {salaryVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          {salaryVisible ? "Ocultar" : "Mostrar"}
+                        </button>
+                      </th>
                       <SortableTh onClick={() => pToggle("status")} active={pKey === "status"} dir={pDir}>Status</SortableTh>
                       <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Ações</th>
                     </tr>
@@ -178,7 +192,9 @@ export default function UserManagement() {
                             />
                           ) : (
                             <span className="flex items-center gap-1.5">
-                              <span className="text-foreground">{fmtBRL(p.salary)}</span>
+                              <span className="text-foreground">
+                                {salaryVisible ? fmtBRL(p.salary) : (p.salary == null ? "" : "••••")}
+                              </span>
                               <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
                             </span>
                           )}
