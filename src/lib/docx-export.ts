@@ -620,8 +620,8 @@ export async function exportDocx(
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
-  const [headerImage, tarjaImage] = await Promise.all([loadHeaderImage(), loadTarjaImage()]);
-  const header = createHeader(title, headerImage, tarjaImage, elaboracao);
+  const headerImage = await loadHeaderImage();
+  const header = createHeader(title, headerImage, elaboracao);
   const footer = createFooter();
 
   const pageProps = {
