@@ -95,6 +95,45 @@ export default function Workspace() {
     window.open("https://forms.cloud.microsoft/r/Y6xHtpLT1j", "_blank");
   };
 
+  const handleRefine = () => {
+    const instr = refineInstructions.trim();
+    if (!instr) {
+      toast.info("Digite as orientações de refinamento.");
+      return;
+    }
+    if (!standardized.trim()) {
+      toast.error("Nenhum documento para refinar.");
+      return;
+    }
+    setRefining(true);
+    let acc = "";
+    setStandardized(""); // limpar para receber streaming
+    streamProcessDocument(
+      {
+        content: standardized,
+        docType,
+        title,
+        sector,
+        mode: "refine",
+        instructions: instr,
+      },
+      (delta) => {
+        acc += delta;
+        setStandardized(acc);
+      },
+      () => {
+        setRefining(false);
+        setRefineInstructions("");
+        toast.success("Documento refinado.");
+      },
+      (err) => {
+        setRefining(false);
+        setStandardized(acc || standardized);
+        toast.error(err || "Erro ao refinar.");
+      }
+    );
+  };
+
   return (
     <AppLayout>
       <div className="p-4 h-[calc(100vh-4rem)] flex flex-col gap-4 animate-fade-in">
