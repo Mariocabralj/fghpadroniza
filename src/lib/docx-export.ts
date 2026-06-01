@@ -6,7 +6,6 @@ import {
   HorizontalPositionAlign, VerticalPositionAlign, TextWrappingType, TextWrappingSide,
 } from "docx";
 import headerLogoUrl from "@/assets/header_logo.png";
-import tarjaAzulUrl from "@/assets/tarja-azul-fgh.jpeg";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -16,7 +15,7 @@ const MARGIN_TOP = 2000;       // body starts below header table
 const MARGIN_BOTTOM = 2400;    // larger footer area
 const MARGIN_LEFT = 850;       // 1.5cm
 const MARGIN_RIGHT = 850;      // 1.5cm
-const MARGIN_HEADER = 113;     // 0,2cm — distância do topo da página até o cabeçalho
+const MARGIN_HEADER = 283;     // ~0,5cm — distância do topo da página até o cabeçalho (máx. 1cm)
 const MARGIN_FOOTER = 567;     // 1cm
 const PAGE_WIDTH = 11906;      // A4
 const PAGE_HEIGHT = 16838;     // A4
@@ -133,9 +132,6 @@ async function loadHeaderImage(): Promise<Uint8Array | null> {
   return loadBinary(headerLogoUrl);
 }
 
-async function loadTarjaImage(): Promise<Uint8Array | null> {
-  return loadBinary(tarjaAzulUrl);
-}
 
 function createHeaderTable(title: string, elaboracao: string = "[a preencher]"): Table {
   // Distribute header table across the full content width (no indent)
@@ -273,46 +269,12 @@ function createFooterTable(): Table {
 function createHeader(
   title: string,
   headerImage: Uint8Array | null,
-  tarjaImage: Uint8Array | null,
   elaboracao: string = "[a preencher]",
 ): Header {
   const children: (Paragraph | Table)[] = [];
 
-  // Institutional blue stripe — anchored, behind document.
-  // Horizontal anchor: COLUMN with offset 0 (encosta na borda esquerda da área útil).
-  // behindDocument:true + zIndex base garante tarja atrás de tabelas e textos.
-  if (tarjaImage) {
-    // Full Page Background — A4 (21cm x 29.7cm = 7559675 x 10691495 EMU).
-    // Ancorada à PÁGINA, offsets 0/0, behindDoc para ficar atrás de tudo.
-    children.push(new Paragraph({
-      spacing: { before: 0, after: 0 },
-      children: [new ImageRun({
-        type: "jpg",
-        data: tarjaImage,
-        // 21cm x 29.7cm em pixels (96dpi): 794 x 1123
-        transformation: { width: 794, height: 1123 },
-        floating: {
-          horizontalPosition: {
-            relative: HorizontalPositionRelativeFrom.PAGE,
-            offset: 0,
-          },
-          verticalPosition: {
-            relative: VerticalPositionRelativeFrom.PAGE,
-            offset: 0,
-          },
-          behindDocument: true,
-          wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
-          allowOverlap: true,
-          zIndex: 251659264,
-        },
-        altText: { title: "Tarja Azul FGH", description: "Tarja institucional FGH", name: "tarja_azul_imagem.jpeg" },
-      })],
-    }));
-  }
-
   if (headerImage) {
-    // Logo institucional: largura fixa em cm (Norma Zero) — 18cm de largura útil,
-    // proporção 8:1 mantida (1248x156). 18cm ≈ 680px, altura ≈ 85px.
+    // Logo institucional FGH — centralizada, proporção original preservada (232x42 ≈ 5.52:1).
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER,
       indent: { left: 0, right: 0 },
@@ -320,11 +282,12 @@ function createHeader(
       children: [new ImageRun({
         type: "png",
         data: headerImage,
-        transformation: { width: 680, height: 85 },
+        transformation: { width: 350, height: 63 },
         altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header_logo.png" },
       })],
     }));
   }
+
 
   children.push(createHeaderTable(title, elaboracao));
 
@@ -657,8 +620,8 @@ export async function exportDocx(
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
-  const [headerImage, tarjaImage] = await Promise.all([loadHeaderImage(), loadTarjaImage()]);
-  const header = createHeader(title, headerImage, tarjaImage, elaboracao);
+  const headerImage = await loadHeaderImage();
+  const header = createHeader(title, headerImage, elaboracao);
   const footer = createFooter();
 
   const pageProps = {
