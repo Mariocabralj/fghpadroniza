@@ -45,9 +45,12 @@ export default function Settings() {
       setSaving(false);
       return toast.error("Salário inválido");
     }
+    const updates: any = { name, role, sector, salary: salaryNum };
+    // Se o usuário digitou um salário, deixa de ser "prefiro não dizer"
+    if (salaryNum !== null) updates.salary_opt_out = false;
     const { error } = await supabase
       .from("profiles")
-      .update({ name, role, sector, salary: salaryNum })
+      .update(updates)
       .eq("user_id", user.user_id);
     setSaving(false);
     if (error) return toast.error(error.message);
