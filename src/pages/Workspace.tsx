@@ -45,6 +45,8 @@ export default function Workspace() {
     state?.pastedText || state?.ideaText || state?.fileName || ""
   );
   const [standardized, setStandardized] = useState(state?.standardizedText || "");
+  const [refineInstructions, setRefineInstructions] = useState("");
+  const [refining, setRefining] = useState(false);
 
   const checklist = useMemo(() => analyzeChecklist(standardized), [standardized]);
   const completionPct = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
