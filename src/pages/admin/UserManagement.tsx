@@ -192,7 +192,9 @@ export default function UserManagement() {
                             />
                           ) : (
                             <span className="flex items-center gap-1.5">
-                              <span className="text-foreground">{fmtBRL(p.salary)}</span>
+                              <span className="text-foreground">
+                                {salaryVisible ? fmtBRL(p.salary) : (p.salary == null ? "" : "••••")}
+                              </span>
                               <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
                             </span>
                           )}
