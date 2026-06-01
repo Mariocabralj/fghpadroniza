@@ -25,10 +25,13 @@ export default function Settings() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("salary")
+        .select("salary, salary_opt_out")
         .eq("user_id", user.user_id)
         .maybeSingle();
-      if (data?.salary != null) setSalary(String(data.salary));
+      // Se o usuário pediu "prefiro não dizer", mantemos o campo limpo
+      // mesmo se um admin tiver preenchido o salário internamente.
+      if (data?.salary_opt_out) setSalary("");
+      else if (data?.salary != null) setSalary(String(data.salary));
       else setSalary("");
     })();
   }, [user?.user_id]);
