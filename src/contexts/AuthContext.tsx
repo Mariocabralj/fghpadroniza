@@ -116,6 +116,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string, remember: boolean = true) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    if (data.user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      if (prof?.status === "blocked") {
+        await supabase.auth.signOut();
+        return { error: "Sua conta foi bloqueada. Contate o administrador." };
+      }
+    }
+    // Política "Manter conectado": grava timestamp de expiração (30 dias) ou marca sessão volátil
+    if (remember) {
+      localStorage.setItem(REMEMBER_KEY, String(Date.now() + THIRTY_DAYS_MS));
+      sessionStorage.removeItem(SESSION_KEY);
+    } else {
+      localStorage.removeItem(REMEMBER_KEY);
+      sessionStorage.setItem(SESSION_KEY, "1");
+    }
+    return {};
+  };
+
+
   const signUp = async (
     email: string,
     password: string,
