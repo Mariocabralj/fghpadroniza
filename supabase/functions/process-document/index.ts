@@ -32,11 +32,38 @@ async function loadActiveDirectives(supa: any): Promise<string> {
 // arquivo correspondente. A IA deve seguir rigorosamente essas seções.
 // =============================================================================
 const TEMPLATE_SECTIONS: Record<string, string> = {
+  "POP": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+SUMÁRIO (com hiperlinks)
+1. APRESENTAÇÃO — introdução curta e direta sobre o procedimento operacional
+2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
+3. ABRANGÊNCIA — áreas/setores onde o POP se aplica (seja específico)
+4. COMPETÊNCIAS — quem executa o quê (imperativo, sem rodeios)
+5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+6. DISPOSIÇÕES GERAIS — passo a passo OPERACIONAL detalhado com subitens 6.1, 6.2, 6.1.1...
+7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais
+10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+
+  "PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas (uso sistêmico/transversal):
+SUMÁRIO (com hiperlinks)
+1. APRESENTAÇÃO — contexto do processo sistêmico e setores conectados
+2. OBJETIVOS — finalidade do procedimento transversal
+3. ABRANGÊNCIA — listar TODOS os setores/unidades envolvidos no fluxo
+4. COMPETÊNCIAS — responsabilidades de CADA setor envolvido na cadeia
+5. FLUXOGRAMAS — descrição textual do fluxo intersetorial, com transições e handoffs
+6. DISPOSIÇÕES GERAIS — critérios, regras de transição, impedimentos, com subitens 6.1, 6.2...
+7. INFORMAÇÕES ADICIONAIS
+8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas)
+9. REFERÊNCIA BIBLIOGRÁFICA
+10. ANEXOS`,
+
+  // alias compatível com documentos antigos
   "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução sobre o tema
 2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
-3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+3. ABRANGÊNCIA — específica ao escopo
 4. COMPETÊNCIAS — atuações de cada profissional envolvido
 5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
 6. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 6.1, 6.2, 6.1.1...
