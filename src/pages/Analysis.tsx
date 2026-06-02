@@ -75,11 +75,12 @@ export default function Analysis() {
       streamProcessDocument(
         {
           content,
-          docType: state.docType || "POP/PRS",
+          docType: state.docType || "POP",
           title: state.title || "",
           sector: state.sector || "",
           mode,
           hasImages,
+          userId: user?.user_id,
         },
         (delta) => {
           resultRef.current += delta;
