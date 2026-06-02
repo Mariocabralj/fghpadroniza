@@ -16,11 +16,15 @@ interface AuthContextType {
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string, remember?: boolean) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, data: { name: string; role: string; sector: string; salary?: string; salary_opt_out?: boolean }) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
+
+const REMEMBER_KEY = "fgh_remember_until";
+const SESSION_KEY = "fgh_session_only";
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -86,33 +90,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     supabase.auth.getSession().then(async ({ data: { session: sess } }) => {
-      setSession(sess);
       if (sess?.user) {
+        // Política de "Manter conectado":
+        // - Se o usuário marcou "Manter conectado", há REMEMBER_KEY com timestamp futuro (até 30 dias).
+        // - Se não marcou, há SESSION_KEY em sessionStorage (vive só enquanto a aba está aberta).
+        // Caso nenhum dos dois seja válido → expira a sessão.
+        const rememberUntil = Number(localStorage.getItem(REMEMBER_KEY) || 0);
+        const sessionOnly = sessionStorage.getItem(SESSION_KEY) === "1";
+        const stillValid = (rememberUntil && Date.now() < rememberUntil) || sessionOnly;
+        if (!stillValid) {
+          await supabase.auth.signOut();
+          localStorage.removeItem(REMEMBER_KEY);
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+        setSession(sess);
         setUser(await loadProfile(sess.user));
         await checkAdmin(sess.user.id);
+      } else {
+        setSession(sess);
       }
       setLoading(false);
     });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
-    if (data.user) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("status")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-      if (prof?.status === "blocked") {
-        await supabase.auth.signOut();
-        return { error: "Sua conta foi bloqueada. Contate o administrador." };
-      }
-    }
-    return {};
-  };
 
   const signUp = async (
     email: string,
