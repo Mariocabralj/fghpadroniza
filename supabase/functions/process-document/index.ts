@@ -7,13 +7,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function logError(supa: any, message: string, metadata: any) {
+async function logError(supa: any, message: string, metadata: any, userId?: string | null) {
   try {
     await supa.from("system_logs").insert({
       level: "error",
       source: "process-document",
       message,
       metadata,
+      user_id: userId ?? null,
     });
   } catch (_) { /* ignore */ }
 }
