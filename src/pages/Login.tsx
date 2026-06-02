@@ -32,6 +32,7 @@ export default function Login() {
   const [sector, setSector] = useState("");
   const [salary, setSalary] = useState("");
   const [salaryOptOut, setSalaryOptOut] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     if (mode === "login") {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(email, password, rememberMe);
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       navigate("/dashboard");
