@@ -207,6 +207,59 @@ SUMÁRIO (com hiperlinks)
 8. REFERÊNCIAS BIBLIOGRÁFICAS`,
 };
 
+// Aliases dos códigos curtos usados na interface (PLA/MAN/POL/REG) →
+// reaproveitam a estrutura oficial dos modelos longos.
+TEMPLATE_SECTIONS["PLA"] = TEMPLATE_SECTIONS["Plano"];
+TEMPLATE_SECTIONS["MAN"] = TEMPLATE_SECTIONS["Manual"];
+TEMPLATE_SECTIONS["POL"] = TEMPLATE_SECTIONS["Política Interna"];
+TEMPLATE_SECTIONS["REG"] = TEMPLATE_SECTIONS["Regimento Interno"];
+
+// =============================================================================
+// MATRIZ DE COMPORTAMENTO — define TOM, DENSIDADE e PROPÓSITO por tipo.
+// É injetada no prompt do usuário para guiar a IA além da estrutura.
+// =============================================================================
+const DOC_BEHAVIOR: Record<string, string> = {
+  "POP": `TIPO: POP — Procedimento Operacional Padrão.
+PROPÓSITO: instruções passo a passo para uma atividade operacional ISOLADA e LOCAL (ex.: higienização de equipamentos).
+TOM E DENSIDADE: conciso, direto e IMPERATIVO. Foque em sequências claras de ações, listas de materiais e definição de quem executa o quê. EVITE explicações conceituais longas, justificativas teóricas e digressões. Frases curtas, verbos no imperativo ("realizar", "higienizar", "registrar"). Privilegie listas com "• " para materiais, EPIs e passos rápidos; use subitens numerados (6.1, 6.2) para etapas com título próprio e corpo.`,
+
+  "PRS": `TIPO: PRS — Procedimento Sistêmico.
+PROPÓSITO: processos AMPLOS e TRANSVERSAIS que cruzam múltiplos departamentos/unidades (ex.: fluxos de regulação, transferências interna/externa).
+TOM E DENSIDADE: estratégico e regulatório. Detalhe CRITÉRIOS DE ELEGIBILIDADE, regras de TRANSIÇÃO DE CUIDADO, IMPEDIMENTOS e RESPONSABILIDADES de cada setor envolvido. Mostre handoffs entre setores. Use subitens numerados quando houver bloco com título próprio + corpo (ex.: "6.1 Critérios de Inclusão", "6.2 Setores de Origem e Destino").`,
+
+  "Protocolo Clínico": `TIPO: Protocolo Clínico.
+PROPÓSITO: orientar condutas assistenciais, diagnósticas ou terapêuticas DIRETAS AO PACIENTE com base em evidências científicas (ex.: Manejo da Dor, Critérios Clínicos de Alta).
+TOM E DENSIDADE: científico, seguro, focado em PRÁTICA CLÍNICA e TOMADA DE DECISÃO RÁPIDA. Estruture com clareza: critérios de elegibilidade, SINAIS VITAIS DE ALERTA, TABELAS/ESCALAS DE AVALIAÇÃO (Glasgow, EVA, dosagens farmacológicas) e CONDUTAS OBRIGATÓRIAS IMEDIATAS de suporte à vida. Use tabelas em pipe ("|") para escalas e dosagens. Cite literatura (SBC, AMIB, MS, OMS).`,
+
+  "PLA": `TIPO: PLA — Plano.
+PROPÓSITO: gestão de riscos, dimensionamento de equipes e ESTRATÉGIAS DE RESPOSTA a contingências/falhas (ex.: interrupção de energia, plano de fonoaudiologia).
+TOM E DENSIDADE: analítico, preventivo e focado em AÇÕES CRONOLÓGICAS. Priorize TABELAS DE CONTINGÊNCIA (setores deficitários × setores de apoio), PRAZOS DE RESPOSTA EM MINUTOS e METAS DE INDICADORES de monitoramento. Use tabelas em pipe e cronologia clara ("até 5 min", "em até 30 min").`,
+
+  "MAN": `TIPO: MAN — Manual.
+PROPÓSITO: guia definitivo de ACULTURAMENTO, conceitos fundamentais e BOAS PRÁTICAS abrangentes de um setor (ex.: manual de ouvidorias, comunicação institucional).
+TOM E DENSIDADE: este é o documento com MAIOR LIBERDADE para ser EXTENSO, EDUCATIVO e CONCEITUAL. Detalhe MARCOS LEGAIS, MACROPROCESSOS DE TRABALHO, características ideais das equipes e cenários hipotéticos. Pode (e deve) usar parágrafos longos de prosa explicativa intercalados com listas quando necessário.`,
+
+  "POL": `TIPO: POL — Política Interna.
+PROPÓSITO: diretrizes institucionais corporativas de CUMPRIMENTO OBRIGATÓRIO e MITIGAÇÃO DE RISCOS jurídicos/trabalhistas (ex.: uso de adornos, regras de demissão PCD).
+TOM E DENSIDADE: formal, IMPOSITIVO e RIGOROSO. Foque em FUNDAMENTAÇÃO LEGAL EXPRESSA (Leis, NRs, CLT, Resoluções), detalhe rigidamente PROIBIÇÕES e EXCEÇÕES, e contenha OBRIGATORIAMENTE a RÉGUA PROGRESSIVA DE PENALIDADES / AÇÕES DISCIPLINARES (advertência verbal → escrita → suspensão → demissão por justa causa, conforme o caso).`,
+
+  "REG": `TIPO: REG — Regimento Interno.
+PROPÓSITO: lei orgânica que dita GOVERNANÇA, cargos, funcionamento e competências de uma comissão ou serviço permanente (ex.: regimento do NSP, Assistência Farmacêutica).
+TOM E DENSIDADE: escrita ESTATUTÁRIA, OBRIGATORIAMENTE dividida em CAPÍTULOS (CAPÍTULO I, II, III...) e ARTIGOS ("Art. 1º", "Art. 2º", "§ 1º"). Foque em ATRIBUIÇÕES ESPECÍFICAS de cada cargo (Presidente, Secretário, Membros), REGRAS DE QUÓRUM, DIREITO A VOTO e EMENTAS MÍNIMAS de relatórios periódicos. NÃO use linguagem operacional ou imperativa de POP — use estilo jurídico-normativo ("Compete ao Presidente...", "Considera-se quórum...").`,
+
+  // Aliases longos (para uploads antigos / biblioteca)
+  "POP/PRS": "",
+  "Plano": "",
+  "Manual": "",
+  "Política Interna": "",
+  "Regimento Interno": "",
+};
+DOC_BEHAVIOR["Plano"] = DOC_BEHAVIOR["PLA"];
+DOC_BEHAVIOR["Manual"] = DOC_BEHAVIOR["MAN"];
+DOC_BEHAVIOR["Política Interna"] = DOC_BEHAVIOR["POL"];
+DOC_BEHAVIOR["Regimento Interno"] = DOC_BEHAVIOR["REG"];
+DOC_BEHAVIOR["POP/PRS"] = DOC_BEHAVIOR["POP"];
+
 // =============================================================================
 // NÍVEL GLOBAL — System Prompt da Norma Zero (NORM.QUAL-001)
 // Aplica-se a TODOS os documentos, independentemente do tipo selecionado.
