@@ -10,8 +10,16 @@ import { Sparkles, Upload, ClipboardPaste, Lightbulb, Wand2, FileStack, Info } f
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-// Apenas documentos operacionais — Norma Zero/Carta/Ata/Fluxograma/Panfleto/Portaria/Ementa/Papel Timbrado removidos
-const docTypes = ["POP/PRS", "Protocolo Clínico", "Plano", "Manual", "Política Interna", "Regimento Interno"];
+// 7 tipos institucionais — cada um com tom/densidade próprios na IA
+const docTypes = [
+  { value: "POP", label: "POP (Procedimento Operacional Padrão)" },
+  { value: "PRS", label: "PRS (Procedimento Sistêmico)" },
+  { value: "Protocolo Clínico", label: "Protocolo Clínico" },
+  { value: "PLA", label: "PLA (Plano)" },
+  { value: "MAN", label: "MAN (Manual)" },
+  { value: "POL", label: "POL (Política Interna)" },
+  { value: "REG", label: "REG (Regimento Interno)" },
+];
 
 type Mode = "improve" | "format" | "paste" | "idea";
 
