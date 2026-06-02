@@ -32,6 +32,7 @@ export default function Login() {
   const [sector, setSector] = useState("");
   const [salary, setSalary] = useState("");
   const [salaryOptOut, setSalaryOptOut] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     if (mode === "login") {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(email, password, rememberMe);
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       navigate("/dashboard");
@@ -175,6 +176,12 @@ export default function Login() {
                   <Input id="pass" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" />
                 </div>
               </div>
+            )}
+            {mode === "login" && (
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <Checkbox checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
+                Manter conectado por 30 dias
+              </label>
             )}
             <Button type="submit" disabled={loading} className="w-full gradient-primary text-primary-foreground font-semibold h-11">
               {loading ? "Processando..." : mode === "login" ? "Entrar" : mode === "signup" ? "Criar conta" : "Enviar link de recuperação"}

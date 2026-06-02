@@ -8,6 +8,7 @@ export interface ProcessDocumentParams {
   mode: "upload" | "upload-improve" | "upload-format" | "paste" | "idea" | "refine";
   hasImages?: boolean;
   instructions?: string;
+  userId?: string;
 }
 
 export async function streamProcessDocument(

@@ -7,13 +7,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function logError(supa: any, message: string, metadata: any) {
+async function logError(supa: any, message: string, metadata: any, userId?: string | null) {
   try {
     await supa.from("system_logs").insert({
       level: "error",
       source: "process-document",
       message,
       metadata,
+      user_id: userId ?? null,
     });
   } catch (_) { /* ignore */ }
 }
@@ -31,11 +32,38 @@ async function loadActiveDirectives(supa: any): Promise<string> {
 // arquivo correspondente. A IA deve seguir rigorosamente essas seções.
 // =============================================================================
 const TEMPLATE_SECTIONS: Record<string, string> = {
+  "POP": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+SUMÁRIO (com hiperlinks)
+1. APRESENTAÇÃO — introdução curta e direta sobre o procedimento operacional
+2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
+3. ABRANGÊNCIA — áreas/setores onde o POP se aplica (seja específico)
+4. COMPETÊNCIAS — quem executa o quê (imperativo, sem rodeios)
+5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+6. DISPOSIÇÕES GERAIS — passo a passo OPERACIONAL detalhado com subitens 6.1, 6.2, 6.1.1...
+7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais
+10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+
+  "PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas (uso sistêmico/transversal):
+SUMÁRIO (com hiperlinks)
+1. APRESENTAÇÃO — contexto do processo sistêmico e setores conectados
+2. OBJETIVOS — finalidade do procedimento transversal
+3. ABRANGÊNCIA — listar TODOS os setores/unidades envolvidos no fluxo
+4. COMPETÊNCIAS — responsabilidades de CADA setor envolvido na cadeia
+5. FLUXOGRAMAS — descrição textual do fluxo intersetorial, com transições e handoffs
+6. DISPOSIÇÕES GERAIS — critérios, regras de transição, impedimentos, com subitens 6.1, 6.2...
+7. INFORMAÇÕES ADICIONAIS
+8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas)
+9. REFERÊNCIA BIBLIOGRÁFICA
+10. ANEXOS`,
+
+  // alias compatível com documentos antigos
   "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução sobre o tema
 2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
-3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
+3. ABRANGÊNCIA — específica ao escopo
 4. COMPETÊNCIAS — atuações de cada profissional envolvido
 5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
 6. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 6.1, 6.2, 6.1.1...
@@ -179,6 +207,59 @@ SUMÁRIO (com hiperlinks)
 8. REFERÊNCIAS BIBLIOGRÁFICAS`,
 };
 
+// Aliases dos códigos curtos usados na interface (PLA/MAN/POL/REG) →
+// reaproveitam a estrutura oficial dos modelos longos.
+TEMPLATE_SECTIONS["PLA"] = TEMPLATE_SECTIONS["Plano"];
+TEMPLATE_SECTIONS["MAN"] = TEMPLATE_SECTIONS["Manual"];
+TEMPLATE_SECTIONS["POL"] = TEMPLATE_SECTIONS["Política Interna"];
+TEMPLATE_SECTIONS["REG"] = TEMPLATE_SECTIONS["Regimento Interno"];
+
+// =============================================================================
+// MATRIZ DE COMPORTAMENTO — define TOM, DENSIDADE e PROPÓSITO por tipo.
+// É injetada no prompt do usuário para guiar a IA além da estrutura.
+// =============================================================================
+const DOC_BEHAVIOR: Record<string, string> = {
+  "POP": `TIPO: POP — Procedimento Operacional Padrão.
+PROPÓSITO: instruções passo a passo para uma atividade operacional ISOLADA e LOCAL (ex.: higienização de equipamentos).
+TOM E DENSIDADE: conciso, direto e IMPERATIVO. Foque em sequências claras de ações, listas de materiais e definição de quem executa o quê. EVITE explicações conceituais longas, justificativas teóricas e digressões. Frases curtas, verbos no imperativo ("realizar", "higienizar", "registrar"). Privilegie listas com "• " para materiais, EPIs e passos rápidos; use subitens numerados (6.1, 6.2) para etapas com título próprio e corpo.`,
+
+  "PRS": `TIPO: PRS — Procedimento Sistêmico.
+PROPÓSITO: processos AMPLOS e TRANSVERSAIS que cruzam múltiplos departamentos/unidades (ex.: fluxos de regulação, transferências interna/externa).
+TOM E DENSIDADE: estratégico e regulatório. Detalhe CRITÉRIOS DE ELEGIBILIDADE, regras de TRANSIÇÃO DE CUIDADO, IMPEDIMENTOS e RESPONSABILIDADES de cada setor envolvido. Mostre handoffs entre setores. Use subitens numerados quando houver bloco com título próprio + corpo (ex.: "6.1 Critérios de Inclusão", "6.2 Setores de Origem e Destino").`,
+
+  "Protocolo Clínico": `TIPO: Protocolo Clínico.
+PROPÓSITO: orientar condutas assistenciais, diagnósticas ou terapêuticas DIRETAS AO PACIENTE com base em evidências científicas (ex.: Manejo da Dor, Critérios Clínicos de Alta).
+TOM E DENSIDADE: científico, seguro, focado em PRÁTICA CLÍNICA e TOMADA DE DECISÃO RÁPIDA. Estruture com clareza: critérios de elegibilidade, SINAIS VITAIS DE ALERTA, TABELAS/ESCALAS DE AVALIAÇÃO (Glasgow, EVA, dosagens farmacológicas) e CONDUTAS OBRIGATÓRIAS IMEDIATAS de suporte à vida. Use tabelas em pipe ("|") para escalas e dosagens. Cite literatura (SBC, AMIB, MS, OMS).`,
+
+  "PLA": `TIPO: PLA — Plano.
+PROPÓSITO: gestão de riscos, dimensionamento de equipes e ESTRATÉGIAS DE RESPOSTA a contingências/falhas (ex.: interrupção de energia, plano de fonoaudiologia).
+TOM E DENSIDADE: analítico, preventivo e focado em AÇÕES CRONOLÓGICAS. Priorize TABELAS DE CONTINGÊNCIA (setores deficitários × setores de apoio), PRAZOS DE RESPOSTA EM MINUTOS e METAS DE INDICADORES de monitoramento. Use tabelas em pipe e cronologia clara ("até 5 min", "em até 30 min").`,
+
+  "MAN": `TIPO: MAN — Manual.
+PROPÓSITO: guia definitivo de ACULTURAMENTO, conceitos fundamentais e BOAS PRÁTICAS abrangentes de um setor (ex.: manual de ouvidorias, comunicação institucional).
+TOM E DENSIDADE: este é o documento com MAIOR LIBERDADE para ser EXTENSO, EDUCATIVO e CONCEITUAL. Detalhe MARCOS LEGAIS, MACROPROCESSOS DE TRABALHO, características ideais das equipes e cenários hipotéticos. Pode (e deve) usar parágrafos longos de prosa explicativa intercalados com listas quando necessário.`,
+
+  "POL": `TIPO: POL — Política Interna.
+PROPÓSITO: diretrizes institucionais corporativas de CUMPRIMENTO OBRIGATÓRIO e MITIGAÇÃO DE RISCOS jurídicos/trabalhistas (ex.: uso de adornos, regras de demissão PCD).
+TOM E DENSIDADE: formal, IMPOSITIVO e RIGOROSO. Foque em FUNDAMENTAÇÃO LEGAL EXPRESSA (Leis, NRs, CLT, Resoluções), detalhe rigidamente PROIBIÇÕES e EXCEÇÕES, e contenha OBRIGATORIAMENTE a RÉGUA PROGRESSIVA DE PENALIDADES / AÇÕES DISCIPLINARES (advertência verbal → escrita → suspensão → demissão por justa causa, conforme o caso).`,
+
+  "REG": `TIPO: REG — Regimento Interno.
+PROPÓSITO: lei orgânica que dita GOVERNANÇA, cargos, funcionamento e competências de uma comissão ou serviço permanente (ex.: regimento do NSP, Assistência Farmacêutica).
+TOM E DENSIDADE: escrita ESTATUTÁRIA, OBRIGATORIAMENTE dividida em CAPÍTULOS (CAPÍTULO I, II, III...) e ARTIGOS ("Art. 1º", "Art. 2º", "§ 1º"). Foque em ATRIBUIÇÕES ESPECÍFICAS de cada cargo (Presidente, Secretário, Membros), REGRAS DE QUÓRUM, DIREITO A VOTO e EMENTAS MÍNIMAS de relatórios periódicos. NÃO use linguagem operacional ou imperativa de POP — use estilo jurídico-normativo ("Compete ao Presidente...", "Considera-se quórum...").`,
+
+  // Aliases longos (para uploads antigos / biblioteca)
+  "POP/PRS": "",
+  "Plano": "",
+  "Manual": "",
+  "Política Interna": "",
+  "Regimento Interno": "",
+};
+DOC_BEHAVIOR["Plano"] = DOC_BEHAVIOR["PLA"];
+DOC_BEHAVIOR["Manual"] = DOC_BEHAVIOR["MAN"];
+DOC_BEHAVIOR["Política Interna"] = DOC_BEHAVIOR["POL"];
+DOC_BEHAVIOR["Regimento Interno"] = DOC_BEHAVIOR["REG"];
+DOC_BEHAVIOR["POP/PRS"] = DOC_BEHAVIOR["POP"];
+
 // =============================================================================
 // NÍVEL GLOBAL — System Prompt da Norma Zero (NORM.QUAL-001)
 // Aplica-se a TODOS os documentos, independentemente do tipo selecionado.
@@ -281,10 +362,10 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { content, docType, title, sector, mode, hasImages, instructions } = await req.json();
+    const { content, docType, title, sector, mode, hasImages, instructions, userId } = await req.json();
 
     if (!content || !docType) {
-      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode });
+      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode, status: 400 }, userId);
       return new Response(
         JSON.stringify({ error: "content and docType are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -292,6 +373,10 @@ serve(async (req) => {
     }
 
     const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
+    const docBehavior = DOC_BEHAVIOR[docType] || "";
+    const behaviorBlock = docBehavior
+      ? `\n\nCOMPORTAMENTO OBRIGATÓRIO PARA ESTE TIPO (tom, densidade e propósito):\n${docBehavior}\n`
+      : "";
     const globalDirectives = await loadActiveDirectives(supaAdmin);
 
     const flowchartFlag = `\n[Sinal do extrator] hasFlowchartImage=${hasImages ? "true" : "false"}. Use esse sinal para decidir se deve ou não inserir a linha "[INSERIR IMAGEM DO BIZAGI AQUI]" na seção FLUXOGRAMA(S), conforme a REGRA DE FLUXOGRAMA (CONDICIONAL).`;
@@ -312,7 +397,7 @@ ${instructions || "(sem orientações específicas — apenas revise o documento
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType}:
 ${templateStructure}
-
+${behaviorBlock}
 Devolva o documento COMPLETO já refinado, começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados). Preserve numeração, marcadores e tabelas.`;
     } else if (mode === "upload-format") {
       userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
@@ -332,7 +417,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Gere o documento padronizado começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
     } else if (mode === "upload" || mode === "upload-improve") {
       userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO, APRIMORADO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
@@ -348,7 +433,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Gere o documento completo padronizado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
     } else if (mode === "paste") {
       userPrompt = `O gestor colou o seguinte texto para ser transformado em documento padronizado FGH, seguindo a hierarquia: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
@@ -362,7 +447,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Faça o MAPEAMENTO INTELIGENTE do texto colado para as seções da estrutura. Preencha as seções faltantes com conteúdo profissional e detalhado. Comece DIRETAMENTE pela primeira seção numerada.`;
     } else {
       userPrompt = `O gestor descreveu uma ideia para criação de um novo documento, seguindo a hierarquia FGH: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
@@ -376,7 +461,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteúdo profissional, técnico e detalhado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
     }
 
@@ -401,7 +486,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
 
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `AI gateway ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode });
+      await logError(supaAdmin, `AI gateway HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
@@ -427,7 +512,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
   } catch (e) {
     console.error("process-document error:", e);
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
-    await logError(supaAdmin, `Falha geral: ${errorMessage}`, { stack: e instanceof Error ? e.stack?.slice(0, 500) : null });
+    await logError(supaAdmin, `Falha geral: ${errorMessage}`, { status: 500, stack: e instanceof Error ? e.stack?.slice(0, 500) : null });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
