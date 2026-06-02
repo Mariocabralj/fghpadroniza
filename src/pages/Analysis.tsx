@@ -42,7 +42,7 @@ export default function Analysis() {
           imageTypes = extracted.imageTypes;
           mode = state.aiMode || "upload";
           if (!content.trim()) {
-            await logSystemError("file-extractor", "Arquivo sem texto extraível", { name: state.file?.name, type: state.file?.type, size: state.file?.size });
+            await logSystemError("file-extractor", "Arquivo sem texto extraível", { name: state.file?.name, type: state.file?.type, size: state.file?.size }, user?.user_id);
             setError(
               "Não foi possível extrair texto do arquivo. Verifique se o documento não é apenas uma imagem digitalizada."
             );
@@ -50,7 +50,7 @@ export default function Analysis() {
           }
         } catch (e: any) {
           console.error("Erro ao extrair texto:", e);
-          await logSystemError("file-extractor", `Erro ao ler arquivo: ${e?.message || e}`, { name: state.file?.name, type: state.file?.type });
+          await logSystemError("file-extractor", `Erro ao ler arquivo: ${e?.message || e}`, { name: state.file?.name, type: state.file?.type }, user?.user_id);
           setError("Erro ao ler o arquivo enviado. Tente outro formato (.pdf, .docx ou .txt).");
           return;
         }
