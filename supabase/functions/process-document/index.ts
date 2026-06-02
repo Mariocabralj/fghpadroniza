@@ -362,10 +362,10 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { content, docType, title, sector, mode, hasImages, instructions } = await req.json();
+    const { content, docType, title, sector, mode, hasImages, instructions, userId } = await req.json();
 
     if (!content || !docType) {
-      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode });
+      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode, status: 400 }, userId);
       return new Response(
         JSON.stringify({ error: "content and docType are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -373,6 +373,10 @@ serve(async (req) => {
     }
 
     const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
+    const docBehavior = DOC_BEHAVIOR[docType] || "";
+    const behaviorBlock = docBehavior
+      ? `\n\nCOMPORTAMENTO OBRIGATÓRIO PARA ESTE TIPO (tom, densidade e propósito):\n${docBehavior}\n`
+      : "";
     const globalDirectives = await loadActiveDirectives(supaAdmin);
 
     const flowchartFlag = `\n[Sinal do extrator] hasFlowchartImage=${hasImages ? "true" : "false"}. Use esse sinal para decidir se deve ou não inserir a linha "[INSERIR IMAGEM DO BIZAGI AQUI]" na seção FLUXOGRAMA(S), conforme a REGRA DE FLUXOGRAMA (CONDICIONAL).`;
