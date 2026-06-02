@@ -397,7 +397,7 @@ ${instructions || "(sem orientações específicas — apenas revise o documento
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType}:
 ${templateStructure}
-
+${behaviorBlock}
 Devolva o documento COMPLETO já refinado, começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados). Preserve numeração, marcadores e tabelas.`;
     } else if (mode === "upload-format") {
       userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
@@ -417,7 +417,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Gere o documento padronizado começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
     } else if (mode === "upload" || mode === "upload-improve") {
       userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO, APRIMORADO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
@@ -433,7 +433,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Gere o documento completo padronizado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
     } else if (mode === "paste") {
       userPrompt = `O gestor colou o seguinte texto para ser transformado em documento padronizado FGH, seguindo a hierarquia: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
@@ -447,7 +447,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Faça o MAPEAMENTO INTELIGENTE do texto colado para as seções da estrutura. Preencha as seções faltantes com conteúdo profissional e detalhado. Comece DIRETAMENTE pela primeira seção numerada.`;
     } else {
       userPrompt = `O gestor descreveu uma ideia para criação de um novo documento, seguindo a hierarquia FGH: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
@@ -461,7 +461,7 @@ ${content}
 
 ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
 ${templateStructure}
-
+${behaviorBlock}
 Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteúdo profissional, técnico e detalhado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
     }
 
@@ -486,7 +486,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
 
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `AI gateway ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode });
+      await logError(supaAdmin, `AI gateway HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
@@ -512,7 +512,7 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
   } catch (e) {
     console.error("process-document error:", e);
     const errorMessage = e instanceof Error ? e.message : "Unknown error";
-    await logError(supaAdmin, `Falha geral: ${errorMessage}`, { stack: e instanceof Error ? e.stack?.slice(0, 500) : null });
+    await logError(supaAdmin, `Falha geral: ${errorMessage}`, { status: 500, stack: e instanceof Error ? e.stack?.slice(0, 500) : null });
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
