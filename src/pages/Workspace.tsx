@@ -39,7 +39,7 @@ export default function Workspace() {
   const state = location.state as any;
   const title = state?.title || "Documento Padronizado";
   const sector = state?.sector || "";
-  const docType = state?.docType || "POP/PRS";
+  const docType = state?.docType || "POP";
 
   const [original, setOriginal] = useState(
     state?.pastedText || state?.ideaText || state?.fileName || ""
@@ -116,6 +116,7 @@ export default function Workspace() {
         sector,
         mode: "refine",
         instructions: instr,
+        userId: user?.user_id,
       },
       (delta) => {
         acc += delta;
