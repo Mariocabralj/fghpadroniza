@@ -12,13 +12,13 @@ import { toast } from "sonner";
 
 // 7 tipos institucionais — cada um com tom/densidade próprios na IA
 const docTypes = [
-  { value: "POP", label: "POP (Procedimento Operacional Padrão)" },
-  { value: "PRS", label: "PRS (Procedimento Sistêmico)" },
+  { value: "POP", label: "Procedimento Operacional Padrão" },
+  { value: "PRS", label: "Procedimento Sistêmico" },
   { value: "Protocolo Clínico", label: "Protocolo Clínico" },
-  { value: "PLA", label: "PLA (Plano)" },
-  { value: "MAN", label: "MAN (Manual)" },
-  { value: "POL", label: "POL (Política Interna)" },
-  { value: "REG", label: "REG (Regimento Interno)" },
+  { value: "PLA", label: "Plano" },
+  { value: "MAN", label: "Manual" },
+  { value: "POL", label: "Política Interna" },
+  { value: "REG", label: "Regimento Interno" },
 ];
 
 type Mode = "improve" | "format" | "paste" | "idea";
