@@ -177,6 +177,12 @@ export default function Login() {
                 </div>
               </div>
             )}
+            {mode === "login" && (
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <Checkbox checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
+                Manter conectado por 30 dias
+              </label>
+            )}
             <Button type="submit" disabled={loading} className="w-full gradient-primary text-primary-foreground font-semibold h-11">
               {loading ? "Processando..." : mode === "login" ? "Entrar" : mode === "signup" ? "Criar conta" : "Enviar link de recuperação"}
             </Button>
