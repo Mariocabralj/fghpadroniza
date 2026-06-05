@@ -280,7 +280,7 @@ Aplica-se a TODO documento gerado, independentemente do tipo.
 4. ABRANGÊNCIA: NÃO use mais o texto fixo "Todas as áreas assistenciais e administrativas...". Em vez disso, analise o conteúdo enviado e LISTE APENAS as áreas, setores, comissões e profissionais EFETIVAMENTE envolvidos no documento em questão (ex.: "Equipe de Enfermagem do Centro Cirúrgico, Médicos plantonistas e CCIH"). Seja específico, nunca genérico.
 5. SEMPRE inclua REFERÊNCIAS BIBLIOGRÁFICAS reais (ANVISA, OMS, MS, ONA, CFM, COFEN, RDC, Resoluções, Portarias do MS, etc.) — nunca invente fontes.
 6. Seja DETALHISTA nos procedimentos/disposições.
-7. SIGLÁRIO: SEMPRE inclua uma seção de Siglário quando o tipo de documento previr (Manual, Política Interna, Fluxograma, Carta de Anuência, Norma Zero) e também sempre que aparecerem 2 ou mais siglas/abreviações no corpo do texto, mesmo em tipos que não listam Siglário (ex.: POP/PRS). Liste as siglas em ordem alfabética no formato "SIGLA — Significado".
+7. SIGLÁRIO: OBRIGATÓRIO em TODOS os tipos que o prevejam na estrutura (POP, PRS, POP/PRS, Protocolo Clínico, Manual, Política Interna, Fluxograma, Carta de Anuência, Norma Zero). NUNCA pule a seção Siglário quando ela estiver listada na estrutura do tipo — se realmente não houver siglas no documento, mantenha a seção e escreva "Não se aplica". Liste as siglas em ORDEM ALFABÉTICA, uma por linha, no formato exato "SIGLA — Significado" (use travessão —, não hífen). Para tipos que NÃO preveem Siglário na estrutura (Plano, Regimento Interno, Ata, Portaria, Panfleto, Papel Timbrado, Ementa), inclua a seção apenas se aparecerem 2 ou mais siglas no corpo.
 
 REGRA DE HIERARQUIA NUMÉRICA (OBRIGATÓRIA):
 - A numeração de subitens pode ter NO MÁXIMO 3 níveis (ex.: 1, 1.1, 1.1.1).
