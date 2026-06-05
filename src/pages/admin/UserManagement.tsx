@@ -110,6 +110,13 @@ export default function UserManagement() {
     setEditingId(null);
   };
 
+  const deleteDocument = async (id: string, title: string) => {
+    const { error } = await supabase.from("documents").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+    toast.success(`"${title}" excluído. Indicadores serão recalculados.`);
+  };
+
   const userMap: Record<string, ProfileRow> = {};
   profiles.forEach((p) => (userMap[p.user_id] = p));
 
