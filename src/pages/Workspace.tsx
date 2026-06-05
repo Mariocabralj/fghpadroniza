@@ -4,8 +4,9 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2 } from "lucide-react";
+import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2, Eye, Pencil } from "lucide-react";
 import { exportDocx } from "@/lib/docx-export";
+import DocumentPreview from "@/components/DocumentPreview";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
@@ -45,6 +46,7 @@ export default function Workspace() {
     state?.pastedText || state?.ideaText || state?.fileName || ""
   );
   const [standardized, setStandardized] = useState(state?.standardizedText || "");
+  const [previewMode, setPreviewMode] = useState<"preview" | "edit">("preview");
   const [refineInstructions, setRefineInstructions] = useState("");
   const [refining, setRefining] = useState(false);
 
@@ -169,12 +171,36 @@ export default function Workspace() {
                   <Sparkles className="w-4 h-4 text-primary" />
                   <div>
                     <h2 className="font-semibold text-foreground text-sm">Documento Padronizado FGH</h2>
-                    <p className="text-xs text-muted-foreground">Gerado por IA conforme Norma Zero</p>
+                    <p className="text-xs text-muted-foreground">Pré-visualização fiel ao .DOCX final</p>
                   </div>
                 </div>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-success/10 text-success">Pronto</span>
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex rounded-md border bg-muted p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode("preview")}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "preview" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
+                    >
+                      <Eye className="w-3 h-3" /> Visualizar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode("edit")}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "edit" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
+                    >
+                      <Pencil className="w-3 h-3" /> Editar
+                    </button>
+                  </div>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-success/10 text-success">Pronto</span>
+                </div>
               </div>
-              <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
+              {previewMode === "preview" ? (
+                <div className="flex-1 min-h-0">
+                  <DocumentPreview content={standardized} title={title} />
+                </div>
+              ) : (
+                <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
+              )}
             </div>
 
             {/* Refinamento por IA */}
