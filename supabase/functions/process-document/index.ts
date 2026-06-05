@@ -32,60 +32,64 @@ async function loadActiveDirectives(supa: any): Promise<string> {
 // arquivo correspondente. A IA deve seguir rigorosamente essas seções.
 // =============================================================================
 const TEMPLATE_SECTIONS: Record<string, string> = {
-  "POP": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+  "POP": `Estrutura oficial (MODELO_POP_PRS.docx) — 11 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução curta e direta sobre o procedimento operacional
 2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
 3. ABRANGÊNCIA — áreas/setores onde o POP se aplica (seja específico)
-4. COMPETÊNCIAS — quem executa o quê (imperativo, sem rodeios)
-5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
-6. DISPOSIÇÕES GERAIS — passo a passo OPERACIONAL detalhado com subitens 6.1, 6.2, 6.1.1...
-7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
-8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
-9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais
-10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações usadas no documento, no formato "SIGLA — Significado". Se realmente não houver nenhuma sigla, escreva "Não se aplica".
+5. COMPETÊNCIAS — quem executa o quê (imperativo, sem rodeios)
+6. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+7. DISPOSIÇÕES GERAIS — passo a passo OPERACIONAL detalhado com subitens 7.1, 7.2, 7.1.1...
+8. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+9. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+10. REFERÊNCIA BIBLIOGRÁFICA — fontes reais
+11. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
 
-  "PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas (uso sistêmico/transversal):
+  "PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 11 seções numeradas (uso sistêmico/transversal):
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — contexto do processo sistêmico e setores conectados
 2. OBJETIVOS — finalidade do procedimento transversal
 3. ABRANGÊNCIA — listar TODOS os setores/unidades envolvidos no fluxo
-4. COMPETÊNCIAS — responsabilidades de CADA setor envolvido na cadeia
-5. FLUXOGRAMAS — descrição textual do fluxo intersetorial, com transições e handoffs
-6. DISPOSIÇÕES GERAIS — critérios, regras de transição, impedimentos, com subitens 6.1, 6.2...
-7. INFORMAÇÕES ADICIONAIS
-8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas)
-9. REFERÊNCIA BIBLIOGRÁFICA
-10. ANEXOS`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações usadas no documento, no formato "SIGLA — Significado". Se realmente não houver nenhuma sigla, escreva "Não se aplica".
+5. COMPETÊNCIAS — responsabilidades de CADA setor envolvido na cadeia
+6. FLUXOGRAMAS — descrição textual do fluxo intersetorial, com transições e handoffs
+7. DISPOSIÇÕES GERAIS — critérios, regras de transição, impedimentos, com subitens 7.1, 7.2...
+8. INFORMAÇÕES ADICIONAIS
+9. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas)
+10. REFERÊNCIA BIBLIOGRÁFICA
+11. ANEXOS`,
 
   // alias compatível com documentos antigos
-  "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+  "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 11 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução sobre o tema
 2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
 3. ABRANGÊNCIA — específica ao escopo
-4. COMPETÊNCIAS — atuações de cada profissional envolvido
-5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
-6. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 6.1, 6.2, 6.1.1...
-7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
-8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
-9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais (ANVISA, OMS, MS, ONA, etc.)
-10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações no formato "SIGLA — Significado". Se não houver, escreva "Não se aplica".
+5. COMPETÊNCIAS — atuações de cada profissional envolvido
+6. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+7. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 7.1, 7.2, 7.1.1...
+8. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+9. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+10. REFERÊNCIA BIBLIOGRÁFICA — fontes reais (ANVISA, OMS, MS, ONA, etc.)
+11. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
 
-  "Protocolo Clínico": `Estrutura oficial (MODELO_PROTOCOLO_CLINICO.docx) — 12 seções numeradas:
+  "Protocolo Clínico": `Estrutura oficial (MODELO_PROTOCOLO_CLINICO.docx) — 13 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução sobre o tema clínico
 2. OBJETIVOS — finalidade do protocolo
 3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
-4. CRITÉRIOS DE INCLUSÃO/EXCLUSÃO — pacientes/condições em que se aplica ou não
-5. COMPETÊNCIAS — atuações de cada profissional
-6. FLUXOGRAMAS — descrição textual do fluxo clínico
-7. DISPOSIÇÕES GERAIS — conduta clínica detalhada com subitens 7.1, 7.2...
-8. RESULTADOS ESPERADOS — indicadores com metas definidas (um indicador por resultado)
-9. INFORMAÇÕES ADICIONAIS
-10. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
-11. REFERÊNCIA BIBLIOGRÁFICA
-12. ANEXOS`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações clínicas e institucionais usadas (ex.: FGH, CEP, SUS, UTI...) no formato "SIGLA — Significado". Se não houver, escreva "Não se aplica".
+5. CRITÉRIOS DE INCLUSÃO/EXCLUSÃO — pacientes/condições em que se aplica ou não
+6. COMPETÊNCIAS — atuações de cada profissional
+7. FLUXOGRAMAS — descrição textual do fluxo clínico
+8. DISPOSIÇÕES GERAIS — conduta clínica detalhada com subitens 8.1, 8.2...
+9. RESULTADOS ESPERADOS — indicadores com metas definidas (um indicador por resultado)
+10. INFORMAÇÕES ADICIONAIS
+11. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+12. REFERÊNCIA BIBLIOGRÁFICA
+13. ANEXOS`,
 
   "Manual": `Estrutura oficial (MODELO_MANUAL.docx) — 7 seções numeradas:
 1. OBJETIVOS — finalidade do manual
