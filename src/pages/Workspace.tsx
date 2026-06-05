@@ -196,7 +196,21 @@ export default function Workspace() {
               </div>
               {previewMode === "preview" ? (
                 <div className="flex-1 min-h-0">
-                  <DocumentPreview content={standardized} title={title} />
+                  <DocumentPreview
+                    content={standardized}
+                    title={title}
+                    elaboracao={user ? `${user.name}${user.role ? " - " + user.role : ""}` : "[A PREENCHER]"}
+                    {...(() => {
+                      try {
+                        const raw = sessionStorage.getItem("fgh:lastImages");
+                        if (raw) {
+                          const p = JSON.parse(raw);
+                          return { images: p.images, imageTypes: p.imageTypes };
+                        }
+                      } catch { /* ignore */ }
+                      return {};
+                    })()}
+                  />
                 </div>
               ) : (
                 <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
