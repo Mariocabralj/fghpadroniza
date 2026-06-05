@@ -4,7 +4,18 @@ import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, CheckCircle2, Ban, FileText, Pencil, Eye, EyeOff } from "lucide-react";
+import { Users, CheckCircle2, Ban, FileText, Pencil, Eye, EyeOff, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
 
@@ -97,6 +108,13 @@ export default function UserManagement() {
     if (error) toast.error(error.message);
     else toast.success("Salário atualizado (oculto para o usuário)");
     setEditingId(null);
+  };
+
+  const deleteDocument = async (id: string, title: string) => {
+    const { error } = await supabase.from("documents").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+    toast.success(`"${title}" excluído. Indicadores serão recalculados.`);
   };
 
   const userMap: Record<string, ProfileRow> = {};
@@ -235,6 +253,7 @@ export default function UserManagement() {
                       <SortableTh onClick={() => dToggle("authorSector")} active={dKey === "authorSector"} dir={dDir}>Setor</SortableTh>
                       <SortableTh onClick={() => dToggle("status")} active={dKey === "status"} dir={dDir}>Status</SortableTh>
                       <SortableTh onClick={() => dToggle("created_at")} active={dKey === "created_at"} dir={dDir}>Data</SortableTh>
+                      <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -248,6 +267,32 @@ export default function UserManagement() {
                         <td className="px-4 py-3 text-sm">{d.authorSector}</td>
                         <td className="px-4 py-3 text-sm">{d.status}</td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(d.created_at).toLocaleDateString("pt-BR")}</td>
+                        <td className="px-4 py-3 text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-8 gap-1 text-destructive hover:text-destructive">
+                                <Trash2 className="w-4 h-4" /> Excluir
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir documento?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação é irreversível. O documento <strong>"{d.title}"</strong> será removido do Histórico Global e todos os indicadores e dashboards serão recalculados automaticamente.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteDocument(d.id, d.title)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir definitivamente
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
