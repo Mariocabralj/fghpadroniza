@@ -6,6 +6,7 @@ import {
   HorizontalPositionAlign, VerticalPositionAlign, TextWrappingType, TextWrappingSide,
 } from "docx";
 import headerLogoUrl from "@/assets/header_logo.png";
+import letterheadBgUrl from "@/assets/letterhead_bg.jpg";
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -130,6 +131,10 @@ async function loadBinary(url: string): Promise<Uint8Array | null> {
 
 async function loadHeaderImage(): Promise<Uint8Array | null> {
   return loadBinary(headerLogoUrl);
+}
+
+async function loadLetterheadBg(): Promise<Uint8Array | null> {
+  return loadBinary(letterheadBgUrl);
 }
 
 
@@ -269,9 +274,36 @@ function createFooterTable(): Table {
 function createHeader(
   title: string,
   headerImage: Uint8Array | null,
+  letterheadBg: Uint8Array | null,
   elaboracao: string = "[a preencher]",
 ): Header {
   const children: (Paragraph | Table)[] = [];
+
+  // Papel timbrado institucional FGH — imagem âncora em página inteira, atrás
+  // do texto, repetida em todas as páginas via header.
+  // A4: 21cm x 29,7cm → em pixels docx-js (9525 EMU/px): ~794 x 1123.
+  const floatingRuns: ImageRun[] = [];
+  if (letterheadBg) {
+    floatingRuns.push(new ImageRun({
+      type: "jpg",
+      data: letterheadBg,
+      transformation: { width: 794, height: 1123 },
+      floating: {
+        horizontalPosition: {
+          relative: HorizontalPositionRelativeFrom.PAGE,
+          offset: 0,
+        },
+        verticalPosition: {
+          relative: VerticalPositionRelativeFrom.PAGE,
+          offset: 0,
+        },
+        behindDocument: true,
+        allowOverlap: true,
+        wrap: { type: TextWrappingType.NONE, side: TextWrappingSide.BOTH_SIDES },
+      },
+      altText: { title: "Papel Timbrado FGH", description: "Tarja institucional FGH", name: "letterhead_bg.jpg" },
+    }));
+  }
 
   if (headerImage) {
     // Logo institucional FGH — centralizada, proporção original preservada (232x42 ≈ 5.52:1).
@@ -279,12 +311,20 @@ function createHeader(
       alignment: AlignmentType.CENTER,
       indent: { left: 0, right: 0 },
       spacing: { before: 0, after: 567 },
-      children: [new ImageRun({
-        type: "png",
-        data: headerImage,
-        transformation: { width: 228, height: 41 },
-        altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header_logo.png" },
-      })],
+      children: [
+        ...floatingRuns,
+        new ImageRun({
+          type: "png",
+          data: headerImage,
+          transformation: { width: 228, height: 41 },
+          altText: { title: "FGH Logo", description: "Logo institucional FGH", name: "header_logo.png" },
+        }),
+      ],
+    }));
+  } else if (floatingRuns.length) {
+    children.push(new Paragraph({
+      spacing: { before: 0, after: 0 },
+      children: floatingRuns,
     }));
   }
 
@@ -620,8 +660,11 @@ export async function exportDocx(
   const cleanText = stripMarkdown(standardizedText);
   const allLines = cleanText.split("\n");
 
-  const headerImage = await loadHeaderImage();
-  const header = createHeader(title, headerImage, elaboracao);
+  const [headerImage, letterheadBg] = await Promise.all([
+    loadHeaderImage(),
+    loadLetterheadBg(),
+  ]);
+  const header = createHeader(title, headerImage, letterheadBg, elaboracao);
   const footer = createFooter();
 
   const pageProps = {
