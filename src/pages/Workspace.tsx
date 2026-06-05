@@ -46,6 +46,7 @@ export default function Workspace() {
     state?.pastedText || state?.ideaText || state?.fileName || ""
   );
   const [standardized, setStandardized] = useState(state?.standardizedText || "");
+  const [previewMode, setPreviewMode] = useState<"preview" | "edit">("preview");
   const [refineInstructions, setRefineInstructions] = useState("");
   const [refining, setRefining] = useState(false);
 
