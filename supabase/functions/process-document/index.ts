@@ -32,60 +32,64 @@ async function loadActiveDirectives(supa: any): Promise<string> {
 // arquivo correspondente. A IA deve seguir rigorosamente essas seções.
 // =============================================================================
 const TEMPLATE_SECTIONS: Record<string, string> = {
-  "POP": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+  "POP": `Estrutura oficial (MODELO_POP_PRS.docx) — 11 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução curta e direta sobre o procedimento operacional
 2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
 3. ABRANGÊNCIA — áreas/setores onde o POP se aplica (seja específico)
-4. COMPETÊNCIAS — quem executa o quê (imperativo, sem rodeios)
-5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
-6. DISPOSIÇÕES GERAIS — passo a passo OPERACIONAL detalhado com subitens 6.1, 6.2, 6.1.1...
-7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
-8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
-9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais
-10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações usadas no documento, no formato "SIGLA — Significado". Se realmente não houver nenhuma sigla, escreva "Não se aplica".
+5. COMPETÊNCIAS — quem executa o quê (imperativo, sem rodeios)
+6. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+7. DISPOSIÇÕES GERAIS — passo a passo OPERACIONAL detalhado com subitens 7.1, 7.2, 7.1.1...
+8. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+9. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+10. REFERÊNCIA BIBLIOGRÁFICA — fontes reais
+11. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
 
-  "PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas (uso sistêmico/transversal):
+  "PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 11 seções numeradas (uso sistêmico/transversal):
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — contexto do processo sistêmico e setores conectados
 2. OBJETIVOS — finalidade do procedimento transversal
 3. ABRANGÊNCIA — listar TODOS os setores/unidades envolvidos no fluxo
-4. COMPETÊNCIAS — responsabilidades de CADA setor envolvido na cadeia
-5. FLUXOGRAMAS — descrição textual do fluxo intersetorial, com transições e handoffs
-6. DISPOSIÇÕES GERAIS — critérios, regras de transição, impedimentos, com subitens 6.1, 6.2...
-7. INFORMAÇÕES ADICIONAIS
-8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas)
-9. REFERÊNCIA BIBLIOGRÁFICA
-10. ANEXOS`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações usadas no documento, no formato "SIGLA — Significado". Se realmente não houver nenhuma sigla, escreva "Não se aplica".
+5. COMPETÊNCIAS — responsabilidades de CADA setor envolvido na cadeia
+6. FLUXOGRAMAS — descrição textual do fluxo intersetorial, com transições e handoffs
+7. DISPOSIÇÕES GERAIS — critérios, regras de transição, impedimentos, com subitens 7.1, 7.2...
+8. INFORMAÇÕES ADICIONAIS
+9. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas)
+10. REFERÊNCIA BIBLIOGRÁFICA
+11. ANEXOS`,
 
   // alias compatível com documentos antigos
-  "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 10 seções numeradas:
+  "POP/PRS": `Estrutura oficial (MODELO_POP_PRS.docx) — 11 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução sobre o tema
 2. OBJETIVOS — finalidade do procedimento (o porquê de existir)
 3. ABRANGÊNCIA — específica ao escopo
-4. COMPETÊNCIAS — atuações de cada profissional envolvido
-5. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
-6. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 6.1, 6.2, 6.1.1...
-7. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
-8. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
-9. REFERÊNCIA BIBLIOGRÁFICA — fontes reais (ANVISA, OMS, MS, ONA, etc.)
-10. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações no formato "SIGLA — Significado". Se não houver, escreva "Não se aplica".
+5. COMPETÊNCIAS — atuações de cada profissional envolvido
+6. FLUXOGRAMAS — descrição textual do fluxo do processo (etapas, decisões SIM/NÃO)
+7. DISPOSIÇÕES GERAIS — etapas detalhadas do processo, com subitens 7.1, 7.2, 7.1.1...
+8. INFORMAÇÕES ADICIONAIS — informações complementares relevantes
+9. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+10. REFERÊNCIA BIBLIOGRÁFICA — fontes reais (ANVISA, OMS, MS, ONA, etc.)
+11. ANEXOS — listar documentos anexos (ou "Não se aplica")`,
 
-  "Protocolo Clínico": `Estrutura oficial (MODELO_PROTOCOLO_CLINICO.docx) — 12 seções numeradas:
+  "Protocolo Clínico": `Estrutura oficial (MODELO_PROTOCOLO_CLINICO.docx) — 13 seções numeradas:
 SUMÁRIO (com hiperlinks)
 1. APRESENTAÇÃO — introdução sobre o tema clínico
 2. OBJETIVOS — finalidade do protocolo
 3. ABRANGÊNCIA — fixo: "Todas as áreas assistenciais e administrativas das unidades FGH"
-4. CRITÉRIOS DE INCLUSÃO/EXCLUSÃO — pacientes/condições em que se aplica ou não
-5. COMPETÊNCIAS — atuações de cada profissional
-6. FLUXOGRAMAS — descrição textual do fluxo clínico
-7. DISPOSIÇÕES GERAIS — conduta clínica detalhada com subitens 7.1, 7.2...
-8. RESULTADOS ESPERADOS — indicadores com metas definidas (um indicador por resultado)
-9. INFORMAÇÕES ADICIONAIS
-10. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
-11. REFERÊNCIA BIBLIOGRÁFICA
-12. ANEXOS`,
+4. SIGLÁRIO — OBRIGATÓRIO: liste em ordem alfabética todas as siglas/abreviações clínicas e institucionais usadas (ex.: FGH, CEP, SUS, UTI...) no formato "SIGLA — Significado". Se não houver, escreva "Não se aplica".
+5. CRITÉRIOS DE INCLUSÃO/EXCLUSÃO — pacientes/condições em que se aplica ou não
+6. COMPETÊNCIAS — atuações de cada profissional
+7. FLUXOGRAMAS — descrição textual do fluxo clínico
+8. DISPOSIÇÕES GERAIS — conduta clínica detalhada com subitens 8.1, 8.2...
+9. RESULTADOS ESPERADOS — indicadores com metas definidas (um indicador por resultado)
+10. INFORMAÇÕES ADICIONAIS
+11. HISTÓRICO DE REVISÕES — tabela obrigatória (5 colunas — ver REGRA TABELA)
+12. REFERÊNCIA BIBLIOGRÁFICA
+13. ANEXOS`,
 
   "Manual": `Estrutura oficial (MODELO_MANUAL.docx) — 7 seções numeradas:
 1. OBJETIVOS — finalidade do manual
@@ -276,7 +280,7 @@ Aplica-se a TODO documento gerado, independentemente do tipo.
 4. ABRANGÊNCIA: NÃO use mais o texto fixo "Todas as áreas assistenciais e administrativas...". Em vez disso, analise o conteúdo enviado e LISTE APENAS as áreas, setores, comissões e profissionais EFETIVAMENTE envolvidos no documento em questão (ex.: "Equipe de Enfermagem do Centro Cirúrgico, Médicos plantonistas e CCIH"). Seja específico, nunca genérico.
 5. SEMPRE inclua REFERÊNCIAS BIBLIOGRÁFICAS reais (ANVISA, OMS, MS, ONA, CFM, COFEN, RDC, Resoluções, Portarias do MS, etc.) — nunca invente fontes.
 6. Seja DETALHISTA nos procedimentos/disposições.
-7. SIGLÁRIO: SEMPRE inclua uma seção de Siglário quando o tipo de documento previr (Manual, Política Interna, Fluxograma, Carta de Anuência, Norma Zero) e também sempre que aparecerem 2 ou mais siglas/abreviações no corpo do texto, mesmo em tipos que não listam Siglário (ex.: POP/PRS). Liste as siglas em ordem alfabética no formato "SIGLA — Significado".
+7. SIGLÁRIO: OBRIGATÓRIO em TODOS os tipos que o prevejam na estrutura (POP, PRS, POP/PRS, Protocolo Clínico, Manual, Política Interna, Fluxograma, Carta de Anuência, Norma Zero). NUNCA pule a seção Siglário quando ela estiver listada na estrutura do tipo — se realmente não houver siglas no documento, mantenha a seção e escreva "Não se aplica". Liste as siglas em ORDEM ALFABÉTICA, uma por linha, no formato exato "SIGLA — Significado" (use travessão —, não hífen). Para tipos que NÃO preveem Siglário na estrutura (Plano, Regimento Interno, Ata, Portaria, Panfleto, Papel Timbrado, Ementa), inclua a seção apenas se aparecerem 2 ou mais siglas no corpo.
 
 REGRA DE HIERARQUIA NUMÉRICA (OBRIGATÓRIA):
 - A numeração de subitens pode ter NO MÁXIMO 3 níveis (ex.: 1, 1.1, 1.1.1).
