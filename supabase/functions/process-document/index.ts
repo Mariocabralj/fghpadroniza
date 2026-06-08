@@ -26,6 +26,29 @@ async function loadActiveDirectives(supa: any): Promise<string> {
     data.map((d: any, i: number) => `${i + 1}. ${d.content}`).join("\n");
 }
 
+async function loadGlobalSystemPrompt(supa: any): Promise<string> {
+  const { data } = await supa.from("ai_system_prompt").select("content").eq("id", "global").maybeSingle();
+  const c = (data?.content || "").trim();
+  if (!c) return "";
+  return `\n\nINSTRUÇÕES DE SISTEMA PERMANENTES (Admin — prioridade máxima):\n${c}`;
+}
+
+async function loadFewShotMessages(supa: any, docType: string): Promise<any[]> {
+  const { data } = await supa
+    .from("ai_few_shot_examples")
+    .select("title, doc_type, input_text, ideal_output")
+    .eq("active", true)
+    .order("created_at", { ascending: true });
+  if (!data || data.length === 0) return [];
+  const filtered = data.filter((e: any) => !e.doc_type || e.doc_type === docType).slice(0, 4);
+  const msgs: any[] = [];
+  for (const ex of filtered) {
+    msgs.push({ role: "user", content: `[EXEMPLO GOLD STANDARD — ${ex.title}] Rascunho de entrada:\n${ex.input_text}` });
+    msgs.push({ role: "assistant", content: ex.ideal_output });
+  }
+  return msgs;
+}
+
 // =============================================================================
 // NÍVEL ESPECÍFICO — Estrutura exata extraída dos modelos da Biblioteca FGH
 // (public/templates/MODELO_*.docx). Cada bloco reflete o layout oficial do
