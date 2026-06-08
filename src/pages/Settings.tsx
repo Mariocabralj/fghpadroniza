@@ -146,6 +146,51 @@ export default function Settings() {
           </div>
         </div>
 
+        <div className="bg-card rounded-xl border shadow-card p-6 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Plug className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Conexão com a IA (Google Gemini)</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Valida se a chave GEMINI_API_KEY está ativa, respondendo e sem erros de cota. Útil antes de iniciar a geração de documentos.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleTestGemini}
+            disabled={testing}
+            className="gap-2"
+          >
+            {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />}
+            {testing ? "Testando..." : "Testar conexão"}
+          </Button>
+
+          {testResult && (
+            <div
+              className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${
+                testResult.ok
+                  ? "border-success/30 bg-success/5 text-foreground"
+                  : "border-destructive/30 bg-destructive/5 text-foreground"
+              }`}
+            >
+              {testResult.ok ? (
+                <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              ) : (
+                <XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+              )}
+              <div className="space-y-1">
+                <p className="font-medium">{testResult.ok ? "Conexão OK" : "Falha na conexão"}</p>
+                <p className="text-xs text-muted-foreground">{testResult.message}</p>
+                {testResult.ok && (
+                  <p className="text-xs text-muted-foreground">
+                    Latência: {testResult.elapsedMs} ms{testResult.reply ? ` · Resposta do modelo: "${testResult.reply}"` : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground font-semibold w-full h-11">
           {saving ? "Salvando..." : "Salvar Alterações"}
         </Button>
