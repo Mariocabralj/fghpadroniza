@@ -490,22 +490,22 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
 
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `AI gateway HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
+      await logError(supaAdmin, `Gemini API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
+          JSON.stringify({ error: "Limite de requisições da API Gemini excedido. Tente novamente em alguns segundos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (response.status === 401 || response.status === 403) {
         return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Chave GEMINI_API_KEY inválida ou sem permissão." }),
+          { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      console.error("AI gateway error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       return new Response(
-        JSON.stringify({ error: "Erro ao processar documento com IA" }),
+        JSON.stringify({ error: "Erro ao processar documento com IA (Gemini)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
