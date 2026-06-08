@@ -41,6 +41,93 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_few_shot_examples: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          doc_type: string | null
+          id: string
+          ideal_output: string
+          input_text: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string | null
+          id?: string
+          ideal_output: string
+          input_text: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string | null
+          id?: string
+          ideal_output?: string
+          input_text?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          diff: Json
+          id: string
+          label: string
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          diff?: Json
+          id?: string
+          label: string
+          payload: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          diff?: Json
+          id?: string
+          label?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
+      ai_system_prompt: {
+        Row: {
+          content: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       ai_training_messages: {
         Row: {
           content: string
