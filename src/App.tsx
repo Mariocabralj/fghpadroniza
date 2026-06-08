@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AITraining from "./pages/admin/AITraining";
 import UserManagement from "./pages/admin/UserManagement";
 import SystemLogs from "./pages/admin/SystemLogs";
+import AdminSettings from "./pages/admin/AdminSettings";
 import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/admin/treinamento" element={<AITraining />} />
             <Route path="/admin/usuarios" element={<UserManagement />} />
             <Route path="/admin/logs" element={<SystemLogs />} />
+            <Route path="/admin/configuracoes" element={<AdminSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
