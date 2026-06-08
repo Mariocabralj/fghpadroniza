@@ -84,10 +84,10 @@ export default function FewShotPanel() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-mono uppercase text-muted-foreground">Tipo de documento</label>
-              <Select value={docType} onValueChange={setDocType}>
-                <SelectTrigger><SelectValue placeholder="Qualquer tipo" /></SelectTrigger>
+              <Select value={docType || "__any__"} onValueChange={(v) => setDocType(v === "__any__" ? "" : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value=" ">Qualquer tipo</SelectItem>
+                  <SelectItem value="__any__">Qualquer tipo</SelectItem>
                   {DOC_TYPES.filter(Boolean).map((t) => (
                     <SelectItem key={t} value={t}>{t}</SelectItem>
                   ))}
