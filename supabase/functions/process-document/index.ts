@@ -361,9 +361,9 @@ serve(async (req) => {
   const supaAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     const { content, docType, title, sector, mode, hasImages, instructions, userId } = await req.json();
@@ -470,15 +470,15 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
     }
 
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${GEMINI_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gemini-2.5-flash",
           messages: [
             { role: "system", content: SYSTEM_PROMPT + globalDirectives },
             { role: "user", content: userPrompt },
@@ -490,22 +490,22 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
 
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `AI gateway HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
+      await logError(supaAdmin, `Gemini API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }),
+          JSON.stringify({ error: "Limite de requisições da API Gemini excedido. Tente novamente em alguns segundos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (response.status === 401 || response.status === 403) {
         return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Adicione créditos ao workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Chave GEMINI_API_KEY inválida ou sem permissão." }),
+          { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      console.error("AI gateway error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       return new Response(
-        JSON.stringify({ error: "Erro ao processar documento com IA" }),
+        JSON.stringify({ error: "Erro ao processar documento com IA (Gemini)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
