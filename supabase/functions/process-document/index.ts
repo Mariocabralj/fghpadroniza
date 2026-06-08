@@ -505,7 +505,8 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
         body: JSON.stringify({
           model: "gemini-2.5-flash",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT + globalDirectives },
+            { role: "system", content: SYSTEM_PROMPT + adminSystemPrompt + globalDirectives },
+            ...fewShotMessages,
             { role: "user", content: userPrompt },
           ],
           stream: true,
