@@ -19,6 +19,25 @@ export default function Settings() {
   const [sector, setSector] = useState(user?.sector || "");
   const [salary, setSalary] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<null | { ok: boolean; message: string; elapsedMs?: number; reply?: string }>(null);
+
+  const handleTestGemini = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("test-gemini", { body: {} });
+      if (error) throw error;
+      setTestResult({ ok: !!data?.ok, message: data?.message || "Sem mensagem", elapsedMs: data?.elapsedMs, reply: data?.reply });
+      if (data?.ok) toast.success("Conexão com Gemini OK");
+      else toast.error("Falha: " + (data?.message || "erro"));
+    } catch (e: any) {
+      setTestResult({ ok: false, message: e?.message || "Erro de rede" });
+      toast.error(e?.message || "Erro ao testar");
+    } finally {
+      setTesting(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
