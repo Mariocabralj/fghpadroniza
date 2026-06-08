@@ -405,6 +405,8 @@ serve(async (req) => {
       ? `\n\nCOMPORTAMENTO OBRIGATÓRIO PARA ESTE TIPO (tom, densidade e propósito):\n${docBehavior}\n`
       : "";
     const globalDirectives = await loadActiveDirectives(supaAdmin);
+    const adminSystemPrompt = await loadGlobalSystemPrompt(supaAdmin);
+    const fewShotMessages = await loadFewShotMessages(supaAdmin, docType);
 
     const flowchartFlag = `\n[Sinal do extrator] hasFlowchartImage=${hasImages ? "true" : "false"}. Use esse sinal para decidir se deve ou não inserir a linha "[INSERIR IMAGEM DO BIZAGI AQUI]" na seção FLUXOGRAMA(S), conforme a REGRA DE FLUXOGRAMA (CONDICIONAL).`;
 
