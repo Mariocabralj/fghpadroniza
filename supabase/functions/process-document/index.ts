@@ -433,7 +433,13 @@ ${templateStructure}${docBehavior ? `\n\nCOMPORTAMENTO OBRIGATÓRIO (tom, densid
       userPrompt = `${header}\nModo: IDEIA — gere o documento COMPLETO a partir da descrição, preenchendo todas as seções da estrutura obrigatória com conteúdo técnico detalhado.\n\nDESCRIÇÃO DA IDEIA:\n${content}`;
     }
 
-    const response = await fetch(
+    const messages = [
+      { role: "system", content: systemInstruction },
+      ...fewShotMessages,
+      { role: "user", content: userPrompt },
+    ];
+
+    const callGemini = (model: string) => fetch(
       "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
         method: "POST",
@@ -442,20 +448,26 @@ ${templateStructure}${docBehavior ? `\n\nCOMPORTAMENTO OBRIGATÓRIO (tom, densid
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gemini-1.5-flash-latest",
-          messages: [
-            { role: "system", content: systemInstruction },
-            ...fewShotMessages,
-            { role: "user", content: userPrompt },
-          ],
+          model,
+          messages,
           stream: true,
         }),
       }
     );
 
+    let selectedModel = "gemini-2.5-flash-lite";
+    let response = await callGemini(selectedModel);
+
+    if (response.status === 404) {
+      const unavailableBody = await response.text();
+      await logError(supaAdmin, "Modelo Gemini econômico indisponível; fallback aplicado", { status: 404, model: selectedModel, body: unavailableBody.slice(0, 500), docType, mode, title }, userId);
+      selectedModel = "gemini-2.5-flash";
+      response = await callGemini(selectedModel);
+    }
+
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `Gemini API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
+      await logError(supaAdmin, `Gemini API HTTP ${response.status}`, { status: response.status, model: selectedModel, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Limite de requisições da API Gemini excedido. Tente novamente em alguns segundos." }),
