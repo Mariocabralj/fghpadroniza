@@ -442,7 +442,7 @@ ${templateStructure}${docBehavior ? `\n\nCOMPORTAMENTO OBRIGATÓRIO (tom, densid
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gemini-1.5-flash",
+          model: "gemini-1.5-flash-latest",
           messages: [
             { role: "system", content: systemInstruction },
             ...fewShotMessages,
