@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Lock, Mail, User, Briefcase, Building2, DollarSign, Info } from "lucide-react";
+import { Lock, Mail, User, Briefcase, Building2, DollarSign, Info } from "lucide-react";
+import logoFgh from "@/assets/logo-fgh-padroniza.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,8 +76,8 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center gradient-primary p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-primary-foreground/20">
-            <FileText className="w-8 h-8 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 border border-primary-foreground/20 shadow-lg">
+            <img src={logoFgh} alt="FGH Padroniza" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold text-primary-foreground">FGH Padroniza</h1>
           <p className="text-primary-foreground/70 mt-1 text-sm">Assistente de Padronização Documental</p>
