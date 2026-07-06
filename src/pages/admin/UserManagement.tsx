@@ -106,7 +106,7 @@ export default function UserManagement() {
       .update({ salary: num, salary_opt_out: true })
       .eq("user_id", userId);
     if (error) toast.error(error.message);
-    else toast.success("Salário atualizado (oculto para o usuário)");
+    else toast.success("Custo atualizado (oculto para o usuário)");
     setEditingId(null);
   };
 
@@ -168,13 +168,13 @@ export default function UserManagement() {
                       <SortableTh onClick={() => pToggle("sector")} active={pKey === "sector"} dir={pDir}>Setor</SortableTh>
                       <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">
                         <span className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => pToggle("salary")}>
-                          Salário
+                          Custo
                           <SortIcon active={pKey === "salary"} dir={pDir} />
                         </span>
                         <button
                           onClick={() => setSalaryVisible((v) => !v)}
                           className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition"
-                          title={salaryVisible ? "Ocultar salários" : "Mostrar salários"}
+                          title={salaryVisible ? "Ocultar custos" : "Mostrar custos"}
                         >
                           {salaryVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                           {salaryVisible ? "Ocultar" : "Mostrar"}
