@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import logoFgh from "@/assets/logo-fgh-padroniza.png";
+import { FileText } from "lucide-react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -16,8 +16,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-3">
               <SidebarTrigger />
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                  <img src={logoFgh} alt="FGH Padroniza" className="w-full h-full object-cover" />
+                <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div className="hidden sm:block">
                   <h1 className="text-sm font-bold text-foreground leading-tight">FGH Padroniza</h1>
