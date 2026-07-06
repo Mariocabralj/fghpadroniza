@@ -106,7 +106,7 @@ export default function UserManagement() {
       .update({ salary: num, salary_opt_out: true })
       .eq("user_id", userId);
     if (error) toast.error(error.message);
-    else toast.success("Salário atualizado (oculto para o usuário)");
+    else toast.success("Custo atualizado (oculto para o usuário)");
     setEditingId(null);
   };
 
