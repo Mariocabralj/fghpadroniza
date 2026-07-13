@@ -23,8 +23,8 @@ Responda EXCLUSIVAMENTE em JSON válido no formato:
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_API_KEY) throw new Error("GROQ_API_KEY not configured");
 
     const { kind, content, existing } = await req.json();
     if (!kind || !content) {
@@ -35,11 +35,11 @@ serve(async (req) => {
 
     const user = `TIPO DA NOVA REGRA: ${kind}\n\nNOVA REGRA:\n"""\n${content}\n"""\n\nREGRAS EXISTENTES (cada uma com id):\n${JSON.stringify(existing || [], null, 2)}`;
 
-    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "llama-3.3-70b-versatile",
         messages: [{ role: "system", content: SYSTEM }, { role: "user", content: user }],
         response_format: { type: "json_object" },
       }),

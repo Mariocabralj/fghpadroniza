@@ -6,24 +6,26 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const started = Date.now();
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) {
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_API_KEY) {
       return new Response(
-        JSON.stringify({ ok: false, status: "missing_key", message: "GEMINI_API_KEY não está configurada nas Secrets." }),
+        JSON.stringify({ ok: false, status: "missing_key", message: "GROQ_API_KEY não está configurada nas Secrets." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: GROQ_MODEL,
         messages: [
           { role: "system", content: "Responda apenas com a palavra OK." },
           { role: "user", content: "ping" },
@@ -58,10 +60,10 @@ serve(async (req) => {
       JSON.stringify({
         ok: true,
         status: "success",
-        model: "gemini-2.5-flash",
+        model: GROQ_MODEL,
         reply: reply.trim(),
         elapsedMs: elapsed,
-        message: "Conexão validada com sucesso. A GEMINI_API_KEY está ativa e respondendo sem erros de cota.",
+        message: "Conexão validada com sucesso. A GROQ_API_KEY está ativa e respondendo sem erros de cota.",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
