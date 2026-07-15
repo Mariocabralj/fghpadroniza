@@ -17,7 +17,7 @@ export default function AdminSettings() {
       const { data, error } = await supabase.functions.invoke("test-gemini", { body: {} });
       if (error) throw error;
       setTestResult({ ok: !!data?.ok, message: data?.message || "Sem mensagem", elapsedMs: data?.elapsedMs, reply: data?.reply });
-      if (data?.ok) toast.success("Conexão com Groq OK");
+      if (data?.ok) toast.success("Conexão com Gemini OK");
       else toast.error("Falha: " + (data?.message || "erro"));
     } catch (e: any) {
       setTestResult({ ok: false, message: e?.message || "Erro de rede" });
@@ -39,10 +39,10 @@ export default function AdminSettings() {
           <div className="bg-card rounded-xl border shadow-card p-6 space-y-4">
             <div className="flex items-center gap-2 mb-2">
               <Plug className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-foreground">Conexão com a IA (Groq — Llama 3.3 70B)</h2>
+              <h2 className="font-semibold text-foreground">Conexão com a IA (Google Gemini 2.5 Flash Lite)</h2>
             </div>
             <p className="text-xs text-muted-foreground">
-              Valida se a chave GROQ_API_KEY está ativa, respondendo e sem erros de cota. Útil antes de iniciar a geração de documentos.
+              Valida se a chave GEMINI_API_KEY está ativa, respondendo e sem erros de cota. Útil antes de iniciar a geração de documentos.
             </p>
             <Button
               type="button"

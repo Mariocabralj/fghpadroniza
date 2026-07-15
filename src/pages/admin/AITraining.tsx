@@ -17,7 +17,7 @@ export default function AITraining() {
               <Brain className="w-6 h-6 text-primary" /> Governança da IA
             </h1>
             <p className="text-muted-foreground text-sm font-mono">
-              Auditoria, versionamento e controle de aprendizado do motor Groq (Llama 3.3 70B)
+              Auditoria, versionamento e controle de aprendizado do motor Google Gemini (2.5 Flash Lite)
             </p>
           </div>
 

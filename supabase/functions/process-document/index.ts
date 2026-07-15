@@ -384,9 +384,9 @@ serve(async (req) => {
   const supaAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    if (!GROQ_API_KEY) {
-      throw new Error("GROQ_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
 
     const { content, docType, title, sector, mode, hasImages, instructions, userId } = await req.json();
@@ -495,15 +495,15 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
     }
 
     const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${GROQ_API_KEY}`,
+          Authorization: `Bearer ${GEMINI_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "gemini-2.5-flash-lite",
           messages: [
             { role: "system", content: SYSTEM_PROMPT + adminSystemPrompt + globalDirectives },
             ...fewShotMessages,
@@ -516,22 +516,22 @@ Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteú
 
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `Groq API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
+      await logError(supaAdmin, `Gemini API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Limite de requisições da API Groq excedido. Tente novamente em alguns segundos." }),
+          JSON.stringify({ error: "Limite de requisições da API Gemini excedido. Tente novamente em alguns segundos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 401 || response.status === 403) {
         return new Response(
-          JSON.stringify({ error: "Chave GROQ_API_KEY inválida ou sem permissão." }),
+          JSON.stringify({ error: "Chave GEMINI_API_KEY inválida ou sem permissão." }),
           { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      console.error("Groq API error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       return new Response(
-        JSON.stringify({ error: "Erro ao processar documento com IA (Groq)" }),
+        JSON.stringify({ error: "Erro ao processar documento com IA (Gemini)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
