@@ -62,8 +62,7 @@ export default function UserManagement() {
     const { data: d } = await supabase
       .from("documents")
       .select("id, user_id, title, doc_type, status, created_at")
-      .order("created_at", { ascending: false })
-      .limit(500);
+      .order("created_at", { ascending: false });
     setDocs(d || []);
   };
 
