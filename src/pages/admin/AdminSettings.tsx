@@ -17,7 +17,7 @@ export default function AdminSettings() {
       const { data, error } = await supabase.functions.invoke("test-gemini", { body: {} });
       if (error) throw error;
       setTestResult({ ok: !!data?.ok, message: data?.message || "Sem mensagem", elapsedMs: data?.elapsedMs, reply: data?.reply });
-      if (data?.ok) toast.success("Conexão com Groq OK");
+      if (data?.ok) toast.success("Conexão com Gemini OK");
       else toast.error("Falha: " + (data?.message || "erro"));
     } catch (e: any) {
       setTestResult({ ok: false, message: e?.message || "Erro de rede" });
