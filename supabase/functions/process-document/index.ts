@@ -384,126 +384,21 @@ serve(async (req) => {
   const supaAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    if (!GROQ_API_KEY) {
-      throw new Error("GROQ_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured");
     }
-
-    const { content, docType, title, sector, mode, hasImages, instructions, userId } = await req.json();
-
-    if (!content || !docType) {
-      await logError(supaAdmin, "Requisição inválida (content/docType ausente)", { docType, mode, status: 400 }, userId);
-      return new Response(
-        JSON.stringify({ error: "content and docType are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const templateStructure = TEMPLATE_SECTIONS[docType] || TEMPLATE_SECTIONS["Norma Zero"];
-    const docBehavior = DOC_BEHAVIOR[docType] || "";
-    const behaviorBlock = docBehavior
-      ? `\n\nCOMPORTAMENTO OBRIGATÓRIO PARA ESTE TIPO (tom, densidade e propósito):\n${docBehavior}\n`
-      : "";
-    const globalDirectives = await loadActiveDirectives(supaAdmin);
-    const adminSystemPrompt = await loadGlobalSystemPrompt(supaAdmin);
-    const fewShotMessages = await loadFewShotMessages(supaAdmin, docType);
-
-    const flowchartFlag = `\n[Sinal do extrator] hasFlowchartImage=${hasImages ? "true" : "false"}. Use esse sinal para decidir se deve ou não inserir a linha "[INSERIR IMAGEM DO BIZAGI AQUI]" na seção FLUXOGRAMA(S), conforme a REGRA DE FLUXOGRAMA (CONDICIONAL).`;
-
-    let userPrompt = "";
-    if (mode === "refine") {
-      userPrompt = `O gestor já recebeu um documento padronizado FGH e agora deseja REFINÁ-LO com novas orientações. NÃO recomece do zero — apenas aplique as alterações pedidas mantendo a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", a Norma Zero e todos os marcadores especiais ([IMAGEM:id], [COR:#hex], [MARCA:#hex], tabelas em pipe).
-
-Título: ${title || "A definir"}
-Setor: ${sector || "A definir"}
-Tipo de documento: ${docType}
-
-DOCUMENTO ATUAL (refine este conteúdo):
-${content}
-
-NOVAS ORIENTAÇÕES DO GESTOR:
-${instructions || "(sem orientações específicas — apenas revise o documento atual)"}
-
-ESTRUTURA OBRIGATÓRIA PARA ${docType}:
-${templateStructure}
-${behaviorBlock}
-Devolva o documento COMPLETO já refinado, começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados). Preserve numeração, marcadores e tabelas.`;
-    } else if (mode === "upload-format") {
-      userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
-
-REGRAS DE FORMATAÇÃO ESTRITA:
-- Não reescreva, não resuma, não enriqueça e não acrescente conteúdo novo.
-- Apenas reorganize o texto enviado nas seções obrigatórias do modelo.
-- Se faltar conteúdo para uma seção obrigatória, insira "[A PREENCHER PELA UNIDADE]".
-- A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
-
-Título: ${title || "A definir"}
-Setor: ${sector || "A definir"}
-Tipo de documento: ${docType}
-
-CONTEÚDO ORIGINAL DO ARQUIVO (preserve a redação):
-${content}
-
-ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
-${templateStructure}
-${behaviorBlock}
-Gere o documento padronizado começando DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
-    } else if (mode === "upload" || mode === "upload-improve") {
-      userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO, APRIMORADO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
-
-REGRA ESPECIAL DE UPLOAD: Faça o MAPEAMENTO INTELIGENTE — identifique cada parágrafo/seção do texto original e transponha para a seção correspondente da ESTRUTURA OBRIGATÓRIA abaixo. Aprimore a clareza, a redação técnica e complete seções faltantes com base em boas práticas hospitalares. Se faltar dado factual da unidade, insira "[A PREENCHER PELA UNIDADE]". A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
-
-Título: ${title || "A definir"}
-Setor: ${sector || "A definir"}
-Tipo de documento: ${docType}
-
-CONTEÚDO DO ARQUIVO:
-${content}
-
-ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
-${templateStructure}
-${behaviorBlock}
-Gere o documento completo padronizado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).${flowchartFlag}`;
-    } else if (mode === "paste") {
-      userPrompt = `O gestor colou o seguinte texto para ser transformado em documento padronizado FGH, seguindo a hierarquia: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
-
-Título: ${title || "A definir"}
-Setor: ${sector || "A definir"}
-Tipo de documento: ${docType}
-
-TEXTO COLADO:
-${content}
-
-ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
-${templateStructure}
-${behaviorBlock}
-Faça o MAPEAMENTO INTELIGENTE do texto colado para as seções da estrutura. Preencha as seções faltantes com conteúdo profissional e detalhado. Comece DIRETAMENTE pela primeira seção numerada.`;
-    } else {
-      userPrompt = `O gestor descreveu uma ideia para criação de um novo documento, seguindo a hierarquia FGH: Nível Global Norma Zero + Nível Específico do modelo "${docType}".
-
-Título: ${title || "A definir"}
-Setor: ${sector || "A definir"}
-Tipo de documento: ${docType}
-
-DESCRIÇÃO DA IDEIA:
-${content}
-
-ESTRUTURA OBRIGATÓRIA PARA ${docType} (extraída do modelo oficial da biblioteca FGH):
-${templateStructure}
-${behaviorBlock}
-Crie o documento COMPLETO padronizado, preenchendo TODAS as seções com conteúdo profissional, técnico e detalhado. Comece DIRETAMENTE pela primeira seção numerada (sem capa, sem repetir título, sem repetir metadados).`;
-    }
-
+...
     const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${GROQ_API_KEY}`,
+          Authorization: `Bearer ${GEMINI_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "gemini-2.5-flash-lite",
           messages: [
             { role: "system", content: SYSTEM_PROMPT + adminSystemPrompt + globalDirectives },
             ...fewShotMessages,
