@@ -411,22 +411,22 @@ serve(async (req) => {
 
     if (!response.ok) {
       const t = await response.text();
-      await logError(supaAdmin, `Groq API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
+      await logError(supaAdmin, `Gemini API HTTP ${response.status}`, { status: response.status, body: t.slice(0, 500), docType, mode, title }, userId);
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Limite de requisições da API Groq excedido. Tente novamente em alguns segundos." }),
+          JSON.stringify({ error: "Limite de requisições da API Gemini excedido. Tente novamente em alguns segundos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 401 || response.status === 403) {
         return new Response(
-          JSON.stringify({ error: "Chave GROQ_API_KEY inválida ou sem permissão." }),
+          JSON.stringify({ error: "Chave GEMINI_API_KEY inválida ou sem permissão." }),
           { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      console.error("Groq API error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       return new Response(
-        JSON.stringify({ error: "Erro ao processar documento com IA (Groq)" }),
+        JSON.stringify({ error: "Erro ao processar documento com IA (Gemini)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
