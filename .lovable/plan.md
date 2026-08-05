@@ -1,55 +1,51 @@
-# Reestruturação do Treinamento de IA
+# Preencher custos em branco por cargo
 
-Transformar `/admin/treinamento-ia` em um centro de governança auditável, dividido em 4 abas dentro da página existente (`src/pages/admin/AITraining.tsx`), mantendo o chat atual em uma das abas.
+Aplicar, nos perfis que hoje estão sem custo, os valores de referência que já existem no app para o mesmo cargo. A correspondência é feita pelo **cargo normalizado** (sem acentos, maiúsculas/minúsculas e variações de gênero), com prioridade para o cargo mais específico.
 
-## Estrutura de Abas (Tabs shadcn)
+## Valores que serão aplicados
 
-1. **Chat & Diretrizes** — conteúdo atual (chat + diretrizes globais) preservado.
-2. **System Prompt** — editor único do prompt institucional permanente.
-3. **Snapshots & Auditoria** — versionamento com diff e rollback.
-4. **Few-Shot (Gold Standards)** — pares Entrada → Saída Ideal.
+| Cargo (normalizado) | Custo |
+|---|---|
+| Enfermeira / Enfermeiro (todas as áreas) | R$ 3.695,11 |
+| Enfermeira Líder | R$ 3.800,00 |
+| Supervisão / Supervisora de Enfermagem | R$ 3.965,00 |
+| Médico / Médica | R$ 12.194,47 |
+| Diretor Médico | R$ 20.000,00 |
+| Diretora Médica | R$ 16.000,00 |
+| Biomédico | R$ 5.000,00 |
+| Nutricionista | R$ 3.400,00 (média das faixas 3.200–3.600) |
+| Coordenadora de Nutrição | R$ 10.000,00 |
+| Fisioterapeuta | R$ 3.000,00 (média 2.600–3.500) |
+| Técnica de Enfermagem | R$ 1.600,00 |
+| Assistente Administrativo | R$ 2.282,37 |
+| TI | R$ 2.500,00 |
+| Ouvidor / Ouvidora | R$ 3.000,00 |
+| Engenheira de Segurança do Trabalho | R$ 4.000,00 |
+| Coordenador de Higienização | R$ 7.000,00 |
+| Coordenador(a) de Atendimento | R$ 10.000,00 |
+| Coordenador(a) de Saúde Funcional | R$ 7.000,00 |
+| Coordenação (Farmácia) | R$ 9.521,36 |
+| Coordenação de Cuidados Interdisciplinares | R$ 8.000,00 |
+| Coordenador genérico (UTI, Same, Atendimento) | R$ 8.000,00 |
+| Supervisor (Radiologia) | R$ 2.561,00 |
+| Supervisor(a) de Infraestrutura | R$ 3.100,00 |
+| Assessor(a) de Comunicação | R$ 8.000,00 |
+| Assessor(a) — Qualidade | R$ 4.900,00 |
+| Psicóloga | R$ 3.430,86 |
 
-Cada salvamento de diretriz/system prompt/few-shot dispara a **Matriz de Conflitos** (modal) antes de persistir.
+## Não serão alterados
 
-## Banco de Dados (1 migration)
+Perfis cujo cargo não tem referência no app ficam em branco, aguardando os valores que você informar:
+Dentista, Psicopedagogia, Práticas Integrativas, Fonoaudióloga, Farmacêutico(a), Téc. Segurança do Trabalho/SESMT, Analista (Ensino e Pesquisa), Analista Administrativo, Diretor(a) de Ensino e Pesquisa, Coord. Adm/Fin, Coordenador(a) de Manutenção e Infraestrutura, Coordenadora de Tecnologia Médica, Coordenação/Supervisão de RH, Coordenação Psicossocial, Supervisor de Atendimento, Supervisor de Hospitalidade, Supervisora Bloco CME, Líder (SADT), Nutricionista Líder, Enfermeira Navegadora, Assistente de Relacionamento Médico, Aprendiz Assistente Administrativo, Enfermaria (E-DOT).
 
-- `ai_system_prompt` — singleton (id fixo `'global'`), `content text`, `updated_by`, `updated_at`.
-- `ai_few_shot_examples` — `title`, `input_text`, `ideal_output`, `doc_type`, `active`, `created_by`.
-- `ai_snapshots` — `label`, `description`, `payload jsonb` (snapshot completo: system_prompt + diretivas + few-shots no momento), `diff jsonb` (lista de mudanças vs snapshot anterior), `created_by`.
-- Todas com RLS: somente admins (`has_role(auth.uid(),'admin')`) podem ler/escrever. GRANT para `authenticated` e `service_role`.
+## Regras de segurança
 
-## Edge Functions
+- Só perfis com custo atualmente **em branco** são tocados; nenhum valor existente é sobrescrito.
+- Cada registro atualizado é marcado como confidencial (não aparece para o próprio colaborador em Configurações), mantendo o padrão já adotado.
+- Nenhuma mudança de interface: os valores aparecem em Admin → Gestão de Usuários, coluna **Custo**.
 
-- `ai-detect-conflict` — recebe `{ kind: 'directive'|'system_prompt'|'few_shot', content, existing[] }`, chama Gemini para detectar conflitos lógicos. Retorna `{ hasConflict: bool, conflicts: [{ id, reason }] }`.
-- Atualizar `process-document` para incluir, no prompt: `ai_system_prompt.content` + diretivas ativas + few-shot examples ativos (como mensagens de exemplo).
+## Detalhes técnicos
 
-## Frontend
-
-### `src/pages/admin/AITraining.tsx`
-Refatorar com `<Tabs>`. Cada aba em componente separado:
-
-- `src/components/admin/ai-training/ChatPanel.tsx` — extrai chat + diretivas atuais.
-- `src/components/admin/ai-training/SystemPromptPanel.tsx` — textarea grande, contador de chars, botão salvar (checa conflitos).
-- `src/components/admin/ai-training/SnapshotsPanel.tsx` — botão "Criar snapshot agora" (captura estado atual + calcula diff), lista de cards expansíveis (`<Collapsible>`) mostrando label, autor, data, diff colorido (verde=add, vermelho=remove, amarelo=alterado) e botão "Reverter para este estado" com `<AlertDialog>` de confirmação.
-- `src/components/admin/ai-training/FewShotPanel.tsx` — form (título, doc_type, input, ideal output) + lista com toggle ativo/inativo e excluir.
-- `src/components/admin/ai-training/ConflictDialog.tsx` — modal que aparece quando edge function detecta conflito, opções: Sobrescrever / Criar Exceção (anexa "EXCEÇÃO:" ao conteúdo) / Cancelar.
-
-### Estética "tech premium"
-- Fonte mono (`font-mono`) para logs/diffs.
-- Cards com borda fina, fundo `bg-card`, headers com badge de tipo.
-- Diff renderizado em blocos estilo terminal com prefixos `+ / - / ~`.
-- Cores semânticas existentes (`text-success`, `text-destructive`, `text-warning`).
-
-## Algoritmo de Diff (Snapshot)
-Comparar `payload.previous` vs `payload.current`:
-- system_prompt: se mudou → `{type:'modified', target:'system_prompt', before, after}`
-- diretivas: por id → added/removed/modified (content ou active)
-- few_shots: idem por id
-
-## Roteamento e Sidebar
-Sem mudanças — a página já existe em `/admin/treinamento-ia`.
-
-## Fora de escopo
-- Não altera Settings/AdminSettings.
-- Não altera o pipeline de exportação DOCX.
-- Sem mudanças visuais fora da página de treinamento.
+- Uma única operação de dados (`UPDATE public.profiles`) usando `CASE` sobre o cargo normalizado (`lower(unaccent(trim(role)))`), com `WHERE salary IS NULL`, definindo `salary` e `salary_opt_out = true`.
+- Sem migração de schema e sem alteração de código do app.
+- Após aplicar, relatório de quantos perfis foram atualizados por cargo.
