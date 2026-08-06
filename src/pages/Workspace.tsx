@@ -4,14 +4,17 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2, Eye, Pencil } from "lucide-react";
+import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2, Eye, Pencil, ListOrdered } from "lucide-react";
 import { exportDocx } from "@/lib/docx-export";
 import DocumentPreview from "@/components/DocumentPreview";
+import OutlineEditor from "@/components/OutlineEditor";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
 import { streamProcessDocument } from "@/lib/ai-service";
 import { ensureImageMarkers, reindexNumbering } from "@/lib/doc-normalize";
+import { parseOutline, serializeOutline, OutlineBlock } from "@/lib/doc-outline";
+
 
 import { toast } from "sonner";
 
@@ -48,9 +51,29 @@ export default function Workspace() {
     state?.pastedText || state?.ideaText || state?.fileName || ""
   );
   const [standardized, setStandardized] = useState(state?.standardizedText || "");
-  const [previewMode, setPreviewMode] = useState<"preview" | "edit">("preview");
+  const [previewMode, setPreviewMode] = useState<"preview" | "outline" | "edit">("preview");
+  const [blocks, setBlocks] = useState<OutlineBlock[]>([]);
   const [refineInstructions, setRefineInstructions] = useState("");
   const [refining, setRefining] = useState(false);
+
+  // Ao entrar no modo Estrutura, converte o texto atual em blocos (sem números).
+  const enterOutline = () => {
+    setBlocks(parseOutline(standardized));
+    setPreviewMode("outline");
+  };
+
+  // Ao sair do modo Estrutura, serializa os blocos com a numeração recalculada.
+  const leaveOutline = (next: "preview" | "edit") => {
+    if (previewMode === "outline") setStandardized(serializeOutline(blocks));
+    setPreviewMode(next);
+  };
+
+  // A numeração exibida no editor é sempre derivada da posição no array.
+  const handleBlocksChange = (next: OutlineBlock[]) => {
+    setBlocks(next);
+    setStandardized(serializeOutline(next));
+  };
+
 
   const checklist = useMemo(() => analyzeChecklist(standardized), [standardized]);
   const completionPct = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
@@ -184,14 +207,21 @@ export default function Workspace() {
                   <div className="inline-flex rounded-md border bg-muted p-0.5">
                     <button
                       type="button"
-                      onClick={() => setPreviewMode("preview")}
+                      onClick={() => leaveOutline("preview")}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "preview" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
                     >
                       <Eye className="w-3 h-3" /> Visualizar
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPreviewMode("edit")}
+                      onClick={enterOutline}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "outline" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
+                    >
+                      <ListOrdered className="w-3 h-3" /> Estrutura
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => leaveOutline("edit")}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "edit" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
                     >
                       <Pencil className="w-3 h-3" /> Editar
@@ -218,6 +248,8 @@ export default function Workspace() {
                     })()}
                   />
                 </div>
+              ) : previewMode === "outline" ? (
+                <OutlineEditor blocks={blocks} onChange={handleBlocksChange} />
               ) : (
                 <Textarea
                   value={standardized}
@@ -225,6 +257,7 @@ export default function Workspace() {
                   onBlur={() => setStandardized((t) => reindexNumbering(t))}
                   className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono"
                 />
+
 
               )}
             </div>
