@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign } from "lucide-react";
+import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign, Mail } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
+import { unitFromEmail, OUTROS_EMAILS, UNIDADES } from "@/lib/unidades";
 import {
   ResponsiveContainer,
   BarChart,
@@ -14,6 +15,9 @@ import {
   Tooltip,
   CartesianGrid,
   Cell,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
 
 interface DocRow {
@@ -31,7 +35,32 @@ interface ProfileRow {
   name: string;
   sector: string | null;
   salary: number | null;
+  email: string | null;
+  created_at: string;
 }
+
+// Quantitativo consolidado manualmente pela administração (corrige erros de
+// digitação nos domínios). A partir de 06/08/2026 a contagem passa a ser
+// automática, somando os novos cadastros a esta base.
+const EMAIL_BASELINE_DATE = new Date("2026-08-06T00:00:00-03:00");
+const EMAIL_BASELINE: Record<string, number> = {
+  [OUTROS_EMAILS]: 62,
+  "Hospital Dom Hélder": 46,
+  UPAEs: 27,
+  "Hospital Miguel Arraes": 17,
+  "Hospital Alfa": 16,
+  "Hospital da Criança": 12,
+  NGC: 15,
+  "Hospital Pelópidas Silveira": 15,
+  "Hospital Eduardo Campos": 14,
+  UPAs: 7,
+};
+
+const PIE_COLORS = [
+  "hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))",
+  "#7C3AED", "#DB2777", "#0891B2", "#65A30D", "#EA580C", "#64748B",
+];
+
 
 const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--accent-foreground))"];
 
