@@ -7,6 +7,8 @@ import {
 } from "docx";
 import headerLogoUrl from "@/assets/header_logo.png";
 import letterheadBgUrl from "@/assets/letterhead_bg.jpg";
+import { reindexNumbering } from "@/lib/doc-normalize";
+
 
 const today = new Date().toLocaleDateString("pt-BR");
 
@@ -657,8 +659,10 @@ export async function exportDocx(
   elaboracao: string = "[a preencher]",
   imageAssets: { images: Record<string, string>; imageTypes: Record<string, string> } = { images: {}, imageTypes: {} },
 ): Promise<Blob> {
-  const cleanText = stripMarkdown(standardizedText);
+  // Reindexação automática: seções e subseções sempre contínuas (sem lacunas)
+  const cleanText = reindexNumbering(stripMarkdown(standardizedText));
   const allLines = cleanText.split("\n");
+
 
   const [headerImage, letterheadBg] = await Promise.all([
     loadHeaderImage(),
