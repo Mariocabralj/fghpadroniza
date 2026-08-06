@@ -51,9 +51,29 @@ export default function Workspace() {
     state?.pastedText || state?.ideaText || state?.fileName || ""
   );
   const [standardized, setStandardized] = useState(state?.standardizedText || "");
-  const [previewMode, setPreviewMode] = useState<"preview" | "edit">("preview");
+  const [previewMode, setPreviewMode] = useState<"preview" | "outline" | "edit">("preview");
+  const [blocks, setBlocks] = useState<OutlineBlock[]>([]);
   const [refineInstructions, setRefineInstructions] = useState("");
   const [refining, setRefining] = useState(false);
+
+  // Ao entrar no modo Estrutura, converte o texto atual em blocos (sem números).
+  const enterOutline = () => {
+    setBlocks(parseOutline(standardized));
+    setPreviewMode("outline");
+  };
+
+  // Ao sair do modo Estrutura, serializa os blocos com a numeração recalculada.
+  const leaveOutline = (next: "preview" | "edit") => {
+    if (previewMode === "outline") setStandardized(serializeOutline(blocks));
+    setPreviewMode(next);
+  };
+
+  // A numeração exibida no editor é sempre derivada da posição no array.
+  const handleBlocksChange = (next: OutlineBlock[]) => {
+    setBlocks(next);
+    setStandardized(serializeOutline(next));
+  };
+
 
   const checklist = useMemo(() => analyzeChecklist(standardized), [standardized]);
   const completionPct = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
