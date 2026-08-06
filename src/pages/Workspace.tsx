@@ -108,6 +108,7 @@ export default function Workspace() {
       return;
     }
     setRefining(true);
+    const before = standardized;
     let acc = "";
     setStandardized(""); // limpar para receber streaming
     streamProcessDocument(
@@ -125,10 +126,13 @@ export default function Workspace() {
         setStandardized(acc);
       },
       () => {
+        // Imagens nunca podem ser perdidas no refinamento + renumeração contínua
+        setStandardized(reindexNumbering(ensureImageMarkers(before, acc)));
         setRefining(false);
         setRefineInstructions("");
         toast.success("Documento refinado.");
       },
+
       (err) => {
         setRefining(false);
         setStandardized(acc || standardized);
