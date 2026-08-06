@@ -87,6 +87,18 @@ export default function Settings() {
             <div className="space-y-2"><Label>Email</Label><Input value={user.email} disabled /></div>
             <div className="space-y-2"><Label>Setor</Label><Input value={sector} onChange={(e) => setSector(e.target.value)} /></div>
             <div className="space-y-2 md:col-span-2">
+              <Label>Qual a unidade em que você está trabalhando?</Label>
+              <Select value={unidade} onValueChange={setUnidade}>
+                <SelectTrigger><SelectValue placeholder="Selecione sua unidade" /></SelectTrigger>
+                <SelectContent>
+                  {UNIDADES.map((u) => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="salary">Salário Base Mensal (opcional)</Label>
                 <TooltipProvider>
