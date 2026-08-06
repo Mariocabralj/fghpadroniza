@@ -196,6 +196,20 @@ export default function AdminDashboard() {
   const { sorted: typeSorted, sortKey: tKey, sortDir: tDir, toggle: tToggle } =
     useSortable<{ type: string; count: number }>(typeDataAll, "count", "desc");
 
+  // Classificação de e-mails por unidade — base consolidada + novos cadastros
+  const emailCounts: Record<string, number> = { ...EMAIL_BASELINE };
+  Object.values(profiles).forEach((p) => {
+    if (!p.created_at) return;
+    if (new Date(p.created_at) < EMAIL_BASELINE_DATE) return;
+    const unit = unitFromEmail(p.email);
+    emailCounts[unit] = (emailCounts[unit] || 0) + 1;
+  });
+  const emailOrder = [...UNIDADES.filter((u) => u !== "Outra unidade"), OUTROS_EMAILS];
+  const emailData = emailOrder
+    .map((name) => ({ name, value: emailCounts[name] || 0 }))
+    .filter((d) => d.value > 0);
+  const emailTotal = emailData.reduce((a, b) => a + b.value, 0);
+
   return (
     <AdminGuard>
       <AppLayout>
