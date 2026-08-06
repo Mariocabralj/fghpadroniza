@@ -286,7 +286,56 @@ export default function AdminDashboard() {
             <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="bg-primary/10 text-primary" />
           </div>
 
+          {/* Classificação de E-mails por Unidade */}
+          <div className="bg-card rounded-xl border p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-1">
+              <Mail className="w-5 h-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Classificação de E-mails dos Usuários</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Distribuição por domínio institucional · {emailTotal} usuários
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+              <ResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie
+                    data={emailData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={110}
+                    label={(e: any) => `${e.value}`}
+                  >
+                    {emailData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-1">
+                {emailData.map((row, i) => (
+                  <div key={row.name} className="flex items-center justify-between text-sm py-1.5 border-b last:border-b-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      <span className="text-foreground truncate">{row.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-foreground font-semibold">{row.value}</span>
+                      <span className="text-xs text-muted-foreground w-12 text-right">
+                        {emailTotal ? ((row.value / emailTotal) * 100).toFixed(1) : "0.0"}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Ranking por Setor */}
+
           <div className="bg-card rounded-xl border p-6 shadow-card">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-5 h-5 text-primary" />
