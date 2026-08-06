@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Lock, Mail, User, Briefcase, Building2, DollarSign, Info } from "lucide-react";
+import { FileText, Lock, Mail, User, Briefcase, Building2, DollarSign, Info, Hospital } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { UNIDADES } from "@/lib/unidades";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+
 
 const translateAuthError = (msg: string) => {
   if (msg.toLowerCase().includes("password is known to be weak")) {
@@ -30,8 +33,10 @@ export default function Login() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [sector, setSector] = useState("");
+  const [unidade, setUnidade] = useState("");
   const [salary, setSalary] = useState("");
   const [salaryOptOut, setSalaryOptOut] = useState(false);
+
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -62,8 +67,13 @@ export default function Login() {
         setLoading(false);
         return toast.error("Preencha nome, cargo e setor");
       }
+      if (!unidade.trim()) {
+        setLoading(false);
+        return toast.error("Informe a unidade em que você está trabalhando");
+      }
       const salaryValue = salaryOptOut ? "" : salary.replace(",", ".").trim();
-      const { error } = await signUp(email, password, { name, role, sector, salary: salaryValue, salary_opt_out: salaryOptOut });
+      const { error } = await signUp(email, password, { name, role, sector, unidade, salary: salaryValue, salary_opt_out: salaryOptOut });
+
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       toast.success("Conta criada! Faça login para continuar.");
@@ -113,6 +123,23 @@ export default function Login() {
                     </div>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="unidade">Qual a unidade em que você está trabalhando?</Label>
+                  <Select value={unidade} onValueChange={setUnidade}>
+                    <SelectTrigger id="unidade">
+                      <div className="flex items-center gap-2">
+                        <Hospital className="h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Selecione sua unidade" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNIDADES.map((u) => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="salary">Salário Base Mensal (opcional)</Label>

@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { streamProcessDocument } from "@/lib/ai-service";
 import { extractDocumentFromFile } from "@/lib/file-extractors";
+import { ensureImageMarkers, reindexNumbering } from "@/lib/doc-normalize";
+
 import { logSystemError } from "@/lib/system-log";
 import { Button } from "@/components/ui/button";
 
@@ -88,6 +90,9 @@ export default function Analysis() {
         () => {
           clearInterval(stepTimer);
           setCurrentStep(steps.length - 1);
+          // Retenção obrigatória de imagens + reindexação automática de tópicos
+          const guarded = ensureImageMarkers(content, resultRef.current);
+          resultRef.current = reindexNumbering(guarded);
           setTimeout(() => {
             // imagens vão por sessionStorage (location.state não serializa bem dados grandes)
             try {
@@ -102,6 +107,7 @@ export default function Analysis() {
             });
           }, 800);
         },
+
         (err) => {
           clearInterval(stepTimer);
           setError(err);

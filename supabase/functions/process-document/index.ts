@@ -324,6 +324,10 @@ REGRA DE PRESERVAÇÃO DE MÍDIA E FORMATAÇÃO ORIGINAL (CRÍTICO):
 - Quando o usuário enviar um documento, PRESERVE qualquer tabela em formato pipe ("|") do conteúdo original.
 - Marcadores [IMAGEM:id] (ex.: [IMAGEM:img_1], [IMAGEM:img_2]…) representam IMAGENS REAIS extraídas do upload. Você DEVE mantê-los exatamente como vieram, em linha própria, na MESMA seção/tópico em que apareciam no documento original. NUNCA remova, renomeie ou agrupe esses marcadores — o motor de exportação substitui cada marcador pela imagem original. Se uma seção do modelo recebe imagens do upload, intercale o marcador entre os parágrafos correspondentes.
 - Marcadores antigos como "[IMAGEM: ...]", "[FIGURA n]", "[FLUXO BIZAGI]" também devem ser preservados quando vierem do texto.
+- RETENÇÃO OBRIGATÓRIA DE IMAGENS (REGRA ABSOLUTA, VALE PARA TODOS OS MODOS): as imagens anexadas pelo usuário são vitais. É TERMINANTEMENTE PROIBIDO apagar, descartar, ignorar, resumir ou substituir por descrição textual qualquer marcador [IMAGEM:id]. A saída final DEVE conter EXATAMENTE a mesma quantidade de marcadores [IMAGEM:id] do texto de entrada, com os MESMOS ids.
+- As imagens ficam ancoradas ao conteúdo que as acompanha: se você mover um parágrafo/tópico para outra seção do modelo, o marcador de imagem correspondente DEVE ir junto, mantendo a mesma posição relativa ao texto (antes/depois do parágrafo de origem).
+- Antes de finalizar a resposta, confira mentalmente a lista de ids de imagem recebidos e garanta que todos aparecem na saída.
+
 - Tags de cor inline no formato [COR:#hex]texto[/COR] representam destaques de cor aplicados pelo usuário no documento original. PRESERVE-as EXATAMENTE como vieram (mesmo hex, mesmo trecho de texto entre as tags) — o motor de exportação aplica essa cor no DOCX final.
 - Tags de marca-texto no formato [MARCA:#hex]texto[/MARCA] representam background-color/highlight aplicado pelo usuário. PRESERVE-as EXATAMENTE como vieram.
 - Se você reescrever ou melhorar uma frase marcada por [COR] ou [MARCA], a frase nova que substitui aquele trecho DEVE permanecer dentro das mesmas tags e com o mesmo hex. Nunca remova, altere ou espalhe essas tags para fora do trecho correspondente.
@@ -431,11 +435,15 @@ Devolva o documento COMPLETO já refinado, começando DIRETAMENTE pela primeira 
     } else if (mode === "upload-format") {
       userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
 
-REGRAS DE FORMATAÇÃO ESTRITA:
-- Não reescreva, não resuma, não enriqueça e não acrescente conteúdo novo.
-- Apenas reorganize o texto enviado nas seções obrigatórias do modelo.
-- Se faltar conteúdo para uma seção obrigatória, insira "[A PREENCHER PELA UNIDADE]".
+REGRAS DE FORMATAÇÃO ESTRITA (PRESERVAÇÃO INTEGRAL DO CONTEÚDO — PROIBIDO ALTERAR):
+- VOCÊ ESTÁ PROIBIDO de alterar o conteúdo escrito pelo usuário. Seu papel exclusivo aqui é ESTRUTURAR, ORGANIZAR OS TÓPICOS e FORMATAR conforme a Norma Zero.
+- Mantenha INTACTAS as palavras, os termos técnicos, as siglas, os números, os nomes próprios e a essência do texto. Sem reescrita criativa, sem sinônimos, sem "melhorias" de estilo, sem correção de tom.
+- É permitido apenas: mover trechos para a seção correta do modelo, aplicar numeração hierárquica (máx. 3 níveis), converter listas para o marcador "•", ajustar CAIXA ALTA de títulos de seção e corrigir erros óbvios de digitação/ortografia.
+- Não reescreva, não resuma, não enriqueça, não interprete e não acrescente conteúdo novo.
+- Se faltar conteúdo para uma seção obrigatória, insira "[A PREENCHER PELA UNIDADE]" — nunca invente texto para preencher.
+- Todos os marcadores [IMAGEM:id] do original DEVEM aparecer na saída, junto do trecho ao qual pertencem.
 - A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
+
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}
@@ -451,7 +459,7 @@ Gere o documento padronizado começando DIRETAMENTE pela primeira seção numera
     } else if (mode === "upload" || mode === "upload-improve") {
       userPrompt = `O gestor enviou o seguinte documento/rascunho para ser CORRIGIDO, APRIMORADO e padronizado conforme a hierarquia FGH (Nível Global Norma Zero + Nível Específico do tipo selecionado).
 
-REGRA ESPECIAL DE UPLOAD: Faça o MAPEAMENTO INTELIGENTE — identifique cada parágrafo/seção do texto original e transponha para a seção correspondente da ESTRUTURA OBRIGATÓRIA abaixo. Aprimore a clareza, a redação técnica e complete seções faltantes com base em boas práticas hospitalares. Se faltar dado factual da unidade, insira "[A PREENCHER PELA UNIDADE]". A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
+REGRA ESPECIAL DE UPLOAD: Faça o MAPEAMENTO INTELIGENTE — identifique cada parágrafo/seção do texto original e transponha para a seção correspondente da ESTRUTURA OBRIGATÓRIA abaixo. Aprimore a clareza, a redação técnica e complete seções faltantes com base em boas práticas hospitalares. Se faltar dado factual da unidade, insira "[A PREENCHER PELA UNIDADE]". A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho). ATENÇÃO: mesmo aprimorando a redação, é PROIBIDO descartar imagens — todos os marcadores [IMAGEM:id] recebidos devem permanecer na saída, ancorados ao trecho correspondente (se o trecho mudar de seção, o marcador vai junto).
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}

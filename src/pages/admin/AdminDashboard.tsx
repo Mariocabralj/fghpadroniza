@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign } from "lucide-react";
+import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign, Mail } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
+import { unitFromEmail, OUTROS_EMAILS, UNIDADES } from "@/lib/unidades";
 import {
   ResponsiveContainer,
   BarChart,
@@ -14,6 +15,9 @@ import {
   Tooltip,
   CartesianGrid,
   Cell,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
 
 interface DocRow {
@@ -31,7 +35,32 @@ interface ProfileRow {
   name: string;
   sector: string | null;
   salary: number | null;
+  email: string | null;
+  created_at: string;
 }
+
+// Quantitativo consolidado manualmente pela administração (corrige erros de
+// digitação nos domínios). A partir de 06/08/2026 a contagem passa a ser
+// automática, somando os novos cadastros a esta base.
+const EMAIL_BASELINE_DATE = new Date("2026-08-06T00:00:00-03:00");
+const EMAIL_BASELINE: Record<string, number> = {
+  [OUTROS_EMAILS]: 62,
+  "Hospital Dom Hélder": 46,
+  UPAEs: 27,
+  "Hospital Miguel Arraes": 17,
+  "Hospital Alfa": 16,
+  "Hospital da Criança": 12,
+  NGC: 15,
+  "Hospital Pelópidas Silveira": 15,
+  "Hospital Eduardo Campos": 14,
+  UPAs: 7,
+};
+
+const PIE_COLORS = [
+  "hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))",
+  "#7C3AED", "#DB2777", "#0891B2", "#65A30D", "#EA580C", "#64748B",
+];
+
 
 const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--accent-foreground))"];
 
@@ -81,11 +110,12 @@ export default function AdminDashboard() {
   };
 
   const loadProfiles = async () => {
-    const { data } = await supabase.from("profiles").select("user_id, name, sector, salary");
+    const { data } = await supabase.from("profiles").select("user_id, name, sector, salary, email, created_at");
     const map: Record<string, ProfileRow> = {};
     (data || []).forEach((p: any) => { map[p.user_id] = p; });
     setProfiles(map);
   };
+
 
   useEffect(() => {
     loadDocs();
@@ -166,6 +196,20 @@ export default function AdminDashboard() {
   const { sorted: typeSorted, sortKey: tKey, sortDir: tDir, toggle: tToggle } =
     useSortable<{ type: string; count: number }>(typeDataAll, "count", "desc");
 
+  // Classificação de e-mails por unidade — base consolidada + novos cadastros
+  const emailCounts: Record<string, number> = { ...EMAIL_BASELINE };
+  Object.values(profiles).forEach((p) => {
+    if (!p.created_at) return;
+    if (new Date(p.created_at) < EMAIL_BASELINE_DATE) return;
+    const unit = unitFromEmail(p.email);
+    emailCounts[unit] = (emailCounts[unit] || 0) + 1;
+  });
+  const emailOrder = [...UNIDADES.filter((u) => u !== "Outra unidade"), OUTROS_EMAILS];
+  const emailData = emailOrder
+    .map((name) => ({ name, value: emailCounts[name] || 0 }))
+    .filter((d) => d.value > 0);
+  const emailTotal = emailData.reduce((a, b) => a + b.value, 0);
+
   return (
     <AdminGuard>
       <AppLayout>
@@ -242,7 +286,56 @@ export default function AdminDashboard() {
             <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="bg-primary/10 text-primary" />
           </div>
 
+          {/* Classificação de E-mails por Unidade */}
+          <div className="bg-card rounded-xl border p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-1">
+              <Mail className="w-5 h-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Classificação de E-mails dos Usuários</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Distribuição por domínio institucional · {emailTotal} usuários
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+              <ResponsiveContainer width="100%" height={320}>
+                <PieChart>
+                  <Pie
+                    data={emailData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={110}
+                    label={(e: any) => `${e.value}`}
+                  >
+                    {emailData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-1">
+                {emailData.map((row, i) => (
+                  <div key={row.name} className="flex items-center justify-between text-sm py-1.5 border-b last:border-b-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      <span className="text-foreground truncate">{row.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-foreground font-semibold">{row.value}</span>
+                      <span className="text-xs text-muted-foreground w-12 text-right">
+                        {emailTotal ? ((row.value / emailTotal) * 100).toFixed(1) : "0.0"}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Ranking por Setor */}
+
           <div className="bg-card rounded-xl border p-6 shadow-card">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-5 h-5 text-primary" />

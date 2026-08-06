@@ -9,14 +9,17 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, Bell, DollarSign, Info } from "lucide-react";
+import { UNIDADES } from "@/lib/unidades";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 
 export default function Settings() {
   const { user, refreshProfile } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [role, setRole] = useState(user?.role || "");
   const [sector, setSector] = useState(user?.sector || "");
+  const [unidade, setUnidade] = useState<string>("");
   const [salary, setSalary] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
@@ -25,9 +28,10 @@ export default function Settings() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("salary, salary_opt_out")
+        .select("salary, salary_opt_out, unidade")
         .eq("user_id", user.user_id)
         .maybeSingle();
+      setUnidade((data as any)?.unidade || "");
       // Se o usuário pediu "prefiro não dizer", mantemos o campo limpo
       // mesmo se um admin tiver preenchido o salário internamente.
       if (data?.salary_opt_out) setSalary("");
@@ -35,6 +39,7 @@ export default function Settings() {
       else setSalary("");
     })();
   }, [user?.user_id]);
+
 
   if (!user) return <Navigate to="/" />;
 
@@ -45,9 +50,14 @@ export default function Settings() {
       setSaving(false);
       return toast.error("Salário inválido");
     }
-    const updates: any = { name, role, sector, salary: salaryNum };
+    if (!unidade) {
+      setSaving(false);
+      return toast.error("Informe a unidade em que você está trabalhando");
+    }
+    const updates: any = { name, role, sector, unidade, salary: salaryNum };
     // Se o usuário digitou um salário, deixa de ser "prefiro não dizer"
     if (salaryNum !== null) updates.salary_opt_out = false;
+
     const { error } = await supabase
       .from("profiles")
       .update(updates)
@@ -76,6 +86,18 @@ export default function Settings() {
             <div className="space-y-2"><Label>Cargo</Label><Input value={role} onChange={(e) => setRole(e.target.value)} /></div>
             <div className="space-y-2"><Label>Email</Label><Input value={user.email} disabled /></div>
             <div className="space-y-2"><Label>Setor</Label><Input value={sector} onChange={(e) => setSector(e.target.value)} /></div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Qual a unidade em que você está trabalhando?</Label>
+              <Select value={unidade} onValueChange={setUnidade}>
+                <SelectTrigger><SelectValue placeholder="Selecione sua unidade" /></SelectTrigger>
+                <SelectContent>
+                  {UNIDADES.map((u) => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2 md:col-span-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="salary">Salário Base Mensal (opcional)</Label>

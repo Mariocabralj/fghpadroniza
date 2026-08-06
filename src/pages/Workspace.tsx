@@ -11,6 +11,8 @@ import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
 import { streamProcessDocument } from "@/lib/ai-service";
+import { ensureImageMarkers, reindexNumbering } from "@/lib/doc-normalize";
+
 import { toast } from "sonner";
 
 const today = new Date().toLocaleDateString("pt-BR");
@@ -108,6 +110,7 @@ export default function Workspace() {
       return;
     }
     setRefining(true);
+    const before = standardized;
     let acc = "";
     setStandardized(""); // limpar para receber streaming
     streamProcessDocument(
@@ -125,10 +128,13 @@ export default function Workspace() {
         setStandardized(acc);
       },
       () => {
+        // Imagens nunca podem ser perdidas no refinamento + renumeração contínua
+        setStandardized(reindexNumbering(ensureImageMarkers(before, acc)));
         setRefining(false);
         setRefineInstructions("");
         toast.success("Documento refinado.");
       },
+
       (err) => {
         setRefining(false);
         setStandardized(acc || standardized);
@@ -213,7 +219,13 @@ export default function Workspace() {
                   />
                 </div>
               ) : (
-                <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
+                <Textarea
+                  value={standardized}
+                  onChange={(e) => setStandardized(e.target.value)}
+                  onBlur={() => setStandardized((t) => reindexNumbering(t))}
+                  className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono"
+                />
+
               )}
             </div>
 
