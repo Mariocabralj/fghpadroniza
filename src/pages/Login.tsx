@@ -33,8 +33,10 @@ export default function Login() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [sector, setSector] = useState("");
+  const [unidade, setUnidade] = useState("");
   const [salary, setSalary] = useState("");
   const [salaryOptOut, setSalaryOptOut] = useState(false);
+
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
@@ -65,8 +67,13 @@ export default function Login() {
         setLoading(false);
         return toast.error("Preencha nome, cargo e setor");
       }
+      if (!unidade.trim()) {
+        setLoading(false);
+        return toast.error("Informe a unidade em que você está trabalhando");
+      }
       const salaryValue = salaryOptOut ? "" : salary.replace(",", ".").trim();
-      const { error } = await signUp(email, password, { name, role, sector, salary: salaryValue, salary_opt_out: salaryOptOut });
+      const { error } = await signUp(email, password, { name, role, sector, unidade, salary: salaryValue, salary_opt_out: salaryOptOut });
+
       setLoading(false);
       if (error) return toast.error(translateAuthError(error));
       toast.success("Conta criada! Faça login para continuar.");
