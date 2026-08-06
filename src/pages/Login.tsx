@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Lock, Mail, User, Briefcase, Building2, DollarSign, Info } from "lucide-react";
+import { FileText, Lock, Mail, User, Briefcase, Building2, DollarSign, Info, Hospital } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { UNIDADES } from "@/lib/unidades";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+
 
 const translateAuthError = (msg: string) => {
   if (msg.toLowerCase().includes("password is known to be weak")) {
