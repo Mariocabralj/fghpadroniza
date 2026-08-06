@@ -435,11 +435,15 @@ Devolva o documento COMPLETO já refinado, começando DIRETAMENTE pela primeira 
     } else if (mode === "upload-format") {
       userPrompt = `O gestor enviou o documento abaixo para ser apenas FORMATADO institucionalmente (Norma Zero / papel timbrado FGH). NÃO altere o conteúdo nem o estilo de escrita — apenas TRANSPONHA o texto original para a ESTRUTURA OBRIGATÓRIA do tipo "${docType}", preservando ao máximo as palavras do autor.
 
-REGRAS DE FORMATAÇÃO ESTRITA:
-- Não reescreva, não resuma, não enriqueça e não acrescente conteúdo novo.
-- Apenas reorganize o texto enviado nas seções obrigatórias do modelo.
-- Se faltar conteúdo para uma seção obrigatória, insira "[A PREENCHER PELA UNIDADE]".
+REGRAS DE FORMATAÇÃO ESTRITA (PRESERVAÇÃO INTEGRAL DO CONTEÚDO — PROIBIDO ALTERAR):
+- VOCÊ ESTÁ PROIBIDO de alterar o conteúdo escrito pelo usuário. Seu papel exclusivo aqui é ESTRUTURAR, ORGANIZAR OS TÓPICOS e FORMATAR conforme a Norma Zero.
+- Mantenha INTACTAS as palavras, os termos técnicos, as siglas, os números, os nomes próprios e a essência do texto. Sem reescrita criativa, sem sinônimos, sem "melhorias" de estilo, sem correção de tom.
+- É permitido apenas: mover trechos para a seção correta do modelo, aplicar numeração hierárquica (máx. 3 níveis), converter listas para o marcador "•", ajustar CAIXA ALTA de títulos de seção e corrigir erros óbvios de digitação/ortografia.
+- Não reescreva, não resuma, não enriqueça, não interprete e não acrescente conteúdo novo.
+- Se faltar conteúdo para uma seção obrigatória, insira "[A PREENCHER PELA UNIDADE]" — nunca invente texto para preencher.
+- Todos os marcadores [IMAGEM:id] do original DEVEM aparecer na saída, junto do trecho ao qual pertencem.
 - A codificação é sempre "[A PREENCHER PELA QUALIDADE]" (já no cabeçalho).
+
 
 Título: ${title || "A definir"}
 Setor: ${sector || "A definir"}
