@@ -110,11 +110,12 @@ export default function AdminDashboard() {
   };
 
   const loadProfiles = async () => {
-    const { data } = await supabase.from("profiles").select("user_id, name, sector, salary");
+    const { data } = await supabase.from("profiles").select("user_id, name, sector, salary, email, created_at");
     const map: Record<string, ProfileRow> = {};
     (data || []).forEach((p: any) => { map[p.user_id] = p; });
     setProfiles(map);
   };
+
 
   useEffect(() => {
     loadDocs();
