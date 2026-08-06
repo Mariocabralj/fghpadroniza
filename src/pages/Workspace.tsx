@@ -219,7 +219,13 @@ export default function Workspace() {
                   />
                 </div>
               ) : (
-                <Textarea value={standardized} onChange={(e) => setStandardized(e.target.value)} className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono" />
+                <Textarea
+                  value={standardized}
+                  onChange={(e) => setStandardized(e.target.value)}
+                  onBlur={() => setStandardized((t) => reindexNumbering(t))}
+                  className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono"
+                />
+
               )}
             </div>
 
