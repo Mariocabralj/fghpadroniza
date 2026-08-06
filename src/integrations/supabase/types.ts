@@ -289,6 +289,7 @@ export type Database = {
           salary_opt_out: boolean
           sector: string | null
           status: string
+          unidade: string | null
           updated_at: string
           user_id: string
         }
@@ -302,6 +303,7 @@ export type Database = {
           salary_opt_out?: boolean
           sector?: string | null
           status?: string
+          unidade?: string | null
           updated_at?: string
           user_id: string
         }
@@ -315,6 +317,7 @@ export type Database = {
           salary_opt_out?: boolean
           sector?: string | null
           status?: string
+          unidade?: string | null
           updated_at?: string
           user_id?: string
         }
