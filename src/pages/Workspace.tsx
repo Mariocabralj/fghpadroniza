@@ -4,14 +4,17 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2, Eye, Pencil } from "lucide-react";
+import { Download, Star, Sparkles, CheckCircle2, AlertTriangle, Wand2, Loader2, Eye, Pencil, ListOrdered } from "lucide-react";
 import { exportDocx } from "@/lib/docx-export";
 import DocumentPreview from "@/components/DocumentPreview";
+import OutlineEditor from "@/components/OutlineEditor";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
 import { streamProcessDocument } from "@/lib/ai-service";
 import { ensureImageMarkers, reindexNumbering } from "@/lib/doc-normalize";
+import { parseOutline, serializeOutline, OutlineBlock } from "@/lib/doc-outline";
+
 
 import { toast } from "sonner";
 
