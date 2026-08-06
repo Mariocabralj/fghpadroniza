@@ -9,8 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, Bell, DollarSign, Info } from "lucide-react";
+import { UNIDADES } from "@/lib/unidades";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 
 export default function Settings() {
   const { user, refreshProfile } = useAuth();
