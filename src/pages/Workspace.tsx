@@ -11,6 +11,8 @@ import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import { logSystemError } from "@/lib/system-log";
 import { streamProcessDocument } from "@/lib/ai-service";
+import { ensureImageMarkers, reindexNumbering } from "@/lib/doc-normalize";
+
 import { toast } from "sonner";
 
 const today = new Date().toLocaleDateString("pt-BR");
