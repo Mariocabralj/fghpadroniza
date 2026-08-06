@@ -207,14 +207,21 @@ export default function Workspace() {
                   <div className="inline-flex rounded-md border bg-muted p-0.5">
                     <button
                       type="button"
-                      onClick={() => setPreviewMode("preview")}
+                      onClick={() => leaveOutline("preview")}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "preview" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
                     >
                       <Eye className="w-3 h-3" /> Visualizar
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPreviewMode("edit")}
+                      onClick={enterOutline}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "outline" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
+                    >
+                      <ListOrdered className="w-3 h-3" /> Estrutura
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => leaveOutline("edit")}
                       className={`flex items-center gap-1 px-2 py-1 text-xs rounded ${previewMode === "edit" ? "bg-card shadow-sm font-semibold text-foreground" : "text-muted-foreground"}`}
                     >
                       <Pencil className="w-3 h-3" /> Editar
@@ -241,6 +248,8 @@ export default function Workspace() {
                     })()}
                   />
                 </div>
+              ) : previewMode === "outline" ? (
+                <OutlineEditor blocks={blocks} onChange={handleBlocksChange} />
               ) : (
                 <Textarea
                   value={standardized}
@@ -248,6 +257,7 @@ export default function Workspace() {
                   onBlur={() => setStandardized((t) => reindexNumbering(t))}
                   className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-sm font-mono"
                 />
+
 
               )}
             </div>
