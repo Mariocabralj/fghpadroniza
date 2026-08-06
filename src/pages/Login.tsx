@@ -115,7 +115,24 @@ export default function Login() {
                       <Input id="role" placeholder="Ex: Enfermeiro" value={role} onChange={(e) => setRole(e.target.value)} className="pl-10" />
                     </div>
                   </div>
-                  <div className="space-y-2">
+                <div className="space-y-2">
+                  <Label htmlFor="unidade">Qual a unidade em que você está trabalhando?</Label>
+                  <Select value={unidade} onValueChange={setUnidade}>
+                    <SelectTrigger id="unidade">
+                      <div className="flex items-center gap-2">
+                        <Hospital className="h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Selecione sua unidade" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNIDADES.map((u) => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+
                     <Label htmlFor="sector">Setor</Label>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
