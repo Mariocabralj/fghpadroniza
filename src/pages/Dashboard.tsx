@@ -95,10 +95,10 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {steps.map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center p-4">
-                <div className="w-14 h-14 rounded-2xl bg-ai-accent flex items-center justify-center mb-3">
-                  <s.icon className="w-6 h-6 text-ai-accent-foreground" />
+                <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mb-3">
+                  <s.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <span className="text-xs font-semibold text-ai-accent mb-1">PASSO {i + 1}</span>
+                <span className="text-xs font-semibold text-primary mb-1">PASSO {i + 1}</span>
                 <h3 className="font-semibold text-foreground">{s.title}</h3>
                 <p className="text-sm text-muted-foreground mt-1">{s.desc}</p>
               </div>
