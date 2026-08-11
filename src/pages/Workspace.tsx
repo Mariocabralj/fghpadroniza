@@ -197,7 +197,7 @@ export default function Workspace() {
             <div className="flex-1 bg-card rounded-xl border shadow-card flex flex-col min-h-0">
               <div className="p-4 border-b flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="w-4 h-4 text-ai-accent" />
                   <div>
                     <h2 className="font-semibold text-foreground text-sm">Documento Padronizado FGH</h2>
                     <p className="text-xs text-muted-foreground">Pré-visualização fiel ao .DOCX final</p>
@@ -265,7 +265,7 @@ export default function Workspace() {
             {/* Refinamento por IA */}
             <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">
               <div className="flex items-center gap-2 mb-2">
-                <Wand2 className="w-4 h-4 text-primary" />
+                <Wand2 className="w-4 h-4 text-ai-accent" />
                 <h3 className="font-semibold text-foreground text-sm">Deseja refinar este documento?</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-2">Digite novas orientações para a IA (ex.: "deixe mais conciso", "detalhe melhor as competências").</p>
@@ -277,7 +277,7 @@ export default function Workspace() {
                   className="min-h-[60px] text-sm flex-1"
                   disabled={refining}
                 />
-                <Button onClick={handleRefine} disabled={refining || !refineInstructions.trim()} className="gap-2 self-end">
+                <Button onClick={handleRefine} disabled={refining || !refineInstructions.trim()} className="gap-2 self-end bg-ai-accent hover:bg-ai-accent/90 text-ai-accent-foreground">
                   {refining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                   {refining ? "Refinando..." : "Refinar"}
                 </Button>

@@ -247,7 +247,7 @@ export default function NewDocument() {
                   <Input placeholder="Ex: Enfermagem" value={sector} onChange={(e) => setSector(e.target.value)} />
                 </div>
               </div>
-              <Button onClick={handleStart} className="w-full gradient-primary text-primary-foreground font-semibold gap-2 h-12">
+              <Button onClick={handleStart} className="w-full bg-ai-accent hover:bg-ai-accent/90 text-ai-accent-foreground font-semibold gap-2 h-12">
                 <Sparkles className="w-5 h-5" /> Iniciar Padronização com IA
               </Button>
             </div>
