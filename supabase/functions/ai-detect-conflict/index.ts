@@ -23,6 +23,10 @@ Responda EXCLUSIVAMENTE em JSON válido no formato:
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const denied = await requireAdmin(req, corsHeaders);
+  if (denied) return denied;
+
   try {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
