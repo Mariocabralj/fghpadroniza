@@ -64,8 +64,10 @@ export default function Dashboard() {
       <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Bem-vindo, {user.name.split(" ")[0]}!</h1>
-            <p className="text-muted-foreground text-sm">Gerencie seus documentos padronizados</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+              Bem-vindo, <span className="text-primary">{user.name.split(" ")[0]}</span>!
+            </h1>
+            <p className="text-muted-foreground text-base mt-1">Gerencie seus documentos padronizados</p>
           </div>
           <Button onClick={() => navigate("/novo-documento")} className="gradient-primary text-primary-foreground font-semibold gap-2">
             <Plus className="w-4 h-4" /> Novo Documento
@@ -89,7 +91,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-card rounded-xl border p-6 shadow-card">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Como funciona o FGH Padroniza?</h2>
+          <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">Como funciona o FGH Padroniza?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {steps.map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center p-4">
@@ -106,7 +108,7 @@ export default function Dashboard() {
 
         <div className="bg-card rounded-xl border shadow-card">
           <div className="p-5 border-b">
-            <h2 className="text-lg font-semibold text-foreground">Documentos Recentes</h2>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Documentos Recentes</h2>
           </div>
           <div className="divide-y">
             {recentDocs.length === 0 && (
