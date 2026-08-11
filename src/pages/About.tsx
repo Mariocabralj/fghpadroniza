@@ -3,7 +3,6 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Target, Wrench, Hospital, ShieldCheck, FileCheck2, History } from "lucide-react";
 
-const INSTITUTIONAL_BLUE = "#00377b";
 
 export default function About() {
   const { user } = useAuth();
@@ -13,7 +12,7 @@ export default function About() {
     <AppLayout>
       <div className="p-8 max-w-4xl mx-auto animate-fade-in" style={{ fontFamily: "Arial, sans-serif" }}>
         <header className="mb-10">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: INSTITUTIONAL_BLUE }}>
+          <h1 className="text-3xl font-bold mb-2 text-primary">
             Sobre o FGH Padroniza
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -23,8 +22,8 @@ export default function About() {
 
         <section className="mb-8 bg-card rounded-xl border p-6 shadow-card">
           <div className="flex items-center gap-3 mb-3">
-            <Target className="w-6 h-6" style={{ color: INSTITUTIONAL_BLUE }} />
-            <h2 className="text-xl font-bold" style={{ color: INSTITUTIONAL_BLUE }}>O Propósito</h2>
+            <Target className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-primary">O Propósito</h2>
           </div>
           <p className="text-foreground leading-relaxed">
             O <strong>FGH Padroniza</strong> é uma solução digital estratégica desenvolvida para a
@@ -36,8 +35,8 @@ export default function About() {
 
         <section className="mb-8 bg-card rounded-xl border p-6 shadow-card">
           <div className="flex items-center gap-3 mb-3">
-            <Wrench className="w-6 h-6" style={{ color: INSTITUTIONAL_BLUE }} />
-            <h2 className="text-xl font-bold" style={{ color: INSTITUTIONAL_BLUE }}>O que fazemos</h2>
+            <Wrench className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-primary">O que fazemos</h2>
           </div>
           <p className="text-foreground leading-relaxed mb-4">
             A ferramenta utiliza Inteligência Artificial avançada para processar rascunhos e ideias,
@@ -46,7 +45,7 @@ export default function About() {
           </p>
           <div className="space-y-3">
             <div className="flex gap-3">
-              <ShieldCheck className="w-5 h-5 mt-0.5 shrink-0" style={{ color: INSTITUTIONAL_BLUE }} />
+              <ShieldCheck className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
               <div>
                 <p className="font-semibold text-foreground">Norma Zero (NORM.QUAL-001)</p>
                 <p className="text-sm text-muted-foreground">
@@ -55,7 +54,7 @@ export default function About() {
               </div>
             </div>
             <div className="flex gap-3">
-              <FileCheck2 className="w-5 h-5 mt-0.5 shrink-0" style={{ color: INSTITUTIONAL_BLUE }} />
+              <FileCheck2 className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
               <div>
                 <p className="font-semibold text-foreground">Modelos Específicos</p>
                 <p className="text-sm text-muted-foreground">
@@ -64,7 +63,7 @@ export default function About() {
               </div>
             </div>
             <div className="flex gap-3">
-              <History className="w-5 h-5 mt-0.5 shrink-0" style={{ color: INSTITUTIONAL_BLUE }} />
+              <History className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
               <div>
                 <p className="font-semibold text-foreground">Rastreabilidade</p>
                 <p className="text-sm text-muted-foreground">
@@ -77,8 +76,8 @@ export default function About() {
 
         <section className="bg-card rounded-xl border p-6 shadow-card">
           <div className="flex items-center gap-3 mb-3">
-            <Hospital className="w-6 h-6" style={{ color: INSTITUTIONAL_BLUE }} />
-            <h2 className="text-xl font-bold" style={{ color: INSTITUTIONAL_BLUE }}>Apoio à Acreditação ONA</h2>
+            <Hospital className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-primary">Apoio à Acreditação ONA</h2>
           </div>
           <p className="text-foreground leading-relaxed">
             Desenvolvido com foco nos requisitos de segurança e qualidade, o app é um aliado fundamental
