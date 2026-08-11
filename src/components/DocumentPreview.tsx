@@ -66,11 +66,14 @@ export default function DocumentPreview({ content, title, elaboracao, images, im
 
   return (
     <div className="h-full overflow-auto bg-muted/40 relative">
-      {loading && (
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-2 bg-card border rounded-md px-3 py-1.5 shadow-sm text-xs text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Renderizando...
-        </div>
-      )}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-muted/70 backdrop-blur-sm border-b">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pré-visualização do .DOCX</span>
+        {loading && (
+          <span className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Renderizando...
+          </span>
+        )}
+      </div>
       {error && (
         <div className="m-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm border border-destructive/30">
           {error}
