@@ -11,6 +11,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { UNIDADES } from "@/lib/unidades";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import letterheadBg from "@/assets/letterhead_bg.jpg";
+import tarjaAzul from "@/assets/tarja-azul-fgh.jpeg";
 
 
 const translateAuthError = (msg: string) => {
@@ -82,19 +84,31 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-primary p-4">
-      <div className="w-full max-w-md animate-fade-in">
+    <div className="min-h-screen relative flex items-center justify-center gradient-primary p-4 overflow-hidden">
+      <img
+        src={letterheadBg}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-[0.07] mix-blend-luminosity"
+      />
+      <div className="w-full max-w-md animate-fade-in relative">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-primary-foreground/20">
             <FileText className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-primary-foreground">FGH Padroniza</h1>
-          <p className="text-primary-foreground/70 mt-1 text-sm">Assistente de Padronização Documental</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-primary-foreground">FGH Padroniza</h1>
+          <p className="text-primary-foreground/80 mt-1 text-sm font-medium">Assistente de Padronização Documental</p>
           <p className="text-primary-foreground/50 text-xs mt-1">Fundação Gestão Hospitalar Martiniano Fernandes</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-xl p-8">
-          <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
+        <div className="bg-card rounded-2xl shadow-xl overflow-hidden">
+          <div
+            className="h-16 w-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${tarjaAzul})` }}
+            role="presentation"
+          />
+          <div className="p-8">
+          <h2 className="text-xl font-bold tracking-tight text-foreground mb-6 text-center">
             {mode === "login" ? "Acesso ao Sistema" : mode === "signup" ? "Criar nova conta" : "Recuperar senha"}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
