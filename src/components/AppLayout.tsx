@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { FileText } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -25,7 +26,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 </div>
               </div>
             </div>
-            {user && (
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              {user && (
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-medium text-foreground">{user.name}</p>
@@ -35,7 +38,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   {user.initials}
                 </div>
               </div>
-            )}
+              )}
+            </div>
           </header>
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
