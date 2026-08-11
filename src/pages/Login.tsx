@@ -12,7 +12,7 @@ import { UNIDADES } from "@/lib/unidades";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import letterheadBg from "@/assets/letterhead_bg.jpg";
-import tarjaAzul from "@/assets/tarja-azul-fgh.jpeg";
+
 
 
 const translateAuthError = (msg: string) => {
