@@ -21,7 +21,15 @@
   <meta name="twitter:title" content="FGH Padroniza">
   <meta property="og:description" content="O FGH Padroniza é um assistente que transforma rascunhos em documentos operacionais estruturados na Norma Zero.">
   <meta name="twitter:description" content="O FGH Padroniza é um assistente que transforma rascunhos em documentos operacionais estruturados na Norma Zero.">
-</head>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('fgh-theme');
+          if (t === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>
