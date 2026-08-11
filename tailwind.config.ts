@@ -59,6 +59,10 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        "ai-accent": {
+          DEFAULT: "hsl(var(--ai-accent))",
+          foreground: "hsl(var(--ai-accent-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

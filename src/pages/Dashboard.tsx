@@ -51,10 +51,10 @@ export default function Dashboard() {
   };
 
   const statusCards = [
-    { label: "Rascunhos", count: counts.rascunhos, icon: FileText, color: "bg-info/10 text-info", border: "border-info/20" },
-    { label: "Com Pendências", count: counts.pendencias, icon: AlertTriangle, color: "bg-warning/10 text-warning", border: "border-warning/20" },
-    { label: "Prontos para Envio", count: counts.prontos, icon: CheckCircle2, color: "bg-success/10 text-success", border: "border-success/20" },
-    { label: "Finalizados", count: counts.finalizados, icon: Archive, color: "bg-muted text-muted-foreground", border: "border-border" },
+    { label: "Rascunhos", count: counts.rascunhos, icon: FileText, color: "text-info", border: "border-l-4 border-l-info" },
+    { label: "Com Pendências", count: counts.pendencias, icon: AlertTriangle, color: "text-warning", border: "border-l-4 border-l-warning" },
+    { label: "Prontos para Envio", count: counts.prontos, icon: CheckCircle2, color: "text-success", border: "border-l-4 border-l-success" },
+    { label: "Finalizados", count: counts.finalizados, icon: Archive, color: "text-muted-foreground", border: "border-l-4 border-l-muted-foreground" },
   ];
 
   const recentDocs = docs.slice(0, 5);
@@ -110,7 +110,13 @@ export default function Dashboard() {
           </div>
           <div className="divide-y">
             {recentDocs.length === 0 && (
-              <p className="p-6 text-sm text-muted-foreground text-center">Você ainda não criou nenhum documento.</p>
+              <div className="p-10 flex flex-col items-center text-center gap-3">
+                <FileText className="w-12 h-12 text-muted-foreground/60" />
+                <p className="text-sm text-muted-foreground">Você ainda não criou nenhum documento.</p>
+                <Button onClick={() => navigate("/novo-documento")} variant="outline" className="gap-2">
+                  <Plus className="w-4 h-4" /> Criar meu primeiro documento
+                </Button>
+              </div>
             )}
             {recentDocs.map((d) => (
               <div key={d.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
