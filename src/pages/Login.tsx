@@ -84,7 +84,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center gradient-primary p-4 overflow-hidden">
+    <div className="force-light min-h-screen relative flex items-center justify-center gradient-primary p-4 overflow-hidden bg-background text-foreground">
       <img
         src={letterheadBg}
         alt=""
