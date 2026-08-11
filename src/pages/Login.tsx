@@ -12,7 +12,7 @@ import { UNIDADES } from "@/lib/unidades";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import letterheadBg from "@/assets/letterhead_bg.jpg";
-import tarjaAzul from "@/assets/tarja-azul-fgh.jpeg";
+
 
 
 const translateAuthError = (msg: string) => {
@@ -101,13 +101,7 @@ export default function Login() {
           <p className="text-primary-foreground/50 text-xs mt-1">Fundação Gestão Hospitalar Martiniano Fernandes</p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-xl overflow-hidden">
-          <div
-            className="h-16 w-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${tarjaAzul})` }}
-            role="presentation"
-          />
-          <div className="p-8">
+        <div className="bg-card rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-bold tracking-tight text-foreground mb-6 text-center">
             {mode === "login" ? "Acesso ao Sistema" : mode === "signup" ? "Criar nova conta" : "Recuperar senha"}
           </h2>
@@ -246,7 +240,6 @@ export default function Login() {
                 {mode === "login" ? "Novo aqui? Crie sua conta!" : "Já tem conta? Entrar"}
               </button>
             )}
-          </div>
           </div>
         </div>
       </div>
