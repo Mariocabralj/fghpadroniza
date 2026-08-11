@@ -148,6 +148,15 @@ const templates = [
   },
 ];
 
+// badge com borda lateral na mesma cor semântica do card
+const badgeFromColor = (color: string) => {
+  if (color.includes("text-primary")) return "border-l-primary text-primary";
+  if (color.includes("text-success")) return "border-l-success text-success";
+  if (color.includes("text-info")) return "border-l-info text-info";
+  if (color.includes("text-warning")) return "border-l-warning text-warning";
+  return "border-l-muted-foreground text-muted-foreground";
+};
+
 export default function Templates() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -210,7 +219,7 @@ export default function Templates() {
                   <div className={`w-10 h-10 rounded-lg ${t.color} flex items-center justify-center`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${t.color}`}>{t.category}</span>
+                  <span className={`text-xs font-semibold pl-2.5 pr-2 py-1 border-l-4 bg-muted/40 rounded-r ${badgeFromColor(t.color)}`}>{t.category}</span>
                 </div>
                 <h3 className="font-semibold text-foreground mb-1">{t.title}</h3>
                 <p className="text-sm text-muted-foreground mb-3">{t.desc}</p>
