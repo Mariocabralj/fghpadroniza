@@ -170,7 +170,7 @@ export default function Workspace() {
     <AppLayout>
       <div className="p-4 h-[calc(100vh-4rem)] flex flex-col gap-4 animate-fade-in">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground">Workspace</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Workspace</h1>
           <div className="flex gap-2">
             <Button onClick={handleExportDocx} className="bg-success text-success-foreground font-semibold gap-2 hover:bg-success/90">
               <Download className="w-4 h-4" /> Exportar .DOCX
@@ -185,7 +185,7 @@ export default function Workspace() {
           <div className="lg:col-span-2 bg-card rounded-xl border shadow-card flex flex-col min-h-0">
             <div className="p-4 border-b flex items-center justify-between shrink-0">
               <div>
-                <h2 className="font-semibold text-foreground text-sm">Documento Original</h2>
+                <h2 className="text-base font-bold tracking-tight text-foreground">Documento Original</h2>
                 <p className="text-xs text-muted-foreground">Conteúdo enviado por você (editável)</p>
               </div>
               <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-info/10 text-info">Rascunho</span>
@@ -199,7 +199,7 @@ export default function Workspace() {
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-ai-accent" />
                   <div>
-                    <h2 className="font-semibold text-foreground text-sm">Documento Padronizado FGH</h2>
+                    <h2 className="text-base font-bold tracking-tight text-foreground">Documento Padronizado FGH</h2>
                     <p className="text-xs text-muted-foreground">Pré-visualização fiel ao .DOCX final</p>
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function Workspace() {
             <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">
               <div className="flex items-center gap-2 mb-2">
                 <Wand2 className="w-4 h-4 text-ai-accent" />
-                <h3 className="font-semibold text-foreground text-sm">Deseja refinar este documento?</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Deseja refinar este documento?</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-2">Digite novas orientações para a IA (ex.: "deixe mais conciso", "detalhe melhor as competências").</p>
               <div className="flex gap-2">
@@ -286,7 +286,7 @@ export default function Workspace() {
 
             <div className="bg-card rounded-xl border shadow-card p-4 shrink-0">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-foreground text-sm">Checklist de Conformidade</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Checklist de Conformidade</h3>
                 <span className="text-xs font-semibold text-primary">{completionPct}%</span>
               </div>
               <div className="w-full bg-muted rounded-full h-1.5 mb-3">
