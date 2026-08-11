@@ -72,7 +72,7 @@ export default function Settings() {
     <AppLayout>
       <div className="p-6 max-w-3xl mx-auto space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Configurações</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Configurações</h1>
           <p className="text-muted-foreground text-sm">Gerencie suas preferências</p>
         </div>
 

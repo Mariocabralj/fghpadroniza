@@ -17,10 +17,10 @@ interface DocRow {
 }
 
 const statusColor = (s: string) =>
-  s === "Pronto" ? "bg-success/10 text-success" :
-  s === "Pendência" ? "bg-warning/10 text-warning" :
-  s === "Finalizado" ? "bg-muted text-muted-foreground" :
-  "bg-info/10 text-info";
+  s === "Pronto" ? "border-l-success text-success" :
+  s === "Pendência" ? "border-l-warning text-warning" :
+  s === "Finalizado" ? "border-l-muted-foreground text-muted-foreground" :
+  "border-l-info text-info";
 
 export default function History() {
   const { user } = useAuth();
@@ -56,7 +56,7 @@ export default function History() {
       <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Histórico</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Histórico</h1>
             <p className="text-muted-foreground text-sm">Seus documentos</p>
           </div>
           <div className="relative w-full sm:w-64">
@@ -86,7 +86,7 @@ export default function History() {
                     <td className="px-4 py-3 text-sm font-medium text-foreground">{d.title}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{d.doc_type}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColor(d.status)}`}>{d.status}</span>
+                      <span className={`inline-block text-xs font-semibold pl-2.5 pr-2 py-1 border-l-4 bg-muted/40 rounded-r ${statusColor(d.status)}`}>{d.status}</span>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{fmt(d.created_at)}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{fmt(d.updated_at)}</td>

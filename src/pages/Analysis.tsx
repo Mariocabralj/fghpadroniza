@@ -140,8 +140,8 @@ export default function Analysis() {
           </>
         ) : (
           <>
-            <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mx-auto animate-pulse-soft">
-              <Loader2 className="w-10 h-10 text-primary-foreground animate-spin" />
+            <div className="w-20 h-20 rounded-full bg-ai-accent flex items-center justify-center mx-auto animate-pulse-soft">
+              <Loader2 className="w-10 h-10 text-ai-accent-foreground animate-spin" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Analisando e padronizando</h1>
@@ -163,7 +163,7 @@ export default function Analysis() {
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
-                className="h-2 rounded-full gradient-primary transition-all duration-500"
+                className="h-2 rounded-full bg-ai-accent transition-all duration-500"
                 style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
               />
             </div>
