@@ -58,11 +58,12 @@ const EMAIL_BASELINE: Record<string, number> = {
 
 const PIE_COLORS = [
   "hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))",
-  "#7C3AED", "#DB2777", "#0891B2", "#65A30D", "#EA580C", "#64748B",
+  "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--chart-6))",
 ];
 
 
-const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--accent-foreground))"];
+const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--chart-1))"];
 
 const TIME_WEIGHTS: Record<string, number> = {
   POP: 120, PRS: 120,
