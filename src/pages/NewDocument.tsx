@@ -135,9 +135,9 @@ export default function NewDocument() {
                 <button
                   key={c.id}
                   onClick={() => setMode(c.id)}
-                  className={`text-left bg-card rounded-xl border-2 ${c.accent} p-6 hover:shadow-card-hover transition-all`}
+                  className={`text-left bg-card rounded-xl border border-l-4 ${c.border} shadow-card p-6 hover:shadow-card-hover transition-all`}
                 >
-                  <div className={`w-12 h-12 rounded-xl ${c.accent} flex items-center justify-center mb-4 border`}>
+                  <div className={`w-12 h-12 rounded-xl bg-muted/50 ${c.accent} flex items-center justify-center mb-4`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-foreground text-lg mb-2">{c.title}</h3>
