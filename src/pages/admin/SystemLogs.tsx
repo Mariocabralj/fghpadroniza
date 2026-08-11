@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
+import { usePagination, TablePagination } from "@/hooks/use-pagination";
 
 interface LogRow {
   id: string;
@@ -81,6 +82,7 @@ export default function SystemLogs() {
   useEffect(() => { load(); }, []);
 
   const { sorted, sortKey, sortDir, toggle } = useSortable<LogRow>(logs, "created_at", "desc");
+  const { paged, page, setPage, pageSize, setPageSize, pageCount, total } = usePagination(sorted);
 
   const levelColor = (l: string) =>
     l === "error" ? "bg-destructive/10 text-destructive" :
@@ -129,10 +131,10 @@ export default function SystemLogs() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {sorted.length === 0 && (
+                  {paged.length === 0 && (
                     <tr><td colSpan={8} className="text-center text-sm text-muted-foreground p-8">Nenhum log registrado.</td></tr>
                   )}
-                  {sorted.map((l) => {
+                  {paged.map((l) => {
                     const prof = l.user_id ? profiles[l.user_id] : null;
                     const interp = interpretError(l);
                     return (
@@ -168,6 +170,15 @@ export default function SystemLogs() {
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              page={page}
+              pageCount={pageCount}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              label="logs"
+            />
           </div>
         </div>
       </AppLayout>

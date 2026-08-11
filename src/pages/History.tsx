@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { usePagination, TablePagination } from "@/hooks/use-pagination";
 
 interface DocRow {
   id: string;
@@ -50,6 +51,7 @@ export default function History() {
 
   const fmt = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
   const filtered = docs.filter((d) => d.title.toLowerCase().includes(search.toLowerCase()));
+  const { paged, page, setPage, pageSize, setPageSize, pageCount, total } = usePagination(filtered);
 
   return (
     <AppLayout>
@@ -78,10 +80,10 @@ export default function History() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filtered.length === 0 && (
+                {paged.length === 0 && (
                   <tr><td colSpan={5} className="text-center text-sm text-muted-foreground p-8">Nenhum documento encontrado.</td></tr>
                 )}
-                {filtered.map((d) => (
+                {paged.map((d) => (
                   <tr key={d.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 text-sm font-medium text-foreground">{d.title}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{d.doc_type}</td>
@@ -95,6 +97,15 @@ export default function History() {
               </tbody>
             </table>
           </div>
+          <TablePagination
+            page={page}
+            pageCount={pageCount}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            label="documentos"
+          />
         </div>
       </div>
     </AppLayout>

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
+import { usePagination, TablePagination } from "@/hooks/use-pagination";
 
 interface ProfileRow {
   user_id: string;
@@ -129,6 +130,9 @@ export default function UserManagement() {
   const { sorted: sortedDocs, sortKey: dKey, sortDir: dDir, toggle: dToggle } =
     useSortable<typeof docsWithMeta[number]>(docsWithMeta);
 
+  const profilesPage = usePagination(sortedProfiles);
+  const docsPage = usePagination(sortedDocs);
+
   return (
     <AdminGuard>
       <AppLayout>
@@ -184,7 +188,7 @@ export default function UserManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {sortedProfiles.map((p) => (
+                    {profilesPage.paged.map((p) => (
                       <tr key={p.user_id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 text-sm font-medium">{p.name}</td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">{p.email}</td>
@@ -239,6 +243,15 @@ export default function UserManagement() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={profilesPage.page}
+                pageCount={profilesPage.pageCount}
+                pageSize={profilesPage.pageSize}
+                total={profilesPage.total}
+                onPageChange={profilesPage.setPage}
+                onPageSizeChange={profilesPage.setPageSize}
+                label="usuários"
+              />
             </div>
           ) : (
             <div className="bg-card rounded-xl border shadow-card overflow-hidden">
@@ -256,7 +269,7 @@ export default function UserManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {sortedDocs.map((d) => (
+                    {docsPage.paged.map((d) => (
                       <tr key={d.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 text-sm font-medium flex items-center gap-2">
                           <FileText className="w-4 h-4 text-primary" /> {d.title}
@@ -297,6 +310,15 @@ export default function UserManagement() {
                   </tbody>
                 </table>
               </div>
+              <TablePagination
+                page={docsPage.page}
+                pageCount={docsPage.pageCount}
+                pageSize={docsPage.pageSize}
+                total={docsPage.total}
+                onPageChange={docsPage.setPage}
+                onPageSizeChange={docsPage.setPageSize}
+                label="documentos"
+              />
             </div>
           )}
         </div>
