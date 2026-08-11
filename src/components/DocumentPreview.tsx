@@ -79,13 +79,20 @@ export default function DocumentPreview({ content, title, elaboracao, images, im
           {error}
         </div>
       )}
-      <div ref={containerRef} className="docx-preview-host py-6 flex justify-center" />
+      <div ref={containerRef} className="docx-preview-host py-10 px-4 flex justify-center min-h-full" />
       <style>{`
+        .docx-preview-host { background: transparent; }
         .docx-preview-host .docx-wrapper { background: transparent !important; padding: 0 !important; }
         .docx-preview-host .docx-wrapper > section.docx {
-          margin: 0 auto 24px auto !important;
-          box-shadow: 0 4px 24px rgba(0,55,123,0.15);
-          background: #fff;
+          margin: 0 auto 40px auto !important;
+          box-shadow:
+            0 12px 40px -8px rgba(0, 0, 0, 0.22),
+            0 4px 12px -4px rgba(0, 0, 0, 0.12) !important;
+          border-radius: 2px !important;
+          background: #ffffff !important;
+        }
+        .docx-preview-host .docx-wrapper > section.docx:last-of-type {
+          margin-bottom: 0 !important;
         }
       `}</style>
     </div>
