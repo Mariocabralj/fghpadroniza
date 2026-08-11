@@ -464,16 +464,14 @@ export default function AdminDashboard() {
 
 function MetricCard({ icon: Icon, label, value, hint, color }: any) {
   return (
-    <div className="bg-card rounded-xl border p-5 shadow-card">
+    <div className={`bg-card rounded-xl border border-l-4 p-5 shadow-card ${color}`}>
       <div className="flex items-center justify-between">
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="text-3xl font-bold text-foreground mt-1">{value}</p>
           {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
         </div>
-        <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center shrink-0`}>
-          <Icon className="w-6 h-6" />
-        </div>
+        <Icon className="w-8 h-8 shrink-0" />
       </div>
     </div>
   );
