@@ -58,11 +58,12 @@ const EMAIL_BASELINE: Record<string, number> = {
 
 const PIE_COLORS = [
   "hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))",
-  "#7C3AED", "#DB2777", "#0891B2", "#65A30D", "#EA580C", "#64748B",
+  "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--chart-6))",
 ];
 
 
-const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--accent-foreground))"];
+const SECTOR_COLORS = ["hsl(var(--primary))", "hsl(var(--info))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--chart-1))"];
 
 const TIME_WEIGHTS: Record<string, number> = {
   POP: 120, PRS: 120,
@@ -281,9 +282,9 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="bg-info/10 text-info" />
-            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="bg-success/10 text-success" />
-            <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="bg-primary/10 text-primary" />
+            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="border-l-info text-info" />
+            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="border-l-success text-success" />
+            <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="border-l-primary text-primary" />
           </div>
 
           {/* Classificação de E-mails por Unidade */}
@@ -463,16 +464,14 @@ export default function AdminDashboard() {
 
 function MetricCard({ icon: Icon, label, value, hint, color }: any) {
   return (
-    <div className="bg-card rounded-xl border p-5 shadow-card">
+    <div className={`bg-card rounded-xl border border-l-4 p-5 shadow-card ${color}`}>
       <div className="flex items-center justify-between">
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="text-3xl font-bold text-foreground mt-1">{value}</p>
           {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
         </div>
-        <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center shrink-0`}>
-          <Icon className="w-6 h-6" />
-        </div>
+        <Icon className="w-8 h-8 shrink-0" />
       </div>
     </div>
   );

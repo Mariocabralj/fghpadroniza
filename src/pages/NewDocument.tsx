@@ -23,34 +23,38 @@ const docTypes = [
 
 type Mode = "improve" | "format" | "paste" | "idea";
 
-const cards: { id: Mode; title: string; desc: string; icon: any; accent: string }[] = [
+const cards: { id: Mode; title: string; desc: string; icon: any; accent: string; border: string }[] = [
   {
     id: "improve",
     title: "Melhore seu Documento",
     desc: "Envie um rascunho e a IA vai aprimorar a escrita técnica, a clareza e a estrutura, completando seções faltantes conforme a Norma Zero.",
     icon: Wand2,
-    accent: "bg-primary/10 text-primary border-primary/20",
+    accent: "text-primary",
+    border: "border-l-primary",
   },
   {
     id: "format",
     title: "Padronize seu Documento",
     desc: "Envie um documento já escrito — a IA apenas formata para o papel timbrado FGH (tarja azul, marca d'água, cabeçalho), sem alterar substancialmente o texto.",
     icon: FileStack,
-    accent: "bg-success/10 text-success border-success/20",
+    accent: "text-success",
+    border: "border-l-success",
   },
   {
     id: "paste",
     title: "Colar Texto",
     desc: "Cole um texto livre e a IA organiza no padrão Norma Zero, mapeando cada trecho para a seção correta.",
     icon: ClipboardPaste,
-    accent: "bg-info/10 text-info border-info/20",
+    accent: "text-info",
+    border: "border-l-info",
   },
   {
     id: "idea",
     title: "Descrever Ideia",
     desc: "Descreva a ideia em poucas linhas e a IA gera o documento completo, técnico e padronizado.",
     icon: Lightbulb,
-    accent: "bg-warning/10 text-warning border-warning/20",
+    accent: "text-warning",
+    border: "border-l-warning",
   },
 ];
 
@@ -131,9 +135,9 @@ export default function NewDocument() {
                 <button
                   key={c.id}
                   onClick={() => setMode(c.id)}
-                  className={`text-left bg-card rounded-xl border-2 ${c.accent} p-6 hover:shadow-card-hover transition-all`}
+                  className={`text-left bg-card rounded-xl border border-l-4 ${c.border} shadow-card p-6 hover:shadow-card-hover transition-all`}
                 >
-                  <div className={`w-12 h-12 rounded-xl ${c.accent} flex items-center justify-center mb-4 border`}>
+                  <div className={`w-12 h-12 rounded-xl bg-muted/50 ${c.accent} flex items-center justify-center mb-4`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold text-foreground text-lg mb-2">{c.title}</h3>

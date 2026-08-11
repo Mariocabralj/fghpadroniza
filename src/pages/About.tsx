@@ -10,7 +10,7 @@ export default function About() {
 
   return (
     <AppLayout>
-      <div className="p-8 max-w-4xl mx-auto animate-fade-in" style={{ fontFamily: "Arial, sans-serif" }}>
+      <div className="p-8 max-w-4xl mx-auto animate-fade-in">
         <header className="mb-10">
           <h1 className="text-3xl font-bold mb-2 text-primary">
             Sobre o FGH Padroniza
