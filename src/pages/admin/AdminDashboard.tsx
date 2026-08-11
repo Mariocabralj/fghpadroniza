@@ -282,9 +282,9 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="bg-info/10 text-info" />
-            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="bg-success/10 text-success" />
-            <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="bg-primary/10 text-primary" />
+            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="border-l-info text-info" />
+            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="border-l-success text-success" />
+            <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="border-l-primary text-primary" />
           </div>
 
           {/* Classificação de E-mails por Unidade */}
