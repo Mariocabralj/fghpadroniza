@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
 import { usePagination, TablePagination } from "@/hooks/use-pagination";
+import { fetchAll } from "@/lib/fetch-all";
 
 interface ProfileRow {
   user_id: string;
