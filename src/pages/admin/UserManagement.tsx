@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
 import { usePagination, TablePagination } from "@/hooks/use-pagination";
+import { fetchAll } from "@/lib/fetch-all";
 
 interface ProfileRow {
   user_id: string;
@@ -55,16 +56,18 @@ export default function UserManagement() {
   const [salaryVisible, setSalaryVisible] = useState(false);
 
   const load = async () => {
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("user_id, name, email, role, sector, status, salary, created_at")
-      .order("created_at", { ascending: false });
-    setProfiles((p as ProfileRow[]) || []);
-    const { data: d } = await supabase
-      .from("documents")
-      .select("id, user_id, title, doc_type, status, created_at")
-      .order("created_at", { ascending: false });
-    setDocs(d || []);
+    const p = await fetchAll<ProfileRow>(
+      "profiles",
+      "user_id, name, email, role, sector, status, salary, created_at",
+      { column: "created_at", ascending: false }
+    );
+    setProfiles(p);
+    const d = await fetchAll<DocRow>(
+      "documents",
+      "id, user_id, title, doc_type, status, created_at",
+      { column: "created_at", ascending: false }
+    );
+    setDocs(d);
   };
 
   useEffect(() => {

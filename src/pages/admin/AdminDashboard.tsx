@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAll } from "@/lib/fetch-all";
 import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign, Mail } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
@@ -104,16 +105,22 @@ export default function AdminDashboard() {
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
 
   const loadDocs = async () => {
-    const { data } = await supabase
-      .from("documents")
-      .select("id, status, sector, doc_type, user_id, standardized_content, updated_at");
-    setDocs((data as DocRow[]) || []);
+    const data = await fetchAll<DocRow>(
+      "documents",
+      "id, status, sector, doc_type, user_id, standardized_content, updated_at",
+      { column: "created_at", ascending: false }
+    );
+    setDocs(data);
   };
 
   const loadProfiles = async () => {
-    const { data } = await supabase.from("profiles").select("user_id, name, sector, salary, email, created_at");
+    const data = await fetchAll<ProfileRow>(
+      "profiles",
+      "user_id, name, sector, salary, email, created_at",
+      { column: "created_at", ascending: false }
+    );
     const map: Record<string, ProfileRow> = {};
-    (data || []).forEach((p: any) => { map[p.user_id] = p; });
+    data.forEach((p: any) => { map[p.user_id] = p; });
     setProfiles(map);
   };
 

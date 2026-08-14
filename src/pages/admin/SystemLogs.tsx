@@ -79,7 +79,16 @@ export default function SystemLogs() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel("system-logs-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_logs" }, () => load())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const { sorted, sortKey, sortDir, toggle } = useSortable<LogRow>(logs, "created_at", "desc");
   const { paged, page, setPage, pageSize, setPageSize, pageCount, total } = usePagination(sorted);
