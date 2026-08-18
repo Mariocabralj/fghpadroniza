@@ -11,3 +11,5 @@ project_id = "gactkafsypsioasflmno"
     verify_jwt = true
   [functions.log-client-error]
     verify_jwt = true
+  [functions.admin-set-password]
+    verify_jwt = true
