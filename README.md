@@ -22,11 +22,6 @@ Foco em clareza e eficiência
 Interface limpa e profissional
 Cards com sombras suaves
 Gradientes sutis em fundos
-👤 PERFIL DO USUÁRIO
-Nome: Mario Cabral
-Cargo: Analista de Processos
-Email: mario.cabral@fgh.org.br
-Setor: Processos e Qualidade
 
 🔄 FLUXO PRINCIPAL DO SISTEMA
 1️⃣ LOGIN
@@ -164,14 +159,11 @@ Título: [título]
 Tipo: [tipo]
 Código: [código]
 Versão: 01
-Elaborado por: Mario Cabral - Analista de Processos
+Elaborado por: Mario Cabral 
 Data: [data atual]
 
 O documento foi padronizado através do sistema FGH Padroniza e está pronto para análise final.
 
-Atenciosamente,
-Mario Cabral
-Analista de Processos
 6️⃣ BIBLIOTECA DE MODELOS
 Grid de cards com modelos pré-definidos
 Categorias: POPs, Instruções de Trabalho, Protocolos, Formulários
@@ -184,20 +176,13 @@ Colunas: Título, Tipo, Status, Elaborado em, Última modificação
 Filtros e busca
 Badges coloridos por status
 Ações: Visualizar, Editar, Exportar, Excluir
-8️⃣ CONFIGURAÇÕES
-Dados Pessoais:
 
-Nome: Mario Cabral
-Cargo: Analista de Processos
-Email: mario.cabral@fgh.org.br
-Setor: Processos e Qualidade
 Preferências de Sistema:
-
 Notificações
 Idioma
 Tema
-Padrões de Documentos:
 
+Padrões de Documentos:
 Modelo padrão
 Numeração automática
 Prazo de revisão
@@ -213,8 +198,8 @@ Logo FGH Padroniza (ícone de documento)
 Título: "FGH Padroniza"
 Subtítulo: "Assistente de Padronização Documental"
 Dados do usuário (direita):
-Nome: Mario Cabral
-Cargo: Analista de Processos
+Nome: 
+Cargo: 
 Avatar/inicial
 🔧 TECNOLOGIAS SUGERIDAS
 Frontend: React + TypeScript
