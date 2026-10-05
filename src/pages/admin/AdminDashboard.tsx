@@ -82,6 +82,11 @@ const matchCategory = (docType: string | null): string | null => {
   if (!docType) return null;
   const t = docType.toLowerCase();
   if (t.includes("pop") || t.includes("prs")) return "POP";
+  const code = t.trim();
+  if (code === "man") return "Manual";
+  if (code === "pla") return "Plano";
+  if (code === "pol") return "Política";
+  if (code === "reg") return "Regimento Interno";
   if (t.includes("protocolo")) return "Protocolo Clínico";
   if (t.includes("manual")) return "Manual";
   if (t.includes("plano")) return "Plano";
