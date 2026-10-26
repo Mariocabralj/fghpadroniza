@@ -3,7 +3,7 @@ import AppLayout from "@/components/AppLayout";
 import AdminGuard from "@/components/AdminGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAll } from "@/lib/fetch-all";
-import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign, Mail } from "lucide-react";
+import { Clock, FileText, TrendingUp, Layers, Info, PercentCircle, Users, BarChart3, DollarSign, Mail, Activity } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSortable, SortIcon } from "@/hooks/use-sortable";
 import { unitFromEmail, OUTROS_EMAILS, UNIDADES } from "@/lib/unidades";
@@ -29,6 +29,7 @@ interface DocRow {
   user_id: string;
   standardized_content: string | null;
   updated_at: string;
+  created_at: string;
 }
 
 interface ProfileRow {
@@ -112,7 +113,7 @@ export default function AdminDashboard() {
   const loadDocs = async () => {
     const data = await fetchAll<DocRow>(
       "documents",
-      "id, status, sector, doc_type, user_id, standardized_content, updated_at",
+      "id, status, sector, doc_type, user_id, standardized_content, updated_at, created_at",
       { column: "created_at", ascending: false }
     );
     setDocs(data);
@@ -223,6 +224,39 @@ export default function AdminDashboard() {
     .filter((d) => d.value > 0);
   const emailTotal = emailData.reduce((a, b) => a + b.value, 0);
 
+  // Uso do aplicativo
+  const DAY = 86400000;
+  const nowMs = Date.now();
+  const activeSince = (days: number) =>
+    new Set(docs.filter((d) => nowMs - new Date(d.created_at || d.updated_at).getTime() <= days * DAY).map((d) => d.user_id)).size;
+  const ativos7 = activeSince(7);
+  const ativos30 = activeSince(30);
+  const totalUsuarios = Object.keys(profiles).length;
+  const novos30 = Object.values(profiles).filter((p) => p.created_at && nowMs - new Date(p.created_at).getTime() <= 30 * DAY).length;
+  const dayKey = (dt: Date) => dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  const usageDaily = Array.from({ length: 30 }, (_, i) => {
+    const dt = new Date(nowMs - (29 - i) * DAY);
+    return { day: dayKey(dt), documentos: 0, cadastros: 0 };
+  });
+  const idx: Record<string, number> = {};
+  usageDaily.forEach((r, i) => { idx[r.day] = i; });
+  docs.forEach((d) => {
+    const dt = new Date(d.created_at || d.updated_at);
+    if (nowMs - dt.getTime() > 30 * DAY) return;
+    const i = idx[dayKey(dt)];
+    if (i !== undefined) usageDaily[i].documentos += 1;
+  });
+  Object.values(profiles).forEach((p) => {
+    if (!p.created_at) return;
+    const dt = new Date(p.created_at);
+    if (nowMs - dt.getTime() > 30 * DAY) return;
+    const i = idx[dayKey(dt)];
+    if (i !== undefined) usageDaily[i].cadastros += 1;
+  });
+  const usersWithDocs = new Set(docs.map((d) => d.user_id)).size;
+  const adesao = totalUsuarios ? ((usersWithDocs / totalUsuarios) * 100).toFixed(1) : "0.0";
+
+
   return (
     <AdminGuard>
       <AppLayout>
@@ -298,6 +332,34 @@ export default function AdminDashboard() {
             <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="border-l-success text-success" />
             <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="border-l-primary text-primary" />
           </div>
+
+          {/* Uso do Aplicativo */}
+          <div className="bg-card rounded-xl border p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="w-5 h-5 text-primary" />
+              <h2 className="font-semibold text-foreground">Uso do Aplicativo</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Atividade dos últimos 30 dias · atualiza em tempo real</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <UsageStat label="Usuários ativos (7 dias)" value={ativos7} />
+              <UsageStat label="Usuários ativos (30 dias)" value={ativos30} />
+              <UsageStat label="Novos cadastros (30 dias)" value={novos30} />
+              <UsageStat label="Adesão" value={`${adesao}%`} hint={`${usersWithDocs} de ${totalUsuarios} já criaram documento`} />
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={usageDaily}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={2} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="documentos" name="Documentos criados" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="cadastros" name="Novos cadastros" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+
 
           {/* Classificação de E-mails por Unidade */}
           <div className="bg-card rounded-xl border p-6 shadow-card">
@@ -471,6 +533,16 @@ export default function AdminDashboard() {
         </div>
       </AppLayout>
     </AdminGuard>
+  );
+}
+
+function UsageStat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/40 p-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+      {hint && <p className="text-[11px] text-muted-foreground mt-1">{hint}</p>}
+    </div>
   );
 }
 
