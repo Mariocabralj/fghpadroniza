@@ -107,6 +107,14 @@ const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 });
 
 export default function AdminDashboard() {
+  const PERIOD_OPTIONS: { label: string; days: number | null }[] = [
+    { label: "7 dias", days: 7 },
+    { label: "30 dias", days: 30 },
+    { label: "90 dias", days: 90 },
+    { label: "1 ano", days: 365 },
+    { label: "Todo o período", days: null },
+  ];
+  const [periodDays, setPeriodDays] = useState<number | null>(30);
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
 
@@ -146,8 +154,18 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const iniciados = docs.length;
-  const exportados = docs.filter(isExported);
+  const DAY = 86400000;
+  const nowMs = Date.now();
+  const periodMs = periodDays === null ? 0 : nowMs - periodDays * DAY;
+  const inPeriod = (value: string | null | undefined) => {
+    if (!value) return false;
+    const t = new Date(value).getTime();
+    return periodDays === null ? t >= 0 : t >= periodMs;
+  };
+  const docsFiltrados = docs.filter((d) => inPeriod(d.created_at || d.updated_at));
+
+  const iniciados = docsFiltrados.length;
+  const exportados = docsFiltrados.filter(isExported);
   const taxaFinalizacao = iniciados > 0 ? ((exportados.length / iniciados) * 100).toFixed(1) : "0.0";
 
   const minutosEconomizados = exportados.reduce((acc, d) => acc + minutesForDoc(d.doc_type), 0);
@@ -174,7 +192,7 @@ export default function AdminDashboard() {
 
   // Ranking por setor — FIEL ao setor cadastrado no perfil do autor
   const sectorMap: Record<string, { count: number; minutes: number }> = {};
-  docs.forEach((d) => {
+  docsFiltrados.forEach((d) => {
     const profSector = profiles[d.user_id]?.sector?.trim();
     const s = profSector && profSector.length > 0 ? profSector : "Não informado";
     if (!sectorMap[s]) sectorMap[s] = { count: 0, minutes: 0 };
@@ -189,7 +207,7 @@ export default function AdminDashboard() {
 
   // Ranking por usuário (puxa setor do perfil — mesma fonte do ranking por setor)
   const userMap: Record<string, number> = {};
-  docs.forEach((d) => {
+  docsFiltrados.forEach((d) => {
     userMap[d.user_id] = (userMap[d.user_id] || 0) + 1;
   });
   const userDataAll = Object.entries(userMap)
@@ -205,7 +223,7 @@ export default function AdminDashboard() {
   // Ranking por tipo (mesma fonte: docs)
   const typeDataAll = CATEGORIES.map((cat) => ({
     type: cat,
-    count: docs.filter((d) => matchCategory(d.doc_type) === cat).length,
+    count: docsFiltrados.filter((d) => matchCategory(d.doc_type) === cat).length,
   }));
   const { sorted: typeSorted, sortKey: tKey, sortDir: tDir, toggle: tToggle } =
     useSortable<{ type: string; count: number }>(typeDataAll, "count", "desc");
@@ -224,34 +242,47 @@ export default function AdminDashboard() {
     .filter((d) => d.value > 0);
   const emailTotal = emailData.reduce((a, b) => a + b.value, 0);
 
-  // Uso do aplicativo
-  const DAY = 86400000;
-  const nowMs = Date.now();
-  const activeSince = (days: number) =>
-    new Set(docs.filter((d) => nowMs - new Date(d.created_at || d.updated_at).getTime() <= days * DAY).map((d) => d.user_id)).size;
-  const ativos7 = activeSince(7);
-  const ativos30 = activeSince(30);
+  // Uso do aplicativo — respeita o filtro de período global
+  const activeInPeriod = new Set(docsFiltrados.map((d) => d.user_id)).size;
   const totalUsuarios = Object.keys(profiles).length;
-  const novos30 = Object.values(profiles).filter((p) => p.created_at && nowMs - new Date(p.created_at).getTime() <= 30 * DAY).length;
+  const novosNoPeriodo = Object.values(profiles).filter((p) => p.created_at && inPeriod(p.created_at)).length;
+  const periodLabel = PERIOD_OPTIONS.find((o) => o.days === periodDays)?.label ?? "";
+
   const dayKey = (dt: Date) => dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-  const usageDaily = Array.from({ length: 30 }, (_, i) => {
-    const dt = new Date(nowMs - (29 - i) * DAY);
-    return { day: dayKey(dt), documentos: 0, cadastros: 0 };
-  });
-  const idx: Record<string, number> = {};
-  usageDaily.forEach((r, i) => { idx[r.day] = i; });
-  docs.forEach((d) => {
-    const dt = new Date(d.created_at || d.updated_at);
-    if (nowMs - dt.getTime() > 30 * DAY) return;
-    const i = idx[dayKey(dt)];
-    if (i !== undefined) usageDaily[i].documentos += 1;
+  const monthKey = (dt: Date) => dt.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+
+  // Buckets do gráfico: por dia até 90 dias, por mês acima disso
+  const useMonthlyBuckets = periodDays === null || periodDays > 90;
+  const buckets: { label: string; documentos: number; cadastros: number }[] = [];
+  if (useMonthlyBuckets) {
+    const stamps = docsFiltrados
+      .map((d) => new Date(d.created_at || d.updated_at).getTime())
+      .filter(Number.isFinite);
+    const earliest = stamps.length ? Math.min(...stamps) : nowMs;
+    const cursor = new Date(earliest);
+    cursor.setDate(1); cursor.setHours(0, 0, 0, 0);
+    const last = new Date(nowMs);
+    last.setDate(1); last.setHours(0, 0, 0, 0);
+    while (cursor <= last) {
+      buckets.push({ label: monthKey(cursor), documentos: 0, cadastros: 0 });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  } else {
+    for (let i = (periodDays as number) - 1; i >= 0; i--) {
+      buckets.push({ label: dayKey(new Date(nowMs - i * DAY)), documentos: 0, cadastros: 0 });
+    }
+  }
+  const bucketKeyOf = (dt: Date) => (useMonthlyBuckets ? monthKey(dt) : dayKey(dt));
+  const bucketIdx: Record<string, number> = {};
+  buckets.forEach((b, i) => { bucketIdx[b.label] = i; });
+  docsFiltrados.forEach((d) => {
+    const i = bucketIdx[bucketKeyOf(new Date(d.created_at || d.updated_at))];
+    if (i !== undefined) buckets[i].documentos += 1;
   });
   Object.values(profiles).forEach((p) => {
-    if (!p.created_at) return;
-    const dt = new Date(p.created_at);
-    if (nowMs - dt.getTime() > 30 * DAY) return;
-    const i = idx[dayKey(dt)];
-    if (i !== undefined) usageDaily[i].cadastros += 1;
+    if (!p.created_at || !inPeriod(p.created_at)) return;
+    const i = bucketIdx[bucketKeyOf(new Date(p.created_at))];
+    if (i !== undefined) buckets[i].cadastros += 1;
   });
   const usersWithDocs = new Set(docs.map((d) => d.user_id)).size;
   const adesao = totalUsuarios ? ((usersWithDocs / totalUsuarios) * 100).toFixed(1) : "0.0";
@@ -264,6 +295,23 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard Admin</h1>
             <p className="text-muted-foreground text-sm">Métricas globais e analytics da plataforma</p>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-xs text-muted-foreground mr-1">Período:</span>
+              {PERIOD_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setPeriodDays(opt.days)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                    periodDays === opt.days
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-primary to-primary/70 rounded-xl p-6 shadow-card text-primary-foreground">
@@ -293,7 +341,7 @@ export default function AdminDashboard() {
                   </Popover>
                 </div>
                 <p className="text-4xl font-bold mt-2">{horasEconomizadas}h</p>
-                <p className="text-xs opacity-80 mt-1">{minutosEconomizados} min · {exportados.length} documentos exportados</p>
+                <p className="text-xs opacity-80 mt-1">{minutosEconomizados} min · {exportados.length} documentos exportados · {periodLabel}</p>
               </div>
               <Clock className="w-12 h-12 opacity-80" />
             </div>
@@ -321,15 +369,15 @@ export default function AdminDashboard() {
                   </Popover>
                 </div>
                 <p className="text-4xl font-bold mt-2">{fmtBRL(custoOportunidade)}</p>
-                <p className="text-xs opacity-80 mt-1">com base nos salários informados</p>
+                <p className="text-xs opacity-80 mt-1">com base nos salários informados · {periodLabel}</p>
               </div>
               <DollarSign className="w-12 h-12 opacity-80" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="border-l-info text-info" />
-            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="border-l-success text-success" />
+            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint={`documentos iniciados · ${periodLabel}`} color="border-l-info text-info" />
+            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados · ${periodLabel}`} color="border-l-success text-success" />
             <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="border-l-primary text-primary" />
           </div>
 
@@ -339,17 +387,19 @@ export default function AdminDashboard() {
               <Activity className="w-5 h-5 text-primary" />
               <h2 className="font-semibold text-foreground">Uso do Aplicativo</h2>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">Atividade dos últimos 30 dias · atualiza em tempo real</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Atividade de {periodDays === null ? "todo o período" : `últimos ${periodDays} dias`} ({periodLabel}) · atualiza em tempo real
+            </p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-              <UsageStat label="Usuários ativos (7 dias)" value={ativos7} />
-              <UsageStat label="Usuários ativos (30 dias)" value={ativos30} />
-              <UsageStat label="Novos cadastros (30 dias)" value={novos30} />
+              <UsageStat label={`Usuários ativos (${periodLabel})`} value={activeInPeriod} />
+              <UsageStat label="Documentos criados" value={docsFiltrados.length} hint={`no período selecionado`} />
+              <UsageStat label="Novos cadastros" value={novosNoPeriodo} hint={`no período selecionado`} />
               <UsageStat label="Adesão" value={`${adesao}%`} hint={`${usersWithDocs} de ${totalUsuarios} já criaram documento`} />
             </div>
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={usageDaily}>
+              <BarChart data={buckets}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={2} />
+                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={useMonthlyBuckets ? 0 : 2} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
