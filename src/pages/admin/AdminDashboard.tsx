@@ -341,7 +341,7 @@ export default function AdminDashboard() {
                   </Popover>
                 </div>
                 <p className="text-4xl font-bold mt-2">{horasEconomizadas}h</p>
-                <p className="text-xs opacity-80 mt-1">{minutosEconomizados} min · {exportados.length} documentos exportados</p>
+                <p className="text-xs opacity-80 mt-1">{minutosEconomizados} min · {exportados.length} documentos exportados · {periodLabel}</p>
               </div>
               <Clock className="w-12 h-12 opacity-80" />
             </div>
@@ -369,15 +369,15 @@ export default function AdminDashboard() {
                   </Popover>
                 </div>
                 <p className="text-4xl font-bold mt-2">{fmtBRL(custoOportunidade)}</p>
-                <p className="text-xs opacity-80 mt-1">com base nos salários informados</p>
+                <p className="text-xs opacity-80 mt-1">com base nos salários informados · {periodLabel}</p>
               </div>
               <DollarSign className="w-12 h-12 opacity-80" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint="documentos iniciados" color="border-l-info text-info" />
-            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados`} color="border-l-success text-success" />
+            <MetricCard icon={FileText} label="Engajamento Total" value={iniciados} hint={`documentos iniciados · ${periodLabel}`} color="border-l-info text-info" />
+            <MetricCard icon={PercentCircle} label="Taxa de Finalização" value={`${taxaFinalizacao}%`} hint={`${exportados.length} de ${iniciados} exportados · ${periodLabel}`} color="border-l-success text-success" />
             <MetricCard icon={Layers} label="Índice de Diversidade" value={`${diversidade} de 6`} hint="categorias padronizadas no mês atual" color="border-l-primary text-primary" />
           </div>
 
