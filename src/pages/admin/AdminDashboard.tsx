@@ -295,6 +295,23 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard Admin</h1>
             <p className="text-muted-foreground text-sm">Métricas globais e analytics da plataforma</p>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-xs text-muted-foreground mr-1">Período:</span>
+              {PERIOD_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setPeriodDays(opt.days)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                    periodDays === opt.days
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-primary to-primary/70 rounded-xl p-6 shadow-card text-primary-foreground">
@@ -370,17 +387,19 @@ export default function AdminDashboard() {
               <Activity className="w-5 h-5 text-primary" />
               <h2 className="font-semibold text-foreground">Uso do Aplicativo</h2>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">Atividade dos últimos 30 dias · atualiza em tempo real</p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Atividade de {periodDays === null ? "todo o período" : `últimos ${periodDays} dias`} ({periodLabel}) · atualiza em tempo real
+            </p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-              <UsageStat label="Usuários ativos (7 dias)" value={ativos7} />
-              <UsageStat label="Usuários ativos (30 dias)" value={ativos30} />
-              <UsageStat label="Novos cadastros (30 dias)" value={novos30} />
+              <UsageStat label={`Usuários ativos (${periodLabel})`} value={activeInPeriod} />
+              <UsageStat label="Documentos criados" value={docsFiltrados.length} hint={`no período selecionado`} />
+              <UsageStat label="Novos cadastros" value={novosNoPeriodo} hint={`no período selecionado`} />
               <UsageStat label="Adesão" value={`${adesao}%`} hint={`${usersWithDocs} de ${totalUsuarios} já criaram documento`} />
             </div>
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={usageDaily}>
+              <BarChart data={buckets}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={2} />
+                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={10} interval={useMonthlyBuckets ? 0 : 2} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
