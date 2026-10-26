@@ -242,34 +242,47 @@ export default function AdminDashboard() {
     .filter((d) => d.value > 0);
   const emailTotal = emailData.reduce((a, b) => a + b.value, 0);
 
-  // Uso do aplicativo
-  const DAY = 86400000;
-  const nowMs = Date.now();
-  const activeSince = (days: number) =>
-    new Set(docs.filter((d) => nowMs - new Date(d.created_at || d.updated_at).getTime() <= days * DAY).map((d) => d.user_id)).size;
-  const ativos7 = activeSince(7);
-  const ativos30 = activeSince(30);
+  // Uso do aplicativo — respeita o filtro de período global
+  const activeInPeriod = new Set(docsFiltrados.map((d) => d.user_id)).size;
   const totalUsuarios = Object.keys(profiles).length;
-  const novos30 = Object.values(profiles).filter((p) => p.created_at && nowMs - new Date(p.created_at).getTime() <= 30 * DAY).length;
+  const novosNoPeriodo = Object.values(profiles).filter((p) => p.created_at && inPeriod(p.created_at)).length;
+  const periodLabel = PERIOD_OPTIONS.find((o) => o.days === periodDays)?.label ?? "";
+
   const dayKey = (dt: Date) => dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-  const usageDaily = Array.from({ length: 30 }, (_, i) => {
-    const dt = new Date(nowMs - (29 - i) * DAY);
-    return { day: dayKey(dt), documentos: 0, cadastros: 0 };
-  });
-  const idx: Record<string, number> = {};
-  usageDaily.forEach((r, i) => { idx[r.day] = i; });
-  docs.forEach((d) => {
-    const dt = new Date(d.created_at || d.updated_at);
-    if (nowMs - dt.getTime() > 30 * DAY) return;
-    const i = idx[dayKey(dt)];
-    if (i !== undefined) usageDaily[i].documentos += 1;
+  const monthKey = (dt: Date) => dt.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+
+  // Buckets do gráfico: por dia até 90 dias, por mês acima disso
+  const useMonthlyBuckets = periodDays === null || periodDays > 90;
+  const buckets: { label: string; documentos: number; cadastros: number }[] = [];
+  if (useMonthlyBuckets) {
+    const stamps = docsFiltrados
+      .map((d) => new Date(d.created_at || d.updated_at).getTime())
+      .filter(Number.isFinite);
+    const earliest = stamps.length ? Math.min(...stamps) : nowMs;
+    const cursor = new Date(earliest);
+    cursor.setDate(1); cursor.setHours(0, 0, 0, 0);
+    const last = new Date(nowMs);
+    last.setDate(1); last.setHours(0, 0, 0, 0);
+    while (cursor <= last) {
+      buckets.push({ label: monthKey(cursor), documentos: 0, cadastros: 0 });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  } else {
+    for (let i = (periodDays as number) - 1; i >= 0; i--) {
+      buckets.push({ label: dayKey(new Date(nowMs - i * DAY)), documentos: 0, cadastros: 0 });
+    }
+  }
+  const bucketKeyOf = (dt: Date) => (useMonthlyBuckets ? monthKey(dt) : dayKey(dt));
+  const bucketIdx: Record<string, number> = {};
+  buckets.forEach((b, i) => { bucketIdx[b.label] = i; });
+  docsFiltrados.forEach((d) => {
+    const i = bucketIdx[bucketKeyOf(new Date(d.created_at || d.updated_at))];
+    if (i !== undefined) buckets[i].documentos += 1;
   });
   Object.values(profiles).forEach((p) => {
-    if (!p.created_at) return;
-    const dt = new Date(p.created_at);
-    if (nowMs - dt.getTime() > 30 * DAY) return;
-    const i = idx[dayKey(dt)];
-    if (i !== undefined) usageDaily[i].cadastros += 1;
+    if (!p.created_at || !inPeriod(p.created_at)) return;
+    const i = bucketIdx[bucketKeyOf(new Date(p.created_at))];
+    if (i !== undefined) buckets[i].cadastros += 1;
   });
   const usersWithDocs = new Set(docs.map((d) => d.user_id)).size;
   const adesao = totalUsuarios ? ((usersWithDocs / totalUsuarios) * 100).toFixed(1) : "0.0";
