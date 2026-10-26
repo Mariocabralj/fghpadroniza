@@ -192,7 +192,7 @@ export default function AdminDashboard() {
 
   // Ranking por setor — FIEL ao setor cadastrado no perfil do autor
   const sectorMap: Record<string, { count: number; minutes: number }> = {};
-  docs.forEach((d) => {
+  docsFiltrados.forEach((d) => {
     const profSector = profiles[d.user_id]?.sector?.trim();
     const s = profSector && profSector.length > 0 ? profSector : "Não informado";
     if (!sectorMap[s]) sectorMap[s] = { count: 0, minutes: 0 };
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
 
   // Ranking por usuário (puxa setor do perfil — mesma fonte do ranking por setor)
   const userMap: Record<string, number> = {};
-  docs.forEach((d) => {
+  docsFiltrados.forEach((d) => {
     userMap[d.user_id] = (userMap[d.user_id] || 0) + 1;
   });
   const userDataAll = Object.entries(userMap)
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
   // Ranking por tipo (mesma fonte: docs)
   const typeDataAll = CATEGORIES.map((cat) => ({
     type: cat,
-    count: docs.filter((d) => matchCategory(d.doc_type) === cat).length,
+    count: docsFiltrados.filter((d) => matchCategory(d.doc_type) === cat).length,
   }));
   const { sorted: typeSorted, sortKey: tKey, sortDir: tDir, toggle: tToggle } =
     useSortable<{ type: string; count: number }>(typeDataAll, "count", "desc");
