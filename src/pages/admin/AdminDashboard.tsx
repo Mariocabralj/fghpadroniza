@@ -107,6 +107,14 @@ const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 });
 
 export default function AdminDashboard() {
+  const PERIOD_OPTIONS: { label: string; days: number | null }[] = [
+    { label: "7 dias", days: 7 },
+    { label: "30 dias", days: 30 },
+    { label: "90 dias", days: 90 },
+    { label: "1 ano", days: 365 },
+    { label: "Todo o período", days: null },
+  ];
+  const [periodDays, setPeriodDays] = useState<number | null>(30);
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, ProfileRow>>({});
 
@@ -146,8 +154,18 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const iniciados = docs.length;
-  const exportados = docs.filter(isExported);
+  const DAY = 86400000;
+  const nowMs = Date.now();
+  const periodMs = periodDays === null ? 0 : nowMs - periodDays * DAY;
+  const inPeriod = (value: string | null | undefined) => {
+    if (!value) return false;
+    const t = new Date(value).getTime();
+    return periodDays === null ? t >= 0 : t >= periodMs;
+  };
+  const docsFiltrados = docs.filter((d) => inPeriod(d.created_at || d.updated_at));
+
+  const iniciados = docsFiltrados.length;
+  const exportados = docsFiltrados.filter(isExported);
   const taxaFinalizacao = iniciados > 0 ? ((exportados.length / iniciados) * 100).toFixed(1) : "0.0";
 
   const minutosEconomizados = exportados.reduce((acc, d) => acc + minutesForDoc(d.doc_type), 0);
