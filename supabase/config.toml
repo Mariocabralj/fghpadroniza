@@ -13,3 +13,5 @@ project_id = "gactkafsypsioasflmno"
     verify_jwt = true
   [functions.admin-set-password]
     verify_jwt = true
+  [functions.preview-transactional-email]
+    verify_jwt = false
